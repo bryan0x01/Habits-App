@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 import { BottomNav } from "@/components/bottom-nav";
+import { CloudProvider } from "@/components/cloud-provider";
 import { ServiceWorkerRegister } from "@/components/service-worker-register";
 import { StoreProvider } from "@/components/store-provider";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -49,8 +50,10 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <StoreProvider>
-            <div className="relative min-h-dvh">{children}</div>
-            <BottomNav />
+            <CloudProvider>
+              <div className="relative min-h-dvh">{children}</div>
+              <BottomNav />
+            </CloudProvider>
           </StoreProvider>
           <ServiceWorkerRegister />
         </ThemeProvider>

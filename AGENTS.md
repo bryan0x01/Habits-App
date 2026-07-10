@@ -12,8 +12,8 @@
 DayFlow is a **mobile-first, ADHD-friendly productivity PWA**. It answers "what do
 I do right now?" and helps you recover when you fall off schedule. It's a **Next.js
 15 App Router** app, **TypeScript strict**, **Tailwind 3 + shadcn/ui**, persisting
-everything to **`localStorage`** (no backend yet — designed so Supabase drops in
-later).
+everything to **`localStorage`** first, with optional Supabase magic-link auth
+and private cross-device snapshot sync.
 
 **Status:** MVP is feature-complete and deploy-ready. `npm run check` runs lint,
 the automated Vitest suite, and the production build/type-check. Six screens are
@@ -38,8 +38,8 @@ npm run icons    # regenerate PWA icons (scripts/generate-icons.mjs)
 **Always run `npm run check` before declaring done** — lint alone cannot catch
 type/module export errors (see gotcha #3).
 
-No environment variables are required. `.env.example` holds commented placeholders
-for the *planned* Supabase / Web Push work only.
+No environment variables are required for local-only use. Supabase sync needs the
+project URL and publishable key in `.env.local` and the deployment environment.
 
 ---
 
@@ -52,6 +52,8 @@ slice back to `localStorage` via effects. Pure domain logic (what's happening no
 day states, weekly analytics) lives in `src/lib/*` as framework-free functions that
 take store data + a `Date` and return view models. UI is composed from shadcn/ui
 primitives in `src/components/ui` plus feature components in `src/components`.
+`CloudProvider` wraps the store in the root layout; after an optional magic-link
+sign-in it syncs the validated `DayFlowSnapshot` in the background.
 
 ```
 User taps → component calls useStore() action → setState → persist effect writes
@@ -89,6 +91,9 @@ src/
     ├── use-now.ts            # ticking clock hook (client-only)
     ├── utils.ts              # cn(), uid(), clamp()
     └── data/                 # seed templates: routines.ts (4), habits.ts (11)
+middleware.ts                  # refreshes Supabase auth sessions
+supabase/migrations/           # RLS-protected cloud-sync schema
+docs/SUPABASE_SETUP.md         # Supabase dashboard + Vercel steps
 public/  manifest.webmanifest · sw.js · icons/
 scripts/ generate-icons.mjs  # dependency-free PNG generator
 tests/                        # Vitest coverage for domain logic and persistence
@@ -108,6 +113,9 @@ tests/                        # Vitest coverage for domain logic and persistence
 - **Persistence.** One `useEffect` per slice writes to `localStorage` when it
   changes — but only after `hydrated` (so the initial default render doesn't clobber
   stored data). Add a matching effect when you add a slice.
+- **Cloud sync.** `CloudProvider` uses the store-owned `snapshot` (not a stale
+  `localStorage` read) and debounces background writes. On a new device, a valid
+  remote snapshot wins; on a new account, existing local data uploads once.
 - **Time is client-only.** Anything time-dependent uses the `useNow()` hook (ticks
   every 30–60s). Never compute "today" during server render.
 
@@ -155,7 +163,7 @@ resumeVersion/referralContact/followUpDate/…), `EnergyLog`, `FrictionLog`,
 | **Habits** | [`app/habits/page.tsx`](src/app/habits/page.tsx) | `HabitCard`, `HabitDayStateCard`, `WeeklyMomentum`, `AddHabitDialog`; grouped by category |
 | **Applications** | [`app/applications/page.tsx`](src/app/applications/page.tsx) | `ApplicationCard`, `ApplicationDialog`; helpers in `applications.ts` |
 | **Weekly Review** | [`app/review/page.tsx`](src/app/review/page.tsx) | analytics in `review.ts`; "Plan next week" writes `WeekPlan` |
-| **Settings** | [`app/settings/page.tsx`](src/app/settings/page.tsx) | routine picker, energy/theme, export/import/reset, reminders placeholder |
+| **Settings** | [`app/settings/page.tsx`](src/app/settings/page.tsx) | routine picker, energy/theme, magic-link cloud sync, export/import/reset, reminders placeholder |
 | **Friction logging** | `FrictionDialog` / `SkipTaskButton` | reasons in `constants.ts` (`FRICTION_REASONS`) |
 | **Shared shell** | `PageHeader`, `PageContainer`, `BottomNav`, `ThemeToggle` | `LoadingCards` for the loading state |
 
@@ -228,23 +236,22 @@ resumeVersion/referralContact/followUpDate/…), `EnergyLog`, `FrictionLog`,
   the bar).
 - **Add a habit / routine template:** edit `data/habits.ts` / `data/routines.ts` and
   bump `SCHEMA_VERSION` so existing installs reseed.
-- **Swap to Supabase (the big one):** reimplement the read/write calls inside the
-  store + `storage.ts`. Because all persistence is centralized there and the models
-  are serializable, the UI shouldn't need to change. `.env.example` already has the
-  key placeholders.
+- **Cloud schema changes:** update the snapshot validator in `storage.ts`, the
+  store snapshot shape, and `supabase/migrations/`. Keep RLS enabled and never use
+  a Supabase secret/service-role key in client code. See `docs/SUPABASE_SETUP.md`.
 
 ---
 
 ## 10. What's NOT done / roadmap
 
-- No backend/auth/sync — `localStorage` only (single device; Settings → Export for
-  backup).
+- Supabase sync needs its migration applied plus Email/Auth redirect URLs and Vercel
+  environment variables configured. See `docs/SUPABASE_SETUP.md`.
 - Reminders are a **placeholder** — blocks carry `notificationMinutesBefore` but no
   Push API wiring yet.
 - Automated tests cover the core domain and persistence layers; full component and
   end-to-end browser automation can be expanded as the product grows.
-- External-service roadmap: Supabase sync/auth, AI assistance, Google Calendar,
-  and real web push. See README's "Future improvements" section.
+- External-service roadmap: AI assistance, Google Calendar, real web push, and
+  richer multi-device conflict resolution. See README's "Future improvements".
 
 ---
 

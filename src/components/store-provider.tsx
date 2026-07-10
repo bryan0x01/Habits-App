@@ -7,12 +7,12 @@ import { DEFAULT_ROUTINE_ID, seedRoutines } from "@/lib/data/routines";
 import {
   STORAGE_KEYS,
   clearAllData,
-  exportSnapshotJSON,
   importSnapshotJSON,
   loadItem,
   migrateIfNeeded,
   saveItem,
 } from "@/lib/storage";
+import { SNAPSHOT_VERSION } from "@/lib/storage";
 import { dateKey } from "@/lib/time";
 import {
   buildBlankRoutine,
@@ -24,6 +24,7 @@ import type {
   ApplicationStatus,
   ApplicationType,
   BlockLog,
+  DayFlowSnapshot,
   EnergyLog,
   EnergyMode,
   FrictionLog,
@@ -158,8 +159,10 @@ export interface AppStore {
   setWeekPlan: (weekKey: string, field: keyof Omit<WeekPlan, "weekKey">, value: string) => void;
 
   // Data management
+  snapshot: DayFlowSnapshot;
   exportData: () => string;
   importData: (json: string) => boolean;
+  importSnapshot: (snapshot: DayFlowSnapshot) => boolean;
   resetData: () => void;
 }
 
@@ -480,12 +483,50 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     [],
   );
 
+  const snapshot = React.useMemo<DayFlowSnapshot>(
+    () => ({
+      version: SNAPSHOT_VERSION,
+      exportedAt: new Date().toISOString(),
+      settings,
+      routines,
+      habits,
+      habitLogs,
+      blockLogs,
+      priorities,
+      applications,
+      energyLogs,
+      frictionLogs,
+      weekPlans,
+    }),
+    [
+      applications,
+      blockLogs,
+      energyLogs,
+      frictionLogs,
+      habitLogs,
+      habits,
+      priorities,
+      routines,
+      settings,
+      weekPlans,
+    ],
+  );
+
   /* ---- data management ---- */
-  const exportData = React.useCallback(() => exportSnapshotJSON(), []);
+  const exportData = React.useCallback(() => JSON.stringify(snapshot, null, 2), [snapshot]);
 
   const importData = React.useCallback(
     (json: string) => {
       const ok = importSnapshotJSON(json);
+      if (ok) hydrateFromStorage();
+      return ok;
+    },
+    [hydrateFromStorage],
+  );
+
+  const importSnapshot = React.useCallback(
+    (nextSnapshot: DayFlowSnapshot) => {
+      const ok = importSnapshotJSON(JSON.stringify(nextSnapshot));
       if (ok) hydrateFromStorage();
       return ok;
     },
@@ -524,6 +565,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     applications,
     energyLogs,
     frictionLogs,
+    snapshot,
     setActiveRoutine,
     setEnergyMode,
     setMinimumDay,
@@ -554,6 +596,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setWeekPlan,
     exportData,
     importData,
+    importSnapshot,
     resetData,
   };
 

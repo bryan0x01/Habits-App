@@ -10,9 +10,8 @@ Instead of a giant, guilt-inducing to-do list, DayFlow surfaces the **one thing*
 that matters at this moment, offers a **tiny on-ramp** to start it, a **lighter
 backup** when it feels like too much, and a **kind path back** when a block slips.
 
-> This is a same-day MVP. It works **fully offline with `localStorage`** — no
-> account, no backend, no setup. It's architected so a Supabase backend can be
-> dropped in later without a rewrite.
+> DayFlow works fully offline with `localStorage`. Optional email sign-in adds
+> private Supabase sync across devices while keeping the app usable offline.
 
 ---
 
@@ -27,7 +26,7 @@ Six screens, each intentionally focused:
 | **Habits** | 11 seeded daily habits grouped by category, with completion states, weekly momentum, and friction logging. Add your own; delete anytime. |
 | **Applications** | A CS-recruiting tracker: type (internship / new-grad / co-op / part-time), status pipeline, priority, deadlines, resume version, referral contact, and follow-ups. Filters by status **and** priority, flags follow-ups due this week, and stars target companies (Wells Fargo, Ally, BofA, CEMEX, Capital One, Charlotte roles). A weekly recruiting pulse also shows on Today. |
 | **Weekly Review** | Judgment-free, chart-free analytics: gym, study, English, reading, and cleaning days; applications sent; project blocks; top friction; your strongest day; one suggested improvement; and a **Plan next week** draft (school/work, health/gym, career/project). |
-| **Settings** | Active routine, energy defaults, theme, data export/import, and reset. |
+| **Settings** | Active routine, energy defaults, theme, optional magic-link cloud sync, data export/import, and reset. |
 
 Four routine templates ship out of the box — **Charlotte** (work + school),
 **Monterrey** (CEMEX weeks), **Weekend**, and **Minimum Day** — each with realistic
@@ -80,7 +79,8 @@ overwhelm, time blindness, or shame spirals.
 - **[date-fns](https://date-fns.org/)** for date/time logic
 - **[lucide-react](https://lucide.dev/)** icons
 - **[next-themes](https://github.com/pacocoursey/next-themes)** for dark mode
-- **`localStorage`** for persistence (MVP) — wrapped in typed utilities
+- **`localStorage`** for local-first persistence — wrapped in typed utilities
+- **Supabase** (optional) — magic-link Auth plus a private RLS-protected sync snapshot
 - **PWA**: web manifest, service worker, and generated icons
 - Deploy-ready for **Vercel**
 
@@ -107,8 +107,9 @@ on mount and persists every change. It saves:
 - **applications**, **energy logs**, and **friction logs**
 - next-week planning drafts
 
-Because everything is centralized here, swapping to Supabase is a matter of
-reimplementing the store's read/write calls — the UI doesn't change.
+When signed in, the store also syncs this snapshot to a single RLS-protected
+Supabase row per user. Local data remains the immediate/offline source of truth;
+cloud sync happens in the background.
 
 ---
 
@@ -145,6 +146,10 @@ public/
 └── icons/              # PWA icons (generated)
 scripts/
 └── generate-icons.mjs  # Dependency-free PNG icon generator
+supabase/
+└── migrations/          # RLS-protected cloud-sync schema
+docs/
+└── SUPABASE_SETUP.md    # Dashboard + Vercel configuration steps
 tests/                   # Vitest domain and persistence regression suite
 ```
 
@@ -162,10 +167,9 @@ npm run dev
 Open [http://localhost:3000](http://localhost:3000). On your phone, open it over
 your local network (or a deployed URL) and use **"Add to Home Screen"** to install.
 
-> **No environment variables are required** for the MVP — it runs entirely on
-> `localStorage`. A [`.env.example`](.env.example) is included with commented-out
-> placeholders for the planned Supabase and Web Push integrations; copy it to
-> `.env.local` only when you wire those up.
+> **No environment variables are required for local-only use.** To enable
+> account sync, follow [the Supabase setup guide](docs/SUPABASE_SETUP.md) and add
+> the URL plus publishable key to `.env.local` and Vercel.
 
 Production build:
 
@@ -217,8 +221,9 @@ the deployed app is installable as a PWA immediately.
 
 The MVP is deliberately local-only. Natural next steps:
 
-- **Supabase** — swap `localStorage` for Postgres + Auth to sync across devices.
-  The centralized store and serializable models are built for exactly this.
+- **Richer multi-device conflict handling** — signed-in devices already sync a
+  private snapshot; future work can add live conflict resolution for simultaneous
+  edits on two open devices.
 - **AI assistance** — an on-device/Claude-powered coach that reshapes the day based
   on your energy mode, suggests smarter tiny-starts, and turns friction logs into
   personalized nudges.

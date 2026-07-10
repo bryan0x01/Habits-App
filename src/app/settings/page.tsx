@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 
 import { EnergyModeSelector } from "@/components/energy-mode-selector";
+import { CloudSyncCard } from "@/components/cloud-sync-card";
 import { MinimumDayToggle } from "@/components/minimum-day-toggle";
 import { PageContainer, LoadingCards } from "@/components/page-container";
 import { PageHeader } from "@/components/page-header";
@@ -127,6 +128,10 @@ export default function SettingsPage() {
               </Card>
             </Section>
 
+            <Section title="Cloud sync">
+              <CloudSyncCard />
+            </Section>
+
             <Section title="Your data">
               <Card>
                 <CardContent className="space-y-3 p-4">
@@ -183,7 +188,7 @@ export default function SettingsPage() {
               <p className="text-sm font-semibold">{APP_NAME}</p>
               <p className="text-xs text-muted-foreground">{APP_TAGLINE}</p>
               <p className="mt-1 text-xs text-muted-foreground">
-                v0.1.0 · MVP · localStorage
+                v0.2.0 · local-first sync
               </p>
             </div>
           </>
