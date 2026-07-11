@@ -67,10 +67,8 @@ export function WhatNowCard() {
             <PartyPopper className="size-6" />
           </IconBubble>
           <div>
-            <p className="text-sm font-medium text-white/80">
-              That&apos;s a wrap
-            </p>
-            <h2 className="text-2xl font-bold">You did the day</h2>
+            <p className="text-sm font-medium text-white/80">Day protected</p>
+            <h2 className="text-2xl font-bold">Enough is done</h2>
             <p className="mt-1 text-white/85">
               {view.doneCount} of {view.requiredCount} done. However today went,
               you showed up — that&apos;s the win.
@@ -210,7 +208,7 @@ function FocusContent({
           className="flex-1 bg-white text-primary hover:bg-white/90"
         >
           <CheckCircle2 className="size-5" />
-          I did it
+          Done
         </Button>
         <SkipTaskButton
           taskType="block"
@@ -267,7 +265,7 @@ export function NextBestActionCard() {
             <ArrowRight className="size-5" />
           </div>
           <div>
-            <p className="text-sm font-semibold">Fell off? Totally normal.</p>
+            <p className="text-sm font-semibold">The plan slipped. The day didn&apos;t.</p>
             <p className="text-xs text-muted-foreground">
               You slipped past <span className="font-medium">{missed.title}</span>.
               No spiral — the day isn&apos;t failed.
@@ -276,13 +274,13 @@ export function NextBestActionCard() {
         </div>
 
         <p className="rounded-xl bg-background/60 p-3 text-sm">
-          <span className="font-medium">Next best action:</span> {suggestion}
+          <span className="font-medium">Keep it small:</span> {suggestion}
         </p>
 
         <div className="flex flex-wrap gap-2">
           <Button size="sm" onClick={() => setBlockStatus(missed.id, "done")}>
             <CheckCircle2 className="size-4" />
-            I did it anyway
+            Done anyway
           </Button>
           <SkipTaskButton
             taskType="block"

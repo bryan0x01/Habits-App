@@ -97,6 +97,35 @@ describe("storage", () => {
     ).toBe(false);
   });
 
+  it("validates vacation settings and optional flexible tasks", () => {
+    const snapshot = emptySnapshot();
+    snapshot.settings.vacationMode = true;
+    snapshot.settings.routineBeforeVacationId = "routine-test";
+    snapshot.flexTasks = [
+      {
+        id: "task-1",
+        date: "2026-07-10",
+        title: "Study calculus",
+        durationMinutes: 45,
+        minimumMinutes: 10,
+        importance: "high",
+        effort: "deep",
+        category: "study",
+        tinyStart: "Answer one question.",
+        done: false,
+        createdAt: "2026-07-10T12:00:00.000Z",
+      },
+    ];
+
+    expect(isDayFlowSnapshot(snapshot)).toBe(true);
+    expect(
+      isDayFlowSnapshot({
+        ...snapshot,
+        flexTasks: [{ ...snapshot.flexTasks[0], minimumMinutes: 60 }],
+      }),
+    ).toBe(false);
+  });
+
   it("rejects malformed backups without changing existing data", () => {
     saveItem(STORAGE_KEYS.settings, { activeRoutineId: "keep-me" });
     expect(importSnapshotJSON("{}")) .toBe(false);

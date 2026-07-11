@@ -21,17 +21,21 @@ Six screens, each intentionally focused:
 
 | Screen | What it does |
 | --- | --- |
-| **Today** | The home base. "What now" hero, Next Best Action recovery, one compact capacity/progress control, Top 3 priorities, habit day-state, and the rest-of-day timeline. In **Chaos** mode it collapses to just three moves. |
-| **Routines** | Pick from four templates or start with a blank week, then make it yours: activate, duplicate, rename, and add/edit/delete time blocks. New blocks can repeat across multiple selected days. |
+| **Today** | The home base. "What now", committed outcomes, local brain-dump planning, one-tap Rescue, capacity/progress, habit day-state, and the day timeline. In **Rescue** mode it collapses to three moves. |
+| **Routines** | Start blank or add editable Student, Frontline, Corporate, Own Business, and Vacation rhythms alongside the original templates. |
 | **Habits** | 11 seeded daily habits grouped by category, with completion states, weekly momentum, and friction logging. Add your own; delete anytime. |
 | **Applications** | A CS-recruiting tracker: type (internship / new-grad / co-op / part-time), status pipeline, priority, deadlines, resume version, referral contact, and follow-ups. Filters by status **and** priority, flags follow-ups due this week, and stars target companies (Wells Fargo, Ally, BofA, CEMEX, Capital One, Charlotte roles). A weekly recruiting pulse also shows on Today. |
 | **Weekly Review** | Judgment-free, chart-free analytics: gym, study, English, reading, and cleaning days; applications sent; project blocks; top friction; your strongest day; one suggested improvement; and a **Plan next week** draft (school/work, health/gym, career/project). |
-| **Settings** | Active routine, energy defaults, theme, optional magic-link cloud sync, data export/import, and reset. |
+| **Settings** | Active routine, Vacation Mode, capacity defaults, theme, optional magic-link cloud sync, data export/import, and reset. |
 
 Four routine templates ship out of the box — **Charlotte** (work + school),
 **Monterrey** (CEMEX weeks), **Weekend**, and **Minimum Day** — each with realistic
 time blocks, tiny-starts, backup options, and per-block importance. On first run
 they're cloned into your local store so every one is fully editable.
+
+The template library adds five evidence-informed starting points: **Student**,
+**Frontline / shift**, **Corporate**, **Own business**, and **Vacation rhythm**.
+They are never imposed automatically and every time or block can be changed.
 
 ---
 
@@ -46,17 +50,17 @@ overwhelm, time blindness, or shame spirals.
   Task initiation is the hardest part; this makes the first step trivial.
 - **Backup Option** — a lighter version of the task ("A 10-minute walk counts")
   so a hard day doesn't become a zero day.
-- **Energy Mode** (High / Medium / Low / Chaos) — you tell the app how much you've
+- **Energy Mode** (High / Medium / Low / Rescue) — you tell the app how much you've
   got, and the copy + emphasis adapt. In **Chaos** mode it literally says
   _"One thing. That's the whole job right now."_
-- **Minimum Day toggle** — shrinks the day to just the high-importance blocks when
+- **Protect the day toggle** — shrinks the day to just the high-importance blocks when
   you're struggling. Everything else becomes explicitly optional.
 - **Top 3 priorities** — three things that would make today a win, kept small,
   above the noise of any longer list.
 - **Completion states, not scores** — hit your minimum habits and the day is
   **Minimum saved**; do most and it's a **Strong day**; do them all for a **Full
   win**. A rough day still counts.
-- **Chaos mode** — the highest-overwhelm energy level strips the whole dashboard to
+- **Rescue mode** — the highest-overwhelm energy level strips the whole dashboard to
   exactly three moves: one tiny start, one minimum task, one recovery action.
 - **Next Best Action** — when an important block slips past untouched, you get a
   calm recovery prompt (_"do 20 minutes instead of skipping completely"_) instead of
@@ -70,6 +74,12 @@ overwhelm, time blindness, or shame spirals.
   dark mode, and encouraging copy throughout ("Fell off? Totally normal.").
 - **Progressive density** — Today contains only decisions needed today. Weekly
   momentum lives in Habits and recruiting analytics live in Applications.
+- **Clear my head** — a local, deterministic parser turns one-item-per-line brain
+  dumps into transparent time, effort, category, first-step, and minimum estimates.
+- **Rescue the plan** — fits flexible tasks into 15, 30, 60, or 120 minutes; tasks
+  are kept, shrunk, or moved only after the user reviews and applies the plan.
+- **Vacation Mode** — temporarily swaps in four loose anchors and restores the
+  prior routine when the trip ends.
 
 ---
 
@@ -91,7 +101,7 @@ overwhelm, time blindness, or shame spirals.
 Defined in [`src/lib/types.ts`](src/lib/types.ts): `Routine`, `RoutineBlock`
 (with `importance` and `notificationMinutesBefore`), `Habit` (with `category` and
 `minimum`), `HabitLog`, `BlockLog`, `Priority`, `Application`, `EnergyLog`,
-`FrictionLog`, `WeekPlan`, and `UserSettings`. They're plain and serializable on purpose, so
+`FrictionLog`, `FlexTask`, `WeekPlan`, and `UserSettings`. They're plain and serializable on purpose, so
 the same shapes can back a Supabase schema later. A `SCHEMA_VERSION` guard in
 [`storage.ts`](src/lib/storage.ts) reseeds cleanly when these shapes evolve.
 
@@ -108,6 +118,7 @@ on mount and persists every change. It saves:
 - the day's **Top 3 priorities**
 - **applications**, **energy logs**, and **friction logs**
 - next-week planning drafts
+- flexible brain-dump tasks and their local Rescue estimates
 
 When signed in, the store also syncs this snapshot to a single RLS-protected
 Supabase row per user. Local data remains the immediate/offline source of truth;
@@ -135,6 +146,7 @@ src/
     ├── types.ts        # Data models
     ├── storage.ts      # localStorage utilities + export/import
     ├── schedule.ts     # "What now / next / missed" logic
+    ├── planner.ts      # local brain-dump and Rescue rules
     ├── day-state.ts    # Day states + streak-free weekly momentum
     ├── routines.ts     # Blank/copy routine builders
     ├── review.ts       # Weekly review aggregation
@@ -183,7 +195,7 @@ npm start
 Full release verification:
 
 ```bash
-npm run check    # ESLint + 25 regression tests + production build/type-check
+npm run check    # ESLint + regression tests + production build/type-check
 ```
 
 > The service worker only registers in **production** builds, so it never

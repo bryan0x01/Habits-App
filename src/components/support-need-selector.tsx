@@ -31,9 +31,9 @@ export function SupportNeedSelector({ compact = false }: { compact?: boolean }) 
   const content = (
     <div className="space-y-3">
       <div>
-        <p className="text-sm font-semibold">What feels hardest right now?</p>
+        <p className="text-sm font-semibold">What is your brain fighting?</p>
         <p className="text-xs text-muted-foreground">
-          DayFlow will adjust the next step, not label you.
+          Pick the friction. DayFlow changes the move, not your identity.
         </p>
       </div>
       <div

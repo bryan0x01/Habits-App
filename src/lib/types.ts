@@ -47,6 +47,26 @@ export type Importance = "low" | "medium" | "high";
 
 export type LogStatus = "done" | "skipped";
 
+export type TaskEffort = "light" | "medium" | "deep";
+
+/** A task without a fixed clock time, usually captured from a brain dump. */
+export interface FlexTask {
+  id: string;
+  /** yyyy-MM-dd */
+  date: string;
+  title: string;
+  durationMinutes: number;
+  minimumMinutes: number;
+  importance: Importance;
+  effort: TaskEffort;
+  category: BlockCategory;
+  tinyStart: string;
+  done: boolean;
+  createdAt: string;
+}
+
+export type FlexTaskDraft = Omit<FlexTask, "id" | "date" | "done" | "createdAt">;
+
 /** A single scheduled block within a routine, tied to a weekday. */
 export interface RoutineBlock {
   id: string;
@@ -199,6 +219,8 @@ export interface UserSettings {
   medicationTracking?: boolean;
   /** Fallback used until the user makes today's functional check-in. */
   defaultSupportNeed?: SupportNeed;
+  vacationMode?: boolean;
+  routineBeforeVacationId?: string;
 }
 
 /** Draft priorities for the upcoming week, set from the Weekly Review. */
@@ -224,4 +246,6 @@ export interface DayFlowSnapshot {
   energyLogs: EnergyLog[];
   frictionLogs: FrictionLog[];
   weekPlans: WeekPlan[];
+  /** Optional for backwards-compatible imports from before flexible tasks. */
+  flexTasks?: FlexTask[];
 }

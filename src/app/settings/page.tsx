@@ -38,6 +38,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { DefaultSupportNeedSelector } from "@/components/support-need-selector";
+import { VacationModeCard } from "@/components/vacation-mode";
 import { APP_NAME, APP_TAGLINE } from "@/lib/constants";
 import { dateKey } from "@/lib/time";
 import { cn } from "@/lib/utils";
@@ -120,6 +121,10 @@ export default function SettingsPage() {
                   <Switch id="medication-context" checked={Boolean(settings.medicationTracking)} onCheckedChange={setMedicationTracking} />
                 </CardContent>
               </Card>
+            </Section>
+
+            <Section title="Life mode">
+              <VacationModeCard />
             </Section>
 
             <Section title="Appearance">

@@ -53,7 +53,7 @@ export function TodayOverview() {
         ) : null}
 
         <div className={cn("space-y-2", view.phase !== "empty" && "border-t pt-4")}>
-          <p className="text-sm font-semibold">Capacity right now</p>
+          <p className="text-sm font-semibold">What can today hold?</p>
           <div className="grid grid-cols-4 gap-1.5" role="group" aria-label="Capacity right now">
             {ENERGY_MODES.map((mode) => {
               const selected = settings.energyMode === mode.id;
@@ -116,10 +116,10 @@ export function TodayOverview() {
           </div>
           <div className="min-w-0 flex-1">
             <label htmlFor="today-minimum-day" className="text-sm font-semibold">
-              Minimum day
+              Protect the day
             </label>
             <p className="text-xs text-muted-foreground">
-              Keep only the non-negotiables.
+              Keep only the anchors.
             </p>
           </div>
           <Switch

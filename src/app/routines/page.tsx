@@ -9,6 +9,7 @@ import { CreateRoutineDialog } from "@/components/create-routine-dialog";
 import { PageContainer, LoadingCards } from "@/components/page-container";
 import { PageHeader } from "@/components/page-header";
 import { RoutineActionsSheet } from "@/components/routine-actions-sheet";
+import { RoutineTemplateDialog } from "@/components/routine-template-dialog";
 import { useStore } from "@/components/store-provider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -60,7 +61,10 @@ export default function RoutinesPage() {
                     Pick a template or start with a blank week.
                   </p>
                 </div>
-                <CreateRoutineDialog onCreated={setEditingId} />
+                <div className="flex gap-2">
+                  <RoutineTemplateDialog onAdded={setEditingId} />
+                  <CreateRoutineDialog onCreated={setEditingId} />
+                </div>
               </div>
               {routines.map((r) => {
                 const active = r.id === settings.activeRoutineId;

@@ -52,8 +52,8 @@ export const ENERGY_MODES: EnergyModeMeta[] = [
   },
   {
     id: "chaos",
-    label: "Chaos",
-    tagline: "Everything's on fire — just do one thing.",
+    label: "Rescue",
+    tagline: "Protect one useful move. The rest can wait.",
     emoji: "🌀",
     chip: "bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/30",
     ring: "ring-rose-500",
@@ -99,8 +99,8 @@ export const SUPPORT_NEEDS: SupportNeedMeta[] = [
   },
   {
     id: "overwhelmed",
-    label: "Feeling overwhelmed",
-    shortLabel: "Overwhelmed",
+    label: "Feeling overloaded",
+    shortLabel: "Overloaded",
     prompt: "Shrink the task. A lighter version is enough today.",
   },
   {

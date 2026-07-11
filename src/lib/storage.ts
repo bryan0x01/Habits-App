@@ -3,6 +3,7 @@ import type {
   BlockLog,
   DayFlowSnapshot,
   EnergyLog,
+  FlexTask,
   FrictionLog,
   Habit,
   HabitLog,
@@ -37,6 +38,7 @@ export const STORAGE_KEYS = {
   energyLogs: `${PREFIX}:energyLogs`,
   frictionLogs: `${PREFIX}:frictionLogs`,
   weekPlans: `${PREFIX}:weekPlans`,
+  flexTasks: `${PREFIX}:flexTasks`,
 } as const;
 
 export function isBrowser(): boolean {
@@ -108,6 +110,7 @@ export function buildSnapshot(): DayFlowSnapshot {
     energyLogs: loadItem<EnergyLog[]>(STORAGE_KEYS.energyLogs, []),
     frictionLogs: loadItem<FrictionLog[]>(STORAGE_KEYS.frictionLogs, []),
     weekPlans: loadItem<WeekPlan[]>(STORAGE_KEYS.weekPlans, []),
+    flexTasks: loadItem<FlexTask[]>(STORAGE_KEYS.flexTasks, []),
   };
 }
 
@@ -228,6 +231,24 @@ function isEnergyLog(value: unknown): boolean {
   );
 }
 
+function isFlexTask(value: unknown): boolean {
+  return (
+    isRecord(value) &&
+    hasStrings(value, ["id", "date", "title", "tinyStart", "createdAt"]) &&
+    typeof value.durationMinutes === "number" &&
+    Number.isFinite(value.durationMinutes) &&
+    value.durationMinutes > 0 &&
+    typeof value.minimumMinutes === "number" &&
+    Number.isFinite(value.minimumMinutes) &&
+    value.minimumMinutes > 0 &&
+    value.minimumMinutes <= value.durationMinutes &&
+    isOneOf(value.importance, IMPORTANCE) &&
+    isOneOf(value.effort, ["light", "medium", "deep"] as const) &&
+    isOneOf(value.category, BLOCK_CATEGORIES) &&
+    typeof value.done === "boolean"
+  );
+}
+
 function isFrictionLog(value: unknown): boolean {
   return (
     isRecord(value) &&
@@ -257,7 +278,9 @@ export function isDayFlowSnapshot(value: unknown): value is DayFlowSnapshot {
     typeof settings.onboarded !== "boolean" ||
     (settings.medicationTracking !== undefined && typeof settings.medicationTracking !== "boolean") ||
     (settings.defaultSupportNeed !== undefined &&
-      !isOneOf(settings.defaultSupportNeed, SUPPORT_NEEDS))
+      !isOneOf(settings.defaultSupportNeed, SUPPORT_NEEDS)) ||
+    (settings.vacationMode !== undefined && typeof settings.vacationMode !== "boolean") ||
+    !isOptionalString(settings.routineBeforeVacationId)
   ) {
     return false;
   }
@@ -273,7 +296,13 @@ export function isDayFlowSnapshot(value: unknown): value is DayFlowSnapshot {
     [value.frictionLogs, isFrictionLog],
     [value.weekPlans, isWeekPlan],
   ];
-  return arrays.every(([items, validate]) => Array.isArray(items) && items.every(validate));
+  const requiredArraysValid = arrays.every(
+    ([items, validate]) => Array.isArray(items) && items.every(validate),
+  );
+  const flexTasksValid =
+    value.flexTasks === undefined ||
+    (Array.isArray(value.flexTasks) && value.flexTasks.every(isFlexTask));
+  return requiredArraysValid && flexTasksValid;
 }
 
 /**
@@ -295,6 +324,7 @@ export function importSnapshotJSON(json: string): boolean {
     saveItem(STORAGE_KEYS.energyLogs, data.energyLogs);
     saveItem(STORAGE_KEYS.frictionLogs, data.frictionLogs);
     saveItem(STORAGE_KEYS.weekPlans, data.weekPlans);
+    saveItem(STORAGE_KEYS.flexTasks, data.flexTasks ?? []);
     saveItem(STORAGE_KEYS.schema, SCHEMA_VERSION);
     return true;
   } catch {

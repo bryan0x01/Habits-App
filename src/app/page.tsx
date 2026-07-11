@@ -5,6 +5,7 @@ import { CalendarClock } from "lucide-react";
 import { ChaosMode } from "@/components/chaos-mode";
 import { EnergyModeSelector } from "@/components/energy-mode-selector";
 import { HabitDayStateCard } from "@/components/habit-day-state";
+import { FlexPlan } from "@/components/flex-plan";
 import { PageContainer, LoadingCards } from "@/components/page-container";
 import { PageHeader } from "@/components/page-header";
 import { useStore } from "@/components/store-provider";
@@ -14,6 +15,7 @@ import { TopPriorities } from "@/components/top-priorities";
 import { NextBestActionCard, WhatNowCard } from "@/components/what-now-card";
 import { greeting, longDate } from "@/lib/time";
 import { useNow } from "@/lib/use-now";
+import { VacationBanner } from "@/components/vacation-mode";
 
 export default function TodayPage() {
   const now = useNow(60_000);
@@ -36,17 +38,19 @@ export default function TodayPage() {
           </>
         ) : (
           <>
+            <VacationBanner />
             <WhatNowCard />
             <NextBestActionCard />
-            <TodayOverview />
             <TopPriorities />
+            <FlexPlan />
+            <TodayOverview />
             <HabitDayStateCard />
 
             <section className="space-y-2">
               <div className="flex items-center gap-2 px-1">
                 <CalendarClock className="size-4 text-muted-foreground" />
                 <h2 className="text-sm font-semibold text-muted-foreground">
-                  Rest of today · {routine.name}
+                  The day from here · {routine.name}
                 </h2>
               </div>
               <TodayTimeline />

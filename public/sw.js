@@ -6,7 +6,7 @@
  * The app itself keeps its data in localStorage, so once the shell loads it
  * remains fully usable offline.
  */
-const CACHE = "dayflow-v1";
+const CACHE = "dayflow-v2";
 const APP_SHELL = [
   "/",
   "/routines",
@@ -48,6 +48,8 @@ self.addEventListener("fetch", (event) => {
 
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
+  // Never intercept or cache auth flows (e.g. /auth/callback?code=…).
+  if (url.pathname.startsWith("/auth/")) return;
 
   if (request.mode === "navigate") {
     event.respondWith(

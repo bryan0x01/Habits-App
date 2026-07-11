@@ -82,6 +82,7 @@ src/
     ├── storage.ts            # ⭐ localStorage wrapper, keys, schema migration, export/import
     ├── constants.ts          # metadata: categories, energy modes, statuses, priority companies…
     ├── schedule.ts           # "what now / next / missed" logic for Today
+    ├── planner.ts            # local brain-dump parsing, prioritization, and Rescue
     ├── day-state.ts          # habit day states (Minimum saved / Strong / Full) + weekly momentum
     ├── routines.ts           # blank/copy routine builders
     ├── review.ts             # Weekly Review analytics
@@ -90,7 +91,7 @@ src/
     ├── time.ts               # date-fns wrappers (dateKey, weekdayOf, prettyTime, …)
     ├── use-now.ts            # ticking clock hook (client-only)
     ├── utils.ts              # cn(), uid(), clamp()
-    └── data/                 # seed templates: routines.ts (4), habits.ts (11)
+    └── data/                 # seed routines + life-mode templates, habits (11)
 middleware.ts                  # refreshes Supabase auth sessions
 supabase/migrations/           # RLS-protected cloud-sync schema
 docs/SUPABASE_SETUP.md         # Supabase dashboard + Vercel steps
@@ -158,7 +159,7 @@ resumeVersion/referralContact/followUpDate/…), `EnergyLog`, `FrictionLog`,
 
 | Screen / feature | Entry | Key components / logic |
 | --- | --- | --- |
-| **Today** | [`app/page.tsx`](src/app/page.tsx) | `WhatNowCard` + `NextBestActionCard`, `ChaosMode` (chaos energy), compact `TodayOverview`, `TopPriorities`, `HabitDayStateCard`, `TodayTimeline`; weekly/recruiting summaries stay on their dedicated screens |
+| **Today** | [`app/page.tsx`](src/app/page.tsx) | `WhatNowCard` + `NextBestActionCard`, `ChaosMode` (chaos energy), `VacationBanner`, `TopPriorities`, `FlexPlan` (brain dump + rescue), compact `TodayOverview`, `HabitDayStateCard`, `TodayTimeline`; weekly/recruiting summaries stay on their dedicated screens |
 | **Routines** | [`app/routines/page.tsx`](src/app/routines/page.tsx) | `CreateRoutineDialog` (blank routines), `RoutineActionsSheet` (activate/duplicate/rename/delete), `BlockEditorSheet` (add/edit/delete blocks, multi-day creation, end>start validation) |
 | **Habits** | [`app/habits/page.tsx`](src/app/habits/page.tsx) | `HabitCard`, `HabitDayStateCard`, `WeeklyMomentum`, `AddHabitDialog`; grouped by category |
 | **Applications** | [`app/applications/page.tsx`](src/app/applications/page.tsx) | `ApplicationCard`, `ApplicationDialog`; helpers in `applications.ts` |
@@ -170,7 +171,8 @@ resumeVersion/referralContact/followUpDate/…), `EnergyLog`, `FrictionLog`,
 ### ADHD-feature logic lives here
 - **What now / next / missed** → `computeToday()` in [`schedule.ts`](src/lib/schedule.ts). "Missed" = an *important* (`importance !== "low"`), non-optional block that already ended untouched. Minimum-day makes non-`high` blocks `optional`.
 - **Day states** (`Minimum saved` / `Strong day` / `Full win`) + **weekly momentum** (completed **days out of 7**, not streaks) → [`day-state.ts`](src/lib/day-state.ts).
-- **Energy modes** (`high/medium/low/chaos`) → `ENERGY_MODES` in `constants.ts`. **Chaos** replaces the whole dashboard with `ChaosMode` (exactly 3 cards). **Backup options** only show on low/chaos.
+- **Energy modes** (`high/medium/low/chaos`) → `ENERGY_MODES` in `constants.ts` (chaos is labeled **"Rescue"** in the UI). **Chaos** replaces the whole dashboard with `ChaosMode` (exactly 3 cards). **Backup options** only show on low/chaos.
+- **Loose ends** (brain dump → estimates, energy-aware ordering, rescue keep/shrink/move, and the day-key carry-forward of unfinished tasks) → [`planner.ts`](src/lib/planner.ts), rendered by `FlexPlan`.
 
 ---
 
@@ -194,6 +196,12 @@ resumeVersion/referralContact/followUpDate/…), `EnergyLog`, `FrictionLog`,
   store, never `Math.random()` inline.
 - **Tone/copy:** direct, supportive, non-judgmental. No streak-shame or failure
   language ("let it go", "that counts", "fell off? totally normal").
+- **Security posture:** RLS is the only server-side boundary — never ship a
+  service-role key to the client. The auth callback only follows same-origin
+  relative `next` paths (see `safeNextPath`), the service worker never touches
+  `/auth/*`, and baseline hardening headers (nosniff, frame-deny, referrer,
+  permissions) live in [`next.config.mjs`](next.config.mjs). Keep all four
+  intact when editing those files.
 
 ---
 
@@ -269,5 +277,7 @@ resumeVersion/referralContact/followUpDate/…), `EnergyLog`, `FrictionLog`,
 - [ ] No console errors.
 - [ ] If a data shape changed, `SCHEMA_VERSION` handled.
 
-_Last updated to reflect: Today dashboard overhaul, habits/routines rebuild,
-applications tracker, weekly review, and the same-day deploy polish pass._
+_Last updated to reflect: the adaptive-support release (planner/loose ends,
+vacation mode, cloud sync, push reminders) plus the security-hardening audit
+(auth-callback redirect validation, global headers, SW auth exclusion, loose-end
+carry-forward, dead-component cleanup)._

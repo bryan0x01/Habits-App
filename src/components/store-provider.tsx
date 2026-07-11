@@ -3,7 +3,12 @@
 import * as React from "react";
 
 import { DEFAULT_HABITS } from "@/lib/data/habits";
-import { DEFAULT_ROUTINE_ID, seedRoutines } from "@/lib/data/routines";
+import {
+  DEFAULT_ROUTINE_ID,
+  VACATION_ROUTINE_ID,
+  lifeRoutineTemplate,
+  seedRoutines,
+} from "@/lib/data/routines";
 import {
   STORAGE_KEYS,
   clearAllData,
@@ -30,6 +35,8 @@ import type {
   EnergyMode,
   FrictionLog,
   FrictionReason,
+  FlexTask,
+  FlexTaskDraft,
   Habit,
   HabitCadence,
   HabitCategory,
@@ -117,6 +124,7 @@ export interface AppStore {
   applications: Application[];
   energyLogs: EnergyLog[];
   frictionLogs: FrictionLog[];
+  flexTasks: FlexTask[];
 
   // Settings
   setActiveRoutine: (id: string) => void;
@@ -129,6 +137,7 @@ export interface AppStore {
   medicationStatus: (date?: string) => EnergyLog["medication"] | null;
   setMedicationStatus: (status: EnergyLog["medication"] | null, date?: string) => void;
   completeOnboarding: () => void;
+  setVacationMode: (on: boolean) => void;
 
   // Routines
   createRoutine: (input: NewRoutineInput) => string;
@@ -138,6 +147,13 @@ export interface AppStore {
   addBlock: (routineId: string, input: BlockInput) => void;
   updateBlock: (routineId: string, blockId: string, patch: Partial<BlockInput>) => void;
   deleteBlock: (routineId: string, blockId: string) => void;
+  addRoutineTemplate: (templateId: string) => string | null;
+
+  // Flexible tasks
+  addFlexTasks: (drafts: FlexTaskDraft[], date?: string) => void;
+  setFlexTaskDone: (id: string, done: boolean) => void;
+  updateFlexTask: (id: string, patch: Partial<FlexTask>) => void;
+  removeFlexTask: (id: string) => void;
 
   // Habits
   addHabit: (input: NewHabitInput) => void;
@@ -196,6 +212,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [energyLogs, setEnergyLogs] = React.useState<EnergyLog[]>([]);
   const [frictionLogs, setFrictionLogs] = React.useState<FrictionLog[]>([]);
   const [weekPlans, setWeekPlans] = React.useState<WeekPlan[]>([]);
+  const [flexTasks, setFlexTasks] = React.useState<FlexTask[]>([]);
 
   const hydrateFromStorage = React.useCallback(() => {
     setSettings({ ...DEFAULT_SETTINGS, ...loadItem(STORAGE_KEYS.settings, {}) });
@@ -208,6 +225,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setEnergyLogs(loadItem<EnergyLog[]>(STORAGE_KEYS.energyLogs, []));
     setFrictionLogs(loadItem<FrictionLog[]>(STORAGE_KEYS.frictionLogs, []));
     setWeekPlans(loadItem<WeekPlan[]>(STORAGE_KEYS.weekPlans, []));
+    setFlexTasks(loadItem<FlexTask[]>(STORAGE_KEYS.flexTasks, []));
   }, []);
 
   React.useEffect(() => {
@@ -227,12 +245,17 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   React.useEffect(() => { if (hydrated) saveItem(STORAGE_KEYS.energyLogs, energyLogs); }, [energyLogs, hydrated]);
   React.useEffect(() => { if (hydrated) saveItem(STORAGE_KEYS.frictionLogs, frictionLogs); }, [frictionLogs, hydrated]);
   React.useEffect(() => { if (hydrated) saveItem(STORAGE_KEYS.weekPlans, weekPlans); }, [weekPlans, hydrated]);
+  React.useEffect(() => { if (hydrated) saveItem(STORAGE_KEYS.flexTasks, flexTasks); }, [flexTasks, hydrated]);
 
   const nowIso = () => new Date().toISOString();
 
   /* ---- settings ---- */
   const setActiveRoutine = React.useCallback((id: string) => {
-    setSettings((s) => ({ ...s, activeRoutineId: id }));
+    setSettings((s) => ({
+      ...s,
+      activeRoutineId: id,
+      ...(s.vacationMode && id !== VACATION_ROUTINE_ID ? { vacationMode: false } : {}),
+    }));
   }, []);
 
   const setEnergyMode = React.useCallback((mode: EnergyMode) => {
@@ -317,6 +340,37 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setSettings((s) => ({ ...s, onboarded: true }));
   }, []);
 
+  const setVacationMode = React.useCallback((on: boolean) => {
+    if (on) {
+      const vacation = lifeRoutineTemplate(VACATION_ROUTINE_ID);
+      if (vacation) {
+        setRoutines((list) =>
+          list.some((routine) => routine.id === VACATION_ROUTINE_ID)
+            ? list
+            : [...list, vacation],
+        );
+      }
+      setSettings((current) => ({
+        ...current,
+        vacationMode: true,
+        routineBeforeVacationId:
+          current.activeRoutineId === VACATION_ROUTINE_ID
+            ? current.routineBeforeVacationId
+            : current.activeRoutineId,
+        activeRoutineId: VACATION_ROUTINE_ID,
+      }));
+      return;
+    }
+
+    setSettings((current) => {
+      const preferred = current.routineBeforeVacationId ?? DEFAULT_ROUTINE_ID;
+      const restoreId = routines.some((routine) => routine.id === preferred)
+        ? preferred
+        : routines.find((routine) => routine.id !== VACATION_ROUTINE_ID)?.id ?? DEFAULT_ROUTINE_ID;
+      return { ...current, vacationMode: false, activeRoutineId: restoreId };
+    });
+  }, [routines]);
+
   /* ---- routines ---- */
   const createRoutine = React.useCallback((input: NewRoutineInput): string => {
     const routine = buildBlankRoutine(input);
@@ -342,9 +396,14 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setRoutines((list) => {
       if (list.length <= 1) return list; // never delete the last routine
       const remaining = list.filter((r) => r.id !== id);
-      setSettings((s) =>
-        s.activeRoutineId === id ? { ...s, activeRoutineId: remaining[0].id } : s,
-      );
+      setSettings((s) => {
+        if (s.activeRoutineId !== id) return s;
+        return {
+          ...s,
+          activeRoutineId: remaining[0].id,
+          ...(id === VACATION_ROUTINE_ID ? { vacationMode: false } : {}),
+        };
+      });
       return remaining;
     });
   }, []);
@@ -384,6 +443,42 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           : r,
       ),
     );
+  }, []);
+
+  const addRoutineTemplate = React.useCallback((templateId: string): string | null => {
+    const template = lifeRoutineTemplate(templateId);
+    if (!template) return null;
+    setRoutines((list) =>
+      list.some((routine) => routine.id === templateId) ? list : [...list, template],
+    );
+    return templateId;
+  }, []);
+
+  /* ---- flexible tasks ---- */
+  const addFlexTasks = React.useCallback((drafts: FlexTaskDraft[], date = dateKey()) => {
+    const createdAt = nowIso();
+    setFlexTasks((list) => [
+      ...list,
+      ...drafts.map((draft) => ({
+        ...draft,
+        id: uid("task"),
+        date,
+        done: false,
+        createdAt,
+      })),
+    ]);
+  }, []);
+
+  const setFlexTaskDone = React.useCallback((id: string, done: boolean) => {
+    setFlexTasks((list) => list.map((task) => (task.id === id ? { ...task, done } : task)));
+  }, []);
+
+  const updateFlexTask = React.useCallback((id: string, patch: Partial<FlexTask>) => {
+    setFlexTasks((list) => list.map((task) => (task.id === id ? { ...task, ...patch } : task)));
+  }, []);
+
+  const removeFlexTask = React.useCallback((id: string) => {
+    setFlexTasks((list) => list.filter((task) => task.id !== id));
   }, []);
 
   /* ---- habits ---- */
@@ -572,6 +667,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       energyLogs,
       frictionLogs,
       weekPlans,
+      flexTasks,
     }),
     [
       applications,
@@ -584,6 +680,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       routines,
       settings,
       weekPlans,
+      flexTasks,
     ],
   );
 
@@ -620,6 +717,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setEnergyLogs([]);
     setFrictionLogs([]);
     setWeekPlans([]);
+    setFlexTasks([]);
   }, []);
 
   const routine = React.useMemo(() => {
@@ -640,6 +738,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     applications,
     energyLogs,
     frictionLogs,
+    flexTasks,
     snapshot,
     setActiveRoutine,
     setEnergyMode,
@@ -651,6 +750,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     medicationStatus,
     setMedicationStatus,
     completeOnboarding,
+    setVacationMode,
     createRoutine,
     duplicateRoutine,
     renameRoutine,
@@ -658,6 +758,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     addBlock,
     updateBlock,
     deleteBlock,
+    addRoutineTemplate,
+    addFlexTasks,
+    setFlexTaskDone,
+    updateFlexTask,
+    removeFlexTask,
     addHabit,
     removeHabit,
     habitStatus,

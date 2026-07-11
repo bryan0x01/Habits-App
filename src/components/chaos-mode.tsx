@@ -14,7 +14,7 @@ import { weekdayOf } from "@/lib/time";
 import { useNow } from "@/lib/use-now";
 
 /**
- * Chaos mode strips the day down to exactly three moves so an overwhelmed brain
+ * Rescue mode strips the day down to exactly three moves so an overloaded brain
  * has nowhere to get lost: one tiny start, one minimum task, one recovery.
  */
 export function ChaosMode() {
@@ -44,7 +44,7 @@ export function ChaosMode() {
   return (
     <div className="space-y-3">
       <p className="rounded-2xl bg-rose-500/10 px-4 py-3 text-sm font-medium text-rose-700 dark:text-rose-300">
-        Chaos mode. Just these three. Ignore everything else for now.
+        Rescue mode. Only these three are in play.
       </p>
 
       {/* 1 — one tiny start */}
@@ -121,12 +121,12 @@ export function ChaosMode() {
           {missed ? (
             <>
               <p className="text-sm">
-                <span className="font-medium">Next best action:</span>{" "}
+                <span className="font-medium">Keep it small:</span>{" "}
                 {missed.backup ?? "Do 20 minutes instead of skipping completely."}
               </p>
               <div className="flex gap-2">
                 <Button size="sm" onClick={() => setBlockStatus(missed.id, "done")}>
-                  I did it anyway
+                  Done anyway
                 </Button>
                 <SkipTaskButton
                   taskType="block"
