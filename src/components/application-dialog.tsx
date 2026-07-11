@@ -3,6 +3,7 @@
 import * as React from "react";
 
 import { useStore } from "@/components/store-provider";
+import { DayFlowIcon } from "@/components/dayflow-icon";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -175,7 +176,7 @@ export function ApplicationDialog({
                 <SelectContent>
                   {APPLICATION_STATUSES.map((s) => (
                     <SelectItem key={s.id} value={s.id}>
-                      {s.emoji} {s.label}
+                      <DayFlowIcon name={s.id} /> {s.label}
                     </SelectItem>
                   ))}
                 </SelectContent>

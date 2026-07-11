@@ -158,7 +158,7 @@ resumeVersion/referralContact/followUpDate/…), `EnergyLog`, `FrictionLog`,
 
 | Screen / feature | Entry | Key components / logic |
 | --- | --- | --- |
-| **Today** | [`app/page.tsx`](src/app/page.tsx) | `WhatNowCard` + `NextBestActionCard`, `ChaosMode` (chaos energy), `EnergyModeSelector`, `MinimumDayToggle`, `TopPriorities`, `HabitDayStateCard`, `WeeklyMomentum`, `RecruitingSummary`, `TodayTimeline`; logic in `schedule.ts` |
+| **Today** | [`app/page.tsx`](src/app/page.tsx) | `WhatNowCard` + `NextBestActionCard`, `ChaosMode` (chaos energy), compact `TodayOverview`, `TopPriorities`, `HabitDayStateCard`, `TodayTimeline`; weekly/recruiting summaries stay on their dedicated screens |
 | **Routines** | [`app/routines/page.tsx`](src/app/routines/page.tsx) | `CreateRoutineDialog` (blank routines), `RoutineActionsSheet` (activate/duplicate/rename/delete), `BlockEditorSheet` (add/edit/delete blocks, multi-day creation, end>start validation) |
 | **Habits** | [`app/habits/page.tsx`](src/app/habits/page.tsx) | `HabitCard`, `HabitDayStateCard`, `WeeklyMomentum`, `AddHabitDialog`; grouped by category |
 | **Applications** | [`app/applications/page.tsx`](src/app/applications/page.tsx) | `ApplicationCard`, `ApplicationDialog`; helpers in `applications.ts` |
@@ -221,6 +221,9 @@ resumeVersion/referralContact/followUpDate/…), `EnergyLog`, `FrictionLog`,
    the brand mark; it hand-encodes PNGs with zlib (no image deps).
 8. **Schema migration wipes seed data** on `SCHEMA_VERSION` bump (see §5) — expected,
    but tell the user if a change forces it.
+9. **Production browser tabs can retain old build errors** after rebuilding while
+   a tab is open. Verify in a fresh tab before treating a chunk mismatch as a
+   service-worker regression.
 
 ---
 
@@ -246,8 +249,8 @@ resumeVersion/referralContact/followUpDate/…), `EnergyLog`, `FrictionLog`,
 
 - Supabase sync needs its migration applied plus Email/Auth redirect URLs and Vercel
   environment variables configured. See `docs/SUPABASE_SETUP.md`.
-- Reminders are a **placeholder** — blocks carry `notificationMinutesBefore` but no
-  Push API wiring yet.
+- Web Push is implemented end to end. Deployment still needs VAPID secrets, the
+  push migration/function, and the one-minute Supabase Cron from `docs/NOTIFICATIONS_SETUP.md`.
 - Automated tests cover the core domain and persistence layers; full component and
   end-to-end browser automation can be expanded as the product grows.
 - External-service roadmap: AI assistance, Google Calendar, real web push, and

@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { DayFlowIcon } from "@/components/dayflow-icon";
 import { Check, Copy, Pencil, Trash2 } from "lucide-react";
 
 import { useStore } from "@/components/store-provider";
@@ -54,7 +55,7 @@ export function RoutineActionsSheet({
       <SheetContent side="bottom" className="px-4 pb-6 pt-4">
         <SheetHeader className="mb-4 mt-2">
           <SheetTitle>
-            {routine.emoji} {routine.name}
+            <DayFlowIcon name={routine.id.includes("charlotte") ? "charlotte" : routine.id.includes("monterrey") ? "monterrey" : routine.id.includes("weekend") ? "weekend" : routine.id.includes("minimum") ? "minimum" : "routine"} /> {routine.name}
           </SheetTitle>
         </SheetHeader>
 

@@ -6,6 +6,7 @@ import type {
   FrictionReason,
   HabitCategory,
   Importance,
+  SupportNeed,
 } from "@/lib/types";
 
 export const APP_NAME = "DayFlow";
@@ -62,6 +63,56 @@ export const ENERGY_MODES: EnergyModeMeta[] = [
 
 export function energyMeta(mode: EnergyMode): EnergyModeMeta {
   return ENERGY_MODES.find((m) => m.id === mode) ?? ENERGY_MODES[1];
+}
+
+export interface SupportNeedMeta {
+  id: SupportNeed;
+  label: string;
+  shortLabel: string;
+  prompt: string;
+}
+
+export const SUPPORT_NEEDS: SupportNeedMeta[] = [
+  {
+    id: "start",
+    label: "Getting started",
+    shortLabel: "Start",
+    prompt: "Forget the whole task. Do only the first visible move.",
+  },
+  {
+    id: "focus",
+    label: "Staying focused",
+    shortLabel: "Focus",
+    prompt: "Keep this one task in view. Everything else can wait.",
+  },
+  {
+    id: "remember",
+    label: "Remembering",
+    shortLabel: "Remember",
+    prompt: "Leave yourself a visible cue for the next step before you move on.",
+  },
+  {
+    id: "switch",
+    label: "Switching tasks",
+    shortLabel: "Switch",
+    prompt: "Close the last task, take one breath, then open this one.",
+  },
+  {
+    id: "overwhelmed",
+    label: "Feeling overwhelmed",
+    shortLabel: "Overwhelmed",
+    prompt: "Shrink the task. A lighter version is enough today.",
+  },
+  {
+    id: "varies",
+    label: "It depends",
+    shortLabel: "It varies",
+    prompt: "Use the smallest useful next step and adjust as you go.",
+  },
+];
+
+export function supportNeedMeta(need: SupportNeed): SupportNeedMeta {
+  return SUPPORT_NEEDS.find((item) => item.id === need) ?? SUPPORT_NEEDS[5];
 }
 
 export interface FrictionReasonMeta {

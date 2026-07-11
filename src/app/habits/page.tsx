@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { DayFlowIcon } from "@/components/dayflow-icon";
 
 import { AddHabitDialog } from "@/components/add-habit-dialog";
 import { HabitCard } from "@/components/habit-card";
@@ -67,8 +68,8 @@ export default function HabitsPage() {
               return (
                 <section key={cat} className="space-y-2">
                   <div className="flex items-center justify-between px-1">
-                    <h2 className="text-sm font-semibold">
-                      {meta.emoji} {meta.label}
+                    <h2 className="flex items-center gap-1.5 text-sm font-semibold">
+                      <DayFlowIcon name={cat} /> {meta.label}
                     </h2>
                     <span className="text-xs text-muted-foreground">
                       {done}/{items.length}

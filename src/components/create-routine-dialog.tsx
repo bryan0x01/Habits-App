@@ -22,18 +22,16 @@ export function CreateRoutineDialog({ onCreated }: { onCreated: (id: string) => 
   const { createRoutine } = useStore();
   const [open, setOpen] = React.useState(false);
   const [name, setName] = React.useState("");
-  const [emoji, setEmoji] = React.useState("🌱");
   const [description, setDescription] = React.useState("");
 
   const reset = () => {
     setName("");
-    setEmoji("🌱");
     setDescription("");
   };
 
   const submit = () => {
     if (!name.trim()) return;
-    const id = createRoutine({ name, emoji, description });
+    const id = createRoutine({ name, description });
     reset();
     setOpen(false);
     onCreated(id);
@@ -62,21 +60,8 @@ export function CreateRoutineDialog({ onCreated }: { onCreated: (id: string) => 
         </DialogHeader>
 
         <div className="space-y-3">
-          <div className="flex gap-2">
-            <div className="w-16 space-y-1.5">
-              <Label htmlFor="routine-emoji">Icon</Label>
-              <Input
-                id="routine-emoji"
-                value={emoji}
-                onChange={(event) => setEmoji(event.target.value)}
-                className="text-center text-lg"
-                aria-describedby="routine-emoji-help"
-              />
-              <span id="routine-emoji-help" className="sr-only">
-                Choose an emoji for this routine.
-              </span>
-            </div>
-            <div className="flex-1 space-y-1.5">
+          <div>
+            <div className="space-y-1.5">
               <Label htmlFor="new-routine-name">Name</Label>
               <Input
                 id="new-routine-name"

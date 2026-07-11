@@ -3,18 +3,19 @@
 import * as React from "react";
 import { useTheme } from "next-themes";
 import {
-  BellOff,
   Download,
   Monitor,
   Moon,
   Sun,
   Trash2,
   Upload,
+  Pill,
 } from "lucide-react";
 
 import { EnergyModeSelector } from "@/components/energy-mode-selector";
 import { CloudSyncCard } from "@/components/cloud-sync-card";
 import { MinimumDayToggle } from "@/components/minimum-day-toggle";
+import { NotificationSettingsCard } from "@/components/notification-settings-card";
 import { PageContainer, LoadingCards } from "@/components/page-container";
 import { PageHeader } from "@/components/page-header";
 import { useStore } from "@/components/store-provider";
@@ -36,12 +37,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { DefaultSupportNeedSelector } from "@/components/support-need-selector";
 import { APP_NAME, APP_TAGLINE } from "@/lib/constants";
 import { dateKey } from "@/lib/time";
 import { cn } from "@/lib/utils";
 
 export default function SettingsPage() {
-  const { hydrated, settings, routines, setActiveRoutine, exportData, importData, resetData } =
+  const { hydrated, settings, routines, setActiveRoutine, setMedicationTracking, exportData, importData, resetData } =
     useStore();
   const fileRef = React.useRef<HTMLInputElement>(null);
   const [message, setMessage] = React.useState<string | null>(null);
@@ -90,7 +92,7 @@ export default function SettingsPage() {
                     <SelectContent>
                       {routines.map((r) => (
                         <SelectItem key={r.id} value={r.id}>
-                          {r.emoji} {r.name}
+                          {r.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -104,7 +106,20 @@ export default function SettingsPage() {
 
             <Section title="Energy & load">
               <EnergyModeSelector />
+              <DefaultSupportNeedSelector />
               <MinimumDayToggle />
+              <Card>
+                <CardContent className="flex items-center gap-3 p-4">
+                  <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                    <Pill className="size-5" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <label htmlFor="medication-context" className="text-sm font-semibold">Medication context</label>
+                    <p className="text-xs text-muted-foreground">Optionally note taken or not taken—no dose or medical advice.</p>
+                  </div>
+                  <Switch id="medication-context" checked={Boolean(settings.medicationTracking)} onCheckedChange={setMedicationTracking} />
+                </CardContent>
+              </Card>
             </Section>
 
             <Section title="Appearance">
@@ -112,20 +127,7 @@ export default function SettingsPage() {
             </Section>
 
             <Section title="Reminders">
-              <Card>
-                <CardContent className="flex items-center gap-3 p-4">
-                  <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
-                    <BellOff className="size-5" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold">Push reminders</p>
-                    <p className="text-xs text-muted-foreground">
-                      Coming soon — gentle nudges for your next block.
-                    </p>
-                  </div>
-                  <Switch disabled aria-label="Reminders (coming soon)" />
-                </CardContent>
-              </Card>
+              <NotificationSettingsCard />
             </Section>
 
             <Section title="Cloud sync">
@@ -136,8 +138,8 @@ export default function SettingsPage() {
               <Card>
                 <CardContent className="space-y-3 p-4">
                   <p className="text-xs text-muted-foreground">
-                    Everything is stored privately on this device. Export a backup
-                    or move it to another device.
+                    DayFlow saves on this device first. When signed in, the same
+                    private data syncs across your devices.
                   </p>
                   <div className="grid grid-cols-2 gap-2">
                     <Button variant="outline" onClick={handleExport}>
@@ -169,7 +171,8 @@ export default function SettingsPage() {
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold">Reset everything</p>
                     <p className="text-xs text-muted-foreground">
-                      Clears all logs, habits, and applications on this device.
+                      Clears logs, habits, and applications. If sync is on, the
+                      reset also syncs to your other devices.
                     </p>
                   </div>
                   <Button
@@ -200,8 +203,9 @@ export default function SettingsPage() {
           <DialogHeader>
             <DialogTitle>Reset all data?</DialogTitle>
             <DialogDescription>
-              This permanently clears everything stored on this device. Consider
-              exporting a backup first. This can&apos;t be undone.
+              This permanently clears your DayFlow data. If cloud sync is on,
+              the reset reaches your other devices too. Export a backup first if
+              you may want it later. This can&apos;t be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

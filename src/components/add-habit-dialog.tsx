@@ -4,6 +4,7 @@ import * as React from "react";
 import { Plus } from "lucide-react";
 
 import { useStore } from "@/components/store-provider";
+import { DayFlowIcon } from "@/components/dayflow-icon";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -32,7 +33,6 @@ export function AddHabitDialog() {
   const { addHabit } = useStore();
   const [open, setOpen] = React.useState(false);
   const [name, setName] = React.useState("");
-  const [emoji, setEmoji] = React.useState("✅");
   const [cadence, setCadence] = React.useState<HabitCadence>("daily");
   const [category, setCategory] = React.useState<HabitCategory>("home");
   const [minimum, setMinimum] = React.useState(false);
@@ -40,7 +40,6 @@ export function AddHabitDialog() {
 
   const reset = () => {
     setName("");
-    setEmoji("✅");
     setCadence("daily");
     setCategory("home");
     setMinimum(false);
@@ -49,7 +48,7 @@ export function AddHabitDialog() {
 
   const submit = () => {
     if (!name.trim()) return;
-    addHabit({ name, emoji, cadence, category, minimum, tinyStart });
+    addHabit({ name, cadence, category, minimum, tinyStart });
     reset();
     setOpen(false);
   };
@@ -77,17 +76,8 @@ export function AddHabitDialog() {
         </DialogHeader>
 
         <div className="space-y-3">
-          <div className="flex gap-2">
-            <div className="w-16 space-y-1.5">
-              <Label htmlFor="habit-emoji">Icon</Label>
-              <Input
-                id="habit-emoji"
-                value={emoji}
-                onChange={(e) => setEmoji(e.target.value.slice(0, 2))}
-                className="text-center text-lg"
-              />
-            </div>
-            <div className="flex-1 space-y-1.5">
+          <div>
+            <div className="space-y-1.5">
               <Label htmlFor="habit-name">Name</Label>
               <Input
                 id="habit-name"
@@ -112,7 +102,7 @@ export function AddHabitDialog() {
                 <SelectContent>
                   {HABIT_CATEGORIES.map((c) => (
                     <SelectItem key={c} value={c}>
-                      {habitCategoryMeta(c).emoji} {habitCategoryMeta(c).label}
+                      <DayFlowIcon name={c} /> {habitCategoryMeta(c).label}
                     </SelectItem>
                   ))}
                 </SelectContent>

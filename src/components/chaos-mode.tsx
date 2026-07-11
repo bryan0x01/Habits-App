@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { DayFlowIcon } from "@/components/dayflow-icon";
 import { Check, CheckCircle2, LifeBuoy, Wind, Zap } from "lucide-react";
 
 import { SkipTaskButton } from "@/components/friction-dialog";
@@ -43,7 +44,7 @@ export function ChaosMode() {
   return (
     <div className="space-y-3">
       <p className="rounded-2xl bg-rose-500/10 px-4 py-3 text-sm font-medium text-rose-700 dark:text-rose-300">
-        🌀 Chaos mode. Just these three. Ignore everything else for now.
+        Chaos mode. Just these three. Ignore everything else for now.
       </p>
 
       {/* 1 — one tiny start */}
@@ -86,7 +87,7 @@ export function ChaosMode() {
           {nextMinimum ? (
             <>
               <p className="text-lg font-bold leading-snug">
-                {nextMinimum.emoji} {nextMinimum.name}
+                <DayFlowIcon name={nextMinimum.category} /> {nextMinimum.name}
               </p>
               {nextMinimum.tinyStart ? (
                 <p className="text-sm text-muted-foreground">{nextMinimum.tinyStart}</p>
@@ -102,7 +103,7 @@ export function ChaosMode() {
             </>
           ) : (
             <p className="text-sm text-muted-foreground">
-              Minimums done — that&apos;s a saved day already. 🛟
+              Minimums done — that&apos;s a saved day already.
             </p>
           )}
         </CardContent>

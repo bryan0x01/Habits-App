@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   applicationsSentThisWeek,
+  applyApplicationPatch,
   followUpsDueThisWeek,
   isActive,
   isPriorityCompany,
@@ -50,5 +51,26 @@ describe("application helpers", () => {
         application({ id: "other", company: "Other" }),
       ]),
     ).toBe(1);
+  });
+
+  it("records the first submitted date when a saved role moves forward", () => {
+    const saved = application({ status: "saved", appliedOn: undefined });
+    const submitted = applyApplicationPatch(
+      saved,
+      { status: "applied" },
+      new Date(2026, 6, 10, 9, 30),
+    );
+
+    expect(submitted.appliedOn).toBe("2026-07-10");
+    expect(submitted.updatedAt).toBe(new Date(2026, 6, 10, 9, 30).toISOString());
+  });
+
+  it("keeps the original submission date during later status changes", () => {
+    const interview = applyApplicationPatch(
+      application({ status: "applied", appliedOn: "2026-07-01" }),
+      { status: "interview" },
+      new Date(2026, 6, 10, 9, 30),
+    );
+    expect(interview.appliedOn).toBe("2026-07-01");
   });
 });

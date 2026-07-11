@@ -37,6 +37,7 @@ export function CloudProvider({ children }: { children: React.ReactNode }) {
     isSupabaseConfigured ? "signed-out" : "local",
   );
   const [error, setError] = React.useState<string | null>(null);
+  const [retryToken, setRetryToken] = React.useState(0);
   const snapshotRef = React.useRef(snapshot);
   const initializedUserRef = React.useRef<string | null>(null);
   const skipNextPushRef = React.useRef(false);
@@ -73,6 +74,12 @@ export function CloudProvider({ children }: { children: React.ReactNode }) {
       subscription.unsubscribe();
     };
   }, [supabase]);
+
+  React.useEffect(() => {
+    const retry = () => setRetryToken((token) => token + 1);
+    window.addEventListener("online", retry);
+    return () => window.removeEventListener("online", retry);
+  }, []);
 
   // On a new device the saved cloud snapshot wins. On a new account, the local
   // snapshot is uploaded once, so existing DayFlow users do not lose their data.
@@ -119,7 +126,7 @@ export function CloudProvider({ children }: { children: React.ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [hydrated, importSnapshot, session?.user, supabase]);
+  }, [hydrated, importSnapshot, retryToken, session?.user, supabase]);
 
   // Keep the UI local-first. A brief debounce groups quick taps into one write.
   React.useEffect(() => {
@@ -146,7 +153,7 @@ export function CloudProvider({ children }: { children: React.ReactNode }) {
     }, 600);
 
     return () => window.clearTimeout(timer);
-  }, [hydrated, session?.user, snapshot, supabase]);
+  }, [hydrated, retryToken, session?.user, snapshot, supabase]);
 
   const sendMagicLink = React.useCallback(
     async (email: string) => {

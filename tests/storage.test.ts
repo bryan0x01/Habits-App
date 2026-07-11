@@ -69,6 +69,34 @@ describe("storage", () => {
     ).toBe(false);
   });
 
+  it("validates functional support context without treating it as required", () => {
+    const snapshot = emptySnapshot();
+    snapshot.settings.defaultSupportNeed = "start";
+    snapshot.energyLogs = [
+      {
+        id: "energy-1",
+        date: "2026-07-10",
+        mode: "medium",
+        supportNeed: "switch",
+        createdAt: "2026-07-10T12:00:00.000Z",
+      },
+    ];
+
+    expect(isDayFlowSnapshot(snapshot)).toBe(true);
+    expect(
+      isDayFlowSnapshot({
+        ...snapshot,
+        settings: { ...snapshot.settings, defaultSupportNeed: "diagnosis" },
+      }),
+    ).toBe(false);
+    expect(
+      isDayFlowSnapshot({
+        ...snapshot,
+        energyLogs: [{ ...snapshot.energyLogs[0], supportNeed: "diagnosis" }],
+      }),
+    ).toBe(false);
+  });
+
   it("rejects malformed backups without changing existing data", () => {
     saveItem(STORAGE_KEYS.settings, { activeRoutineId: "keep-me" });
     expect(importSnapshotJSON("{}")) .toBe(false);

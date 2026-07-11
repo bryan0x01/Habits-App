@@ -11,6 +11,15 @@ export type Weekday = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
 export type EnergyMode = "high" | "medium" | "low" | "chaos";
 
+/** The kind of practical support that would help most right now. */
+export type SupportNeed =
+  | "start"
+  | "focus"
+  | "remember"
+  | "switch"
+  | "overwhelmed"
+  | "varies";
+
 /** Categories for routine blocks. */
 export type BlockCategory =
   | "gym"
@@ -152,6 +161,10 @@ export interface EnergyLog {
   /** yyyy-MM-dd */
   date: string;
   mode: EnergyMode;
+  /** Optional context only; DayFlow never interprets this as medical advice. */
+  medication?: "taken" | "not-taken";
+  /** User-chosen functional context, never a diagnostic classification. */
+  supportNeed?: SupportNeed;
   createdAt: string;
 }
 
@@ -183,6 +196,9 @@ export interface UserSettings {
   energyMode: EnergyMode;
   minimumDay: boolean;
   onboarded: boolean;
+  medicationTracking?: boolean;
+  /** Fallback used until the user makes today's functional check-in. */
+  defaultSupportNeed?: SupportNeed;
 }
 
 /** Draft priorities for the upcoming week, set from the Weekly Review. */

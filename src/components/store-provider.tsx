@@ -14,6 +14,7 @@ import {
 } from "@/lib/storage";
 import { SNAPSHOT_VERSION } from "@/lib/storage";
 import { dateKey } from "@/lib/time";
+import { applyApplicationPatch } from "@/lib/applications";
 import {
   buildBlankRoutine,
   buildRoutineCopy,
@@ -38,6 +39,7 @@ import type {
   Priority,
   Routine,
   RoutineBlock,
+  SupportNeed,
   UserSettings,
   WeekPlan,
 } from "@/lib/types";
@@ -48,6 +50,8 @@ const DEFAULT_SETTINGS: UserSettings = {
   energyMode: "medium",
   minimumDay: false,
   onboarded: false,
+  medicationTracking: false,
+  defaultSupportNeed: "varies",
 };
 
 const MAX_PRIORITIES = 3;
@@ -118,6 +122,12 @@ export interface AppStore {
   setActiveRoutine: (id: string) => void;
   setEnergyMode: (mode: EnergyMode) => void;
   setMinimumDay: (on: boolean) => void;
+  setMedicationTracking: (on: boolean) => void;
+  setDefaultSupportNeed: (need: SupportNeed) => void;
+  supportNeed: (date?: string) => SupportNeed;
+  setSupportNeed: (need: SupportNeed, date?: string) => void;
+  medicationStatus: (date?: string) => EnergyLog["medication"] | null;
+  setMedicationStatus: (status: EnergyLog["medication"] | null, date?: string) => void;
   completeOnboarding: () => void;
 
   // Routines
@@ -228,15 +238,80 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const setEnergyMode = React.useCallback((mode: EnergyMode) => {
     setSettings((s) => ({ ...s, energyMode: mode }));
     const key = dateKey();
-    setEnergyLogs((logs) => [
-      ...logs.filter((l) => l.date !== key),
-      { id: uid("energy"), date: key, mode, createdAt: nowIso() },
-    ]);
+    setEnergyLogs((logs) => {
+      const existing = logs.find((log) => log.date === key);
+      return [
+        ...logs.filter((log) => log.date !== key),
+        {
+          id: existing?.id ?? uid("energy"),
+          date: key,
+          mode,
+          medication: existing?.medication,
+          supportNeed: existing?.supportNeed,
+          createdAt: existing?.createdAt ?? nowIso(),
+        },
+      ];
+    });
   }, []);
 
   const setMinimumDay = React.useCallback((on: boolean) => {
     setSettings((s) => ({ ...s, minimumDay: on }));
   }, []);
+
+  const setMedicationTracking = React.useCallback((on: boolean) => {
+    setSettings((current) => ({ ...current, medicationTracking: on }));
+  }, []);
+
+  const setDefaultSupportNeed = React.useCallback((need: SupportNeed) => {
+    setSettings((current) => ({ ...current, defaultSupportNeed: need }));
+  }, []);
+
+  const supportNeed = React.useCallback((date = dateKey()): SupportNeed => {
+    return (
+      energyLogs.find((log) => log.date === date)?.supportNeed ??
+      settings.defaultSupportNeed ??
+      "varies"
+    );
+  }, [energyLogs, settings.defaultSupportNeed]);
+
+  const setSupportNeed = React.useCallback((need: SupportNeed, date = dateKey()) => {
+    setEnergyLogs((logs) => {
+      const existing = logs.find((log) => log.date === date);
+      return [
+        ...logs.filter((log) => log.date !== date),
+        {
+          id: existing?.id ?? uid("energy"),
+          date,
+          mode: existing?.mode ?? settings.energyMode,
+          medication: existing?.medication,
+          supportNeed: need,
+          createdAt: existing?.createdAt ?? nowIso(),
+        },
+      ];
+    });
+  }, [settings.energyMode]);
+
+  const medicationStatus = React.useCallback((date = dateKey()) => {
+    return energyLogs.find((log) => log.date === date)?.medication ?? null;
+  }, [energyLogs]);
+
+  const setMedicationStatus = React.useCallback((status: EnergyLog["medication"] | null, date = dateKey()) => {
+    setEnergyLogs((logs) => {
+      const existing = logs.find((log) => log.date === date);
+      if (!existing && !status) return logs;
+      return [
+        ...logs.filter((log) => log.date !== date),
+        {
+          id: existing?.id ?? uid("energy"),
+          date,
+          mode: existing?.mode ?? settings.energyMode,
+          supportNeed: existing?.supportNeed,
+          ...(status ? { medication: status } : {}),
+          createdAt: existing?.createdAt ?? nowIso(),
+        },
+      ];
+    });
+  }, [settings.energyMode]);
 
   const completeOnboarding = React.useCallback(() => {
     setSettings((s) => ({ ...s, onboarded: true }));
@@ -448,7 +523,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   const updateApplication = React.useCallback((id: string, patch: Partial<Application>) => {
     setApplications((list) =>
-      list.map((a) => (a.id === id ? { ...a, ...patch, updatedAt: nowIso() } : a)),
+      list.map((a) => (a.id === id ? applyApplicationPatch(a, patch) : a)),
     );
   }, []);
 
@@ -569,6 +644,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setActiveRoutine,
     setEnergyMode,
     setMinimumDay,
+    setMedicationTracking,
+    setDefaultSupportNeed,
+    supportNeed,
+    setSupportNeed,
+    medicationStatus,
+    setMedicationStatus,
     completeOnboarding,
     createRoutine,
     duplicateRoutine,

@@ -134,6 +134,7 @@ function isOneOf<T extends string>(value: unknown, options: readonly T[]): value
 }
 
 const ENERGY_MODES = ["high", "medium", "low", "chaos"] as const;
+const SUPPORT_NEEDS = ["start", "focus", "remember", "switch", "overwhelmed", "varies"] as const;
 const LOG_STATUSES = ["done", "skipped"] as const;
 const IMPORTANCE = ["low", "medium", "high"] as const;
 const BLOCK_CATEGORIES = [
@@ -221,7 +222,9 @@ function isEnergyLog(value: unknown): boolean {
   return (
     isRecord(value) &&
     hasStrings(value, ["id", "date", "createdAt"]) &&
-    isOneOf(value.mode, ENERGY_MODES)
+    isOneOf(value.mode, ENERGY_MODES) &&
+    (value.medication === undefined || isOneOf(value.medication, ["taken", "not-taken"] as const)) &&
+    (value.supportNeed === undefined || isOneOf(value.supportNeed, SUPPORT_NEEDS))
   );
 }
 
@@ -251,7 +254,10 @@ export function isDayFlowSnapshot(value: unknown): value is DayFlowSnapshot {
     typeof settings.activeRoutineId !== "string" ||
     !isOneOf(settings.energyMode, ENERGY_MODES) ||
     typeof settings.minimumDay !== "boolean" ||
-    typeof settings.onboarded !== "boolean"
+    typeof settings.onboarded !== "boolean" ||
+    (settings.medicationTracking !== undefined && typeof settings.medicationTracking !== "boolean") ||
+    (settings.defaultSupportNeed !== undefined &&
+      !isOneOf(settings.defaultSupportNeed, SUPPORT_NEEDS))
   ) {
     return false;
   }

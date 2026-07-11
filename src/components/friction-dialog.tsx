@@ -3,6 +3,7 @@
 import * as React from "react";
 
 import { useStore } from "@/components/store-provider";
+import { DayFlowIcon } from "@/components/dayflow-icon";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -80,7 +81,7 @@ export function FrictionDialog({
                   : "border-border hover:bg-accent",
               )}
             >
-              <span className="text-lg">{r.emoji}</span>
+              <DayFlowIcon name={r.id} />
               {r.label}
             </button>
           ))}

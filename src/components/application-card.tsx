@@ -1,9 +1,13 @@
 "use client";
 
+import * as React from "react";
+
 import { format, parseISO } from "date-fns";
 import { Bell, CalendarClock, ExternalLink, Pencil, Star, Trash2, UserRound } from "lucide-react";
 
 import { useStore } from "@/components/store-provider";
+import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
+import { DayFlowIcon } from "@/components/dayflow-icon";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -41,6 +45,7 @@ export function ApplicationCard({
   onEdit: (application: Application) => void;
 }) {
   const { updateApplication, removeApplication } = useStore();
+  const [deleteOpen, setDeleteOpen] = React.useState(false);
   const meta = appStatusMeta(application.status);
   const priority = application.priority ?? "medium";
   const priorityMeta = APP_PRIORITY_META[priority];
@@ -49,6 +54,7 @@ export function ApplicationCard({
   const followUp = fmt(application.followUpDate);
 
   return (
+    <>
     <Card className={cn(starred && "border-amber-400/50 ring-1 ring-amber-400/20")}>
       <CardContent className="space-y-3 p-4">
         <div className="flex items-start justify-between gap-2">
@@ -68,7 +74,7 @@ export function ApplicationCard({
             </p>
           </div>
           <Badge variant="secondary" className={cn("shrink-0 border-0", meta.className)}>
-            {meta.emoji} {meta.label}
+            <DayFlowIcon name={application.status} /> {meta.label}
           </Badge>
         </div>
 
@@ -126,7 +132,7 @@ export function ApplicationCard({
             <SelectContent>
               {APPLICATION_STATUSES.map((s) => (
                 <SelectItem key={s.id} value={s.id}>
-                  {s.emoji} {s.label}
+                  <DayFlowIcon name={s.id} /> {s.label}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -159,12 +165,20 @@ export function ApplicationCard({
             size="icon"
             className="size-9 text-muted-foreground hover:text-destructive"
             aria-label={`Delete ${application.company} application`}
-            onClick={() => removeApplication(application.id)}
+            onClick={() => setDeleteOpen(true)}
           >
             <Trash2 className="size-4" />
           </Button>
         </div>
       </CardContent>
     </Card>
+    <ConfirmDeleteDialog
+      open={deleteOpen}
+      onOpenChange={setDeleteOpen}
+      title="Delete this application?"
+      description={`${application.role} at ${application.company} and its notes will be removed.`}
+      onConfirm={() => removeApplication(application.id)}
+    />
+    </>
   );
 }

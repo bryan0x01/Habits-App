@@ -12,11 +12,12 @@ import {
 } from "lucide-react";
 
 import { SkipTaskButton } from "@/components/friction-dialog";
+import { DayFlowIcon } from "@/components/dayflow-icon";
 import { useStore } from "@/components/store-provider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { categoryMeta, energyMeta } from "@/lib/constants";
+import { categoryMeta, supportNeedMeta } from "@/lib/constants";
 import { computeToday, type ScheduledBlock } from "@/lib/schedule";
 import { minutesNow, prettyTime, timeRange } from "@/lib/time";
 import { useNow } from "@/lib/use-now";
@@ -24,15 +25,19 @@ import { cn } from "@/lib/utils";
 
 export function WhatNowCard() {
   const now = useNow(30_000);
-  const { routine, blockLogs, settings, setBlockStatus } = useStore();
+  const { routine, blockLogs, settings, setBlockStatus, supportNeed } = useStore();
 
   const view = React.useMemo(
     () => computeToday(routine, now, blockLogs, settings.minimumDay),
     [routine, now, blockLogs, settings.minimumDay],
   );
 
-  const energy = energyMeta(settings.energyMode);
-  const allowBackup = settings.energyMode === "low" || settings.energyMode === "chaos";
+  const need = supportNeed();
+  const support = supportNeedMeta(need);
+  const allowBackup =
+    settings.energyMode === "low" ||
+    settings.energyMode === "chaos" ||
+    need === "overwhelmed";
 
   if (view.phase === "empty") {
     return (
@@ -65,7 +70,7 @@ export function WhatNowCard() {
             <p className="text-sm font-medium text-white/80">
               That&apos;s a wrap
             </p>
-            <h2 className="text-2xl font-bold">You did the day 🎉</h2>
+            <h2 className="text-2xl font-bold">You did the day</h2>
             <p className="mt-1 text-white/85">
               {view.doneCount} of {view.requiredCount} done. However today went,
               you showed up — that&apos;s the win.
@@ -114,8 +119,10 @@ export function WhatNowCard() {
           eyebrow={eyebrow}
           live={live}
           allowBackup={allowBackup}
-          emphasizeTiny={allowBackup}
-          energyLine={live ? "Don't think. Start here." : energy.tagline}
+          emphasizeTiny={allowBackup || need === "start"}
+          energyLine={
+            need === "varies" && live ? "Don't think. Start here." : support.prompt
+          }
           onDone={() => setBlockStatus(focus.id, "done")}
         />
       </HeroShell>
@@ -160,13 +167,13 @@ function FocusContent({
       <div className="flex items-center justify-between gap-2">
         <span className="text-sm font-medium text-white/80">{eyebrow}</span>
         <Badge className="border-white/25 bg-white/15 text-white">
-          {cat.emoji} {cat.label}
+          <DayFlowIcon name={block.category} /> {cat.label}
         </Badge>
       </div>
 
       <div>
         <h2 className="text-3xl font-bold leading-tight">
-          {cat.emoji} {block.title}
+          <DayFlowIcon name={block.category} /> {block.title}
         </h2>
         <p className="mt-1 text-white/85">
           {timeRange(block.start, block.end)}

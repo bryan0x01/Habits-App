@@ -4,6 +4,8 @@ import * as React from "react";
 import { Check, Trash2, Undo2 } from "lucide-react";
 
 import { SkipTaskButton } from "@/components/friction-dialog";
+import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
+import { DayFlowIcon } from "@/components/dayflow-icon";
 import { useStore } from "@/components/store-provider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -23,6 +25,7 @@ export function HabitCard({
   showDelete?: boolean;
 }) {
   const { habitStatus, setHabitStatus, removeHabit } = useStore();
+  const [deleteOpen, setDeleteOpen] = React.useState(false);
   const status = habitStatus(habit.id, date);
   const done = status === "done";
   const skipped = status === "skipped";
@@ -31,10 +34,11 @@ export function HabitCard({
   const subtitle = skipped
     ? "Let go today — no problem"
     : done
-      ? "Done today 🎉"
+      ? "Done today"
       : habit.tinyStart || CADENCE_LABEL[habit.cadence];
 
   return (
+    <>
     <div
       className={cn(
         "flex items-center gap-3 rounded-2xl border bg-card p-3 transition-colors",
@@ -51,7 +55,7 @@ export function HabitCard({
           done ? "bg-success text-success-foreground" : "bg-secondary",
         )}
       >
-        {done ? <Check className="size-6" /> : <span aria-hidden>{habit.emoji}</span>}
+        {done ? <Check className="size-6" /> : <DayFlowIcon name={habit.category} className="size-5" />}
       </button>
 
       <div className="min-w-0 flex-1">
@@ -79,7 +83,7 @@ export function HabitCard({
           className={cn("border-0", cat.className)}
           title={cat.label}
         >
-          {cat.emoji}
+          <DayFlowIcon name={habit.category} />
         </Badge>
         {done || skipped ? (
           <Button
@@ -105,7 +109,7 @@ export function HabitCard({
             variant="ghost"
             size="icon"
             aria-label={`Delete ${habit.name}`}
-            onClick={() => removeHabit(habit.id)}
+            onClick={() => setDeleteOpen(true)}
             className="size-9 text-muted-foreground hover:text-destructive"
           >
             <Trash2 className="size-4" />
@@ -113,5 +117,13 @@ export function HabitCard({
         ) : null}
       </div>
     </div>
+    <ConfirmDeleteDialog
+      open={deleteOpen}
+      onOpenChange={setDeleteOpen}
+      title="Delete this habit?"
+      description={`${habit.name} and its saved history will be removed.`}
+      onConfirm={() => removeHabit(habit.id)}
+    />
+    </>
   );
 }

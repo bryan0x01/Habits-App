@@ -2,6 +2,7 @@
 
 import * as React from "react";
 
+import { CapacityIcon } from "@/components/capacity-icon";
 import { useStore } from "@/components/store-provider";
 import { Card, CardContent } from "@/components/ui/card";
 import { ENERGY_MODES, energyMeta } from "@/lib/constants";
@@ -29,9 +30,7 @@ export function EnergyModeSelector({ compact = false }: { compact?: boolean }) {
                 : "border-border bg-card hover:bg-accent",
             )}
           >
-            <span className="text-2xl" aria-hidden>
-              {m.emoji}
-            </span>
+            <CapacityIcon mode={m.id} className="size-6" />
             <span className="text-xs font-semibold">{m.label}</span>
           </button>
         );
@@ -56,9 +55,7 @@ export function EnergyModeSelector({ compact = false }: { compact?: boolean }) {
             <p className="text-sm font-semibold">Energy mode</p>
             <p className="text-xs text-muted-foreground">How much have you got right now?</p>
           </div>
-          <span className="text-2xl" aria-hidden>
-            {meta.emoji}
-          </span>
+          <CapacityIcon mode={active} className="size-6 text-primary" />
         </div>
         {grid}
         <p className="px-1 text-sm text-muted-foreground">{meta.tagline}</p>

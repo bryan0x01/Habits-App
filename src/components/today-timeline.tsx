@@ -4,6 +4,7 @@ import * as React from "react";
 import { Check, ChevronDown, Circle, Undo2, Zap } from "lucide-react";
 
 import { SkipTaskButton } from "@/components/friction-dialog";
+import { DayFlowIcon } from "@/components/dayflow-icon";
 import { useStore } from "@/components/store-provider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -95,7 +96,7 @@ function BlockRow({
           {done ? (
             <Check className="size-5" />
           ) : (
-            <span className="text-base">{cat.emoji}</span>
+            <DayFlowIcon name={block.category} />
           )}
         </span>
 

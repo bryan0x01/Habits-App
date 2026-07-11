@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { DayFlowIcon } from "@/components/dayflow-icon";
 import { Trash2 } from "lucide-react";
 
 import { useStore, type BlockInput } from "@/components/store-provider";
@@ -155,7 +156,7 @@ export function BlockEditorSheet({
                 <SelectContent>
                   {BLOCK_CATEGORIES.map((c) => (
                     <SelectItem key={c} value={c}>
-                      {categoryMeta(c).emoji} {categoryMeta(c).label}
+                      <DayFlowIcon name={c} /> {categoryMeta(c).label}
                     </SelectItem>
                   ))}
                 </SelectContent>

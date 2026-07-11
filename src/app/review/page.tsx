@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { DayFlowIcon } from "@/components/dayflow-icon";
 import { addDays } from "date-fns";
 import { Hammer, HeartHandshake, Lightbulb, Send, Sparkles, Trophy } from "lucide-react";
 
@@ -66,7 +67,7 @@ export default function ReviewPage() {
                     <div key={m.key} className="space-y-1">
                       <div className="flex items-center justify-between text-sm">
                         <span>
-                          {m.emoji} {m.label}
+                          <DayFlowIcon name={m.key} /> {m.label}
                         </span>
                         <span className="text-muted-foreground">
                           {m.done}/{m.total} days
@@ -135,7 +136,7 @@ export default function ReviewPage() {
                         <li key={reason} className="space-y-1">
                           <div className="flex items-center justify-between text-sm">
                             <span>
-                              {meta.emoji} {meta.label}
+                              <DayFlowIcon name={reason} /> {meta.label}
                             </span>
                             <span className="text-muted-foreground">{count}×</span>
                           </div>

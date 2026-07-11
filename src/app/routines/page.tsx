@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { DayFlowIcon } from "@/components/dayflow-icon";
 import { Check, MoreHorizontal, Pencil, Plus, Zap } from "lucide-react";
 
 import { BlockEditorSheet } from "@/components/block-editor-sheet";
@@ -79,7 +80,7 @@ export default function RoutinesPage() {
                         className="flex min-w-0 flex-1 items-center gap-3 text-left"
                       >
                         <span className="text-3xl" aria-hidden>
-                          {r.emoji}
+                          <DayFlowIcon name={r.id.includes("charlotte") ? "charlotte" : r.id.includes("monterrey") ? "monterrey" : r.id.includes("weekend") ? "weekend" : r.id.includes("minimum") ? "minimum" : "routine"} className="size-5" />
                         </span>
                         <div className="min-w-0">
                           <div className="flex items-center gap-2">
@@ -113,7 +114,7 @@ export default function RoutinesPage() {
             <section className="space-y-3">
               <div className="flex items-center justify-between px-1">
                 <h2 className="text-sm font-semibold">
-                  Editing · {editing.emoji} {editing.name}
+                  Editing · {editing.name}
                 </h2>
                 <button
                   type="button"
@@ -201,7 +202,7 @@ export default function RoutinesPage() {
                                 variant="secondary"
                                 className={cn("border-0", cat.className)}
                               >
-                                {cat.emoji} {cat.label}
+                                <DayFlowIcon name={block.category} /> {cat.label}
                               </Badge>
                             </div>
                             {block.tinyStart ? (

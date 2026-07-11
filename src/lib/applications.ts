@@ -1,6 +1,7 @@
 import { endOfWeek, isWithinInterval, parseISO, startOfWeek } from "date-fns";
 
 import { PRIORITY_COMPANIES, PRIORITY_LOCATIONS } from "@/lib/constants";
+import { dateKey } from "@/lib/time";
 import type { Application } from "@/lib/types";
 
 const WEEK_OPTS = { weekStartsOn: 1 as const };
@@ -57,4 +58,24 @@ export function followUpsDueThisWeek(apps: Application[], now: Date): Applicatio
 
 export function priorityInPipeline(apps: Application[]): number {
   return apps.filter((a) => isActive(a) && isPriorityCompany(a)).length;
+}
+
+/** Apply an edit while preserving recruiting history and timestamps. */
+export function applyApplicationPatch(
+  application: Application,
+  patch: Partial<Application>,
+  now = new Date(),
+): Application {
+  const firstSubmission =
+    application.status === "saved" &&
+    patch.status !== undefined &&
+    patch.status !== "saved" &&
+    !application.appliedOn;
+
+  return {
+    ...application,
+    ...patch,
+    appliedOn: patch.appliedOn ?? (firstSubmission ? dateKey(now) : application.appliedOn),
+    updatedAt: now.toISOString(),
+  };
 }

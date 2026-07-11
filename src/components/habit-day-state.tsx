@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { DayFlowIcon } from "@/components/dayflow-icon";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 
@@ -54,9 +55,7 @@ export function HabitDayStateCard({
       <CardContent className="space-y-3 p-4">
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-2">
-            <span className="text-2xl" aria-hidden>
-              {copy.emoji}
-            </span>
+            <DayFlowIcon name={summary.state === "full" ? "offer" : summary.state === "saved" ? "minimum" : "body"} className="size-6" />
             <div>
               <p className="font-semibold leading-tight">{copy.label}</p>
               <p className="text-xs text-muted-foreground">{copy.microcopy}</p>
@@ -104,7 +103,7 @@ export function HabitDayStateCard({
                         : "border-border bg-card hover:bg-accent",
                     )}
                   >
-                    <span aria-hidden>{h.emoji}</span>
+                    <DayFlowIcon name={h.category} />
                     <span className={cn(done && "line-through decoration-teal-500/40")}>
                       {h.name}
                     </span>

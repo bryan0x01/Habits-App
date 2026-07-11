@@ -150,7 +150,7 @@ export default function ApplicationsPage() {
               {APPLICATION_STATUSES.map((s) => (
                 <FilterChip
                   key={s.id}
-                  label={`${s.emoji} ${s.label}`}
+                  label={s.label}
                   count={counts.get(s.id) ?? 0}
                   active={statusFilter === s.id}
                   onClick={() => setStatusFilter(s.id)}

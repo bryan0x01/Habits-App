@@ -21,7 +21,7 @@ Six screens, each intentionally focused:
 
 | Screen | What it does |
 | --- | --- |
-| **Today** | The home base. "What now" hero, next block, Next Best Action recovery, Top 3 priorities, energy mode, minimum-day toggle, habit day-state, weekly momentum, and the rest-of-day timeline. In **Chaos** mode it collapses to just three moves. |
+| **Today** | The home base. "What now" hero, Next Best Action recovery, one compact capacity/progress control, Top 3 priorities, habit day-state, and the rest-of-day timeline. In **Chaos** mode it collapses to just three moves. |
 | **Routines** | Pick from four templates or start with a blank week, then make it yours: activate, duplicate, rename, and add/edit/delete time blocks. New blocks can repeat across multiple selected days. |
 | **Habits** | 11 seeded daily habits grouped by category, with completion states, weekly momentum, and friction logging. Add your own; delete anytime. |
 | **Applications** | A CS-recruiting tracker: type (internship / new-grad / co-op / part-time), status pipeline, priority, deadlines, resume version, referral contact, and follow-ups. Filters by status **and** priority, flags follow-ups due this week, and stars target companies (Wells Fargo, Ally, BofA, CEMEX, Capital One, Charlotte roles). A weekly recruiting pulse also shows on Today. |
@@ -68,6 +68,8 @@ overwhelm, time blindness, or shame spirals.
   you can shrink the right tasks — framed as data, never as failure.
 - **Tone & UI** — friendly but not childish, big tap targets, cards over lists,
   dark mode, and encouraging copy throughout ("Fell off? Totally normal.").
+- **Progressive density** — Today contains only decisions needed today. Weekly
+  momentum lives in Habits and recruiting analytics live in Applications.
 
 ---
 
@@ -181,7 +183,7 @@ npm start
 Full release verification:
 
 ```bash
-npm run check    # ESLint + 23 regression tests + production build/type-check
+npm run check    # ESLint + 25 regression tests + production build/type-check
 ```
 
 > The service worker only registers in **production** builds, so it never
