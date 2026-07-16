@@ -20,10 +20,17 @@ Add these values to `.env.local` and to the matching Vercel environments:
 | --- | --- |
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk dashboard → API keys |
 | `CLERK_SECRET_KEY` (optional) | Clerk dashboard → API keys; enables server-side Clerk middleware |
+| `CLERK_DISABLE_AUTO_PROXY=1` (Vercel production) | Prevents Clerk from routing browser scripts through an unconfigured `/__clerk` proxy |
 
 Never commit either value. When used, the secret key is server-only. DayFlow
 keeps every route public and safely falls back to its temporary preview when the
 secret is not configured; Supabase RLS remains the data boundary.
+
+Keep `CLERK_DISABLE_AUTO_PROXY=1` on the Vercel production project. Clerk
+otherwise detects the project’s generated `.vercel.app` production URL and may
+automatically load its browser SDK through `/__clerk`. DayFlow uses Clerk’s
+configured `clerk.halynt.com` frontend instead, so that proxy path is not part of
+this deployment.
 
 ## 2. Connect Clerk to Supabase
 
@@ -100,6 +107,9 @@ secret in a `NEXT_PUBLIC_*` variable.
 
 Vercel applies environment changes to new builds. Redeploy after adding or
 changing a value.
+
+The current Halynt production project is `halynt/habitsapp`, served at
+`https://dayflow.halynt.com`.
 
 ## 5. Check the full flow
 

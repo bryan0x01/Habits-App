@@ -235,6 +235,10 @@ and cron setup in [docs/NOTIFICATIONS_SETUP.md](docs/NOTIFICATIONS_SETUP.md).
    repository code alone.
 8. npm currently reports moderate transitive advisories. Do not run a broad
    `npm audit fix` without reviewing breaking changes.
+9. Keep `CLERK_DISABLE_AUTO_PROXY=1` in the Halynt Vercel production environment.
+   Without it, Clerk detects the generated `.vercel.app` production URL and
+   tries to load through `/__clerk`, leaving first-time visitors on the cloud
+   loading screen because this public app does not run Clerk’s server proxy.
 
 ## 11. Release checklist
 
@@ -253,5 +257,7 @@ and cron setup in [docs/NOTIFICATIONS_SETUP.md](docs/NOTIFICATIONS_SETUP.md).
 - [ ] Routine descriptions and brain dumps create no external network requests.
 - [ ] No secret key or full saved snapshot appears in browser requests.
 
+Production is `halynt/habitsapp` at `https://dayflow.halynt.com`.
+
 Last updated for the natural-copy pass, Clerk authentication, the private local
-planning engine, and 28-day behavior patterns.
+planning engine, 28-day behavior patterns, and the Halynt production deployment.

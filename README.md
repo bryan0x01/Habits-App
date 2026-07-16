@@ -6,7 +6,7 @@ DayFlow is a simple daily planner for people with ADHD. It keeps the next task
 easy to find, makes routines editable, and gives people a lighter view when the
 full day feels like too much.
 
-[Open the live demo](https://habits-app-eta.vercel.app) · [View the repository](https://github.com/bryan0x01/Habits-App)
+[Open DayFlow](https://dayflow.halynt.com) · [View the repository](https://github.com/bryan0x01/Habits-App)
 
 ## Preview
 
@@ -135,6 +135,8 @@ The service worker only registers in production. Use `npm run build` followed by
 3. Apply every migration in `supabase/migrations/`.
 4. Connect Clerk as a Supabase third-party authentication provider.
 5. Redeploy after changing environment variables.
+
+The Halynt production deployment is [dayflow.halynt.com](https://dayflow.halynt.com).
 
 Reminder delivery also needs the VAPID secrets, Edge Function, and one-minute
 cron described in [the notification guide](docs/NOTIFICATIONS_SETUP.md).
