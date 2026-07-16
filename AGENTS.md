@@ -210,7 +210,9 @@ Keep these protections intact:
 
 Account saving requires all of the following:
 
-1. Clerk publishable and secret keys in local/Vercel environments.
+1. A Clerk publishable key in local/Vercel environments. The secret key is
+   optional for this public, client-authenticated app; when absent, middleware
+   passes public routes through instead of taking the product offline.
 2. Supabase URL and publishable key in local/Vercel environments.
 3. Clerk’s Supabase integration activated in the Clerk dashboard.
 4. Clerk configured as a Third-Party Auth provider in Supabase.

@@ -6,11 +6,14 @@ import { NextResponse, type NextFetchEvent, type NextRequest } from "next/server
 const withClerk = clerkMiddleware();
 
 export default function middleware(request: NextRequest, event: NextFetchEvent) {
-  // Clerk development instances perform a browser handshake that loops when a
-  // production Next server is exercised on localhost. Browser tests cover the
-  // signed-out preview, so they bypass only that handshake. This variable is
-  // never set in a deployed environment.
-  if (process.env.DAYFLOW_E2E === "1") return NextResponse.next();
+  // Every route is public and Supabase RLS is the data boundary. Keep the app
+  // available as a signed-out preview when server-side Clerk verification is
+  // not configured; the client SDK can still create and restore sessions with
+  // the publishable key. A secret enables the normal Clerk middleware path.
+  // E2E also bypasses Clerk's localhost development-browser handshake.
+  if (!process.env.CLERK_SECRET_KEY || process.env.DAYFLOW_E2E === "1") {
+    return NextResponse.next();
+  }
   return withClerk(request, event);
 }
 

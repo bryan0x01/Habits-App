@@ -19,9 +19,11 @@ Add these values to `.env.local` and to the matching Vercel environments:
 | Variable | Where it comes from |
 | --- | --- |
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk dashboard → API keys |
-| `CLERK_SECRET_KEY` | Clerk dashboard → API keys |
+| `CLERK_SECRET_KEY` (optional) | Clerk dashboard → API keys; enables server-side Clerk middleware |
 
-Never commit either value. The secret key is server-only.
+Never commit either value. When used, the secret key is server-only. DayFlow
+keeps every route public and safely falls back to its temporary preview when the
+secret is not configured; Supabase RLS remains the data boundary.
 
 ## 2. Connect Clerk to Supabase
 
