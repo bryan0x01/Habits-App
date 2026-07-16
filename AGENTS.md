@@ -232,6 +232,15 @@ resumeVersion/referralContact/followUpDate/…), `EnergyLog`, `FrictionLog`,
 9. **Production browser tabs can retain old build errors** after rebuilding while
    a tab is open. Verify in a fresh tab before treating a chunk mismatch as a
    service-worker regression.
+10. **Missing Vercel env vars disable Supabase silently — per deployment.**
+    `isSupabaseConfigured` is just `Boolean(url && publishableKey)`, so a
+    deployment without both shows "Cloud sync will be available after this
+    deployment gets its Supabase settings" and no sign-in — while `localhost`
+    works fine from `.env.local`. This reads as "Supabase is broken" when it is
+    only unconfigured *there*. All three `NEXT_PUBLIC_*` vars are listed in
+    [`docs/SUPABASE_SETUP.md`](docs/SUPABASE_SETUP.md) §3; Vercel only applies
+    them to **new** builds, so redeploy after adding. When someone reports sync
+    not working, **check which origin they are testing** before touching code.
 
 ---
 

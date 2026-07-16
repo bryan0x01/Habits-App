@@ -28,19 +28,29 @@ In **Authentication** → **URL Configuration**:
 
 ## 3. Add deployment variables
 
+This is the **complete** list of variables Vercel needs — it is the only place
+they are listed. Missing either Supabase value silently disables cloud sync in
+that deployment: the app still works, but **Settings → Cloud sync** shows
+"Cloud sync will be available after this deployment gets its Supabase settings"
+and sign-in never appears.
+
 In Vercel → your project → **Settings** → **Environment Variables**, add these
 for Production and Preview:
 
-```env
-NEXT_PUBLIC_SUPABASE_URL=https://gtdsbcjnnpbarcainssf.supabase.co
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_pl7absGS0Cf0qcMK81Iwiw_hwuLiYuD
-```
+| Variable | Required for | Value |
+| --- | --- | --- |
+| `NEXT_PUBLIC_SUPABASE_URL` | Cloud sync | `https://gtdsbcjnnpbarcainssf.supabase.co` |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Cloud sync | `sb_publishable_pl7absGS0Cf0qcMK81Iwiw_hwuLiYuD` |
+| `NEXT_PUBLIC_VAPID_PUBLIC_KEY` | Push reminders only | see [NOTIFICATIONS_SETUP.md](NOTIFICATIONS_SETUP.md) |
 
-Redeploy after adding them.
+All three are `NEXT_PUBLIC_*`: they ship to the browser by design and are safe
+to expose. Vercel only applies variables to **new** builds, so **redeploy after
+adding them** — an existing deployment will not pick them up.
 
-The publishable key is intended for browser apps when Row Level Security is
-enabled. Never add a Supabase `service_role`, `sb_secret_…`, database password,
-or personal access token to Vercel, `.env.local`, or source code.
+Every secret (VAPID private key, `CRON_SECRET`, service-role key) belongs in
+**Supabase → Edge Functions → Secrets**, never in Vercel. Never add a Supabase
+`service_role`, `sb_secret_…`, database password, or personal access token to
+Vercel, `.env.local`, or source code.
 
 ## What users see
 
