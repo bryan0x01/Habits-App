@@ -49,7 +49,7 @@ export function BrainDumpDialog({ compact = false }: { compact?: boolean }) {
         <DialogHeader>
           <DialogTitle>Drop it here. Organize second.</DialogTitle>
           <DialogDescription>
-            One item per line. DayFlow estimates time and a minimum version locally on this device.
+            One item per line. DayFlow estimates time and a minimum version without sending the text to an AI service.
           </DialogDescription>
         </DialogHeader>
 

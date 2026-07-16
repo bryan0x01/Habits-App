@@ -1,9 +1,10 @@
 "use client";
 
 import * as React from "react";
-import { DayFlowIcon } from "@/components/dayflow-icon";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
+
+import { DayFlowIcon, IconTile } from "@/components/dayflow-icon";
 
 import { useStore } from "@/components/store-provider";
 import { Card, CardContent } from "@/components/ui/card";
@@ -30,6 +31,14 @@ const PROGRESS_FILL: Record<DayState, string> = {
   full: "bg-amber-500",
 };
 
+const STATE_ICON: Record<DayState, string> = {
+  none: "fresh",
+  started: "started",
+  saved: "done",
+  strong: "strong",
+  full: "full",
+};
+
 export function HabitDayStateCard({
   showMinimums = true,
   showLink = true,
@@ -54,8 +63,14 @@ export function HabitDayStateCard({
     <Card className={cn("transition-colors", STATE_ACCENT[summary.state])}>
       <CardContent className="space-y-3 p-4">
         <div className="flex items-start justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <DayFlowIcon name={summary.state === "full" ? "offer" : summary.state === "saved" ? "minimum" : "body"} className="size-6" />
+          <div className="flex items-center gap-2.5">
+            <IconTile
+              name={STATE_ICON[summary.state]}
+              className={cn(
+                summary.state === "full" && "bg-amber-500/15 text-amber-600 dark:text-amber-300",
+                summary.state === "saved" && "bg-teal-500/15 text-teal-700 dark:text-teal-300",
+              )}
+            />
             <div>
               <p className="font-semibold leading-tight">{copy.label}</p>
               <p className="text-xs text-muted-foreground">{copy.microcopy}</p>

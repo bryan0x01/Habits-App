@@ -1,66 +1,25 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import {
-  SCHEMA_VERSION,
-  STORAGE_KEYS,
-  importSnapshotJSON,
   isDayFlowSnapshot,
-  loadItem,
-  migrateIfNeeded,
-  saveItem,
+  parseSnapshotJSON,
+  serializeSnapshot,
 } from "@/lib/storage";
 import { emptySnapshot } from "./fixtures";
 
-class MemoryStorage {
-  private data = new Map<string, string>();
-
-  get length() {
-    return this.data.size;
-  }
-
-  clear() {
-    this.data.clear();
-  }
-
-  getItem(key: string) {
-    return this.data.get(key) ?? null;
-  }
-
-  key(index: number) {
-    return [...this.data.keys()][index] ?? null;
-  }
-
-  removeItem(key: string) {
-    this.data.delete(key);
-  }
-
-  setItem(key: string, value: string) {
-    this.data.set(key, value);
-  }
-}
-
-describe("storage", () => {
-  beforeEach(() => {
-    vi.stubGlobal("window", { localStorage: new MemoryStorage() });
-  });
-
-  afterEach(() => {
-    vi.unstubAllGlobals();
-  });
-
-  it("round-trips typed values and falls back on malformed JSON", () => {
-    saveItem(STORAGE_KEYS.priorities, [{ id: "one" }]);
-    expect(loadItem(STORAGE_KEYS.priorities, [])).toEqual([{ id: "one" }]);
-
-    window.localStorage.setItem(STORAGE_KEYS.priorities, "not-json");
-    expect(loadItem(STORAGE_KEYS.priorities, [])).toEqual([]);
-  });
-
-  it("validates a complete snapshot, including nested records", () => {
+describe("snapshot boundary", () => {
+  it("round-trips a complete Supabase snapshot", () => {
     const snapshot = emptySnapshot();
-    expect(isDayFlowSnapshot(snapshot)).toBe(true);
-    expect(isDayFlowSnapshot({})).toBe(false);
-    expect(isDayFlowSnapshot({ ...snapshot, version: 1 })).toBe(false);
+    snapshot.settings.theme = "dark";
+    snapshot.settings.interfaceColor = "teal";
+
+    expect(parseSnapshotJSON(serializeSnapshot(snapshot))).toEqual(snapshot);
+  });
+
+  it("rejects malformed JSON and incomplete nested records", () => {
+    const snapshot = emptySnapshot();
+    expect(parseSnapshotJSON("not json")).toBeNull();
+    expect(parseSnapshotJSON("{}")).toBeNull();
     expect(
       isDayFlowSnapshot({
         ...snapshot,
@@ -69,9 +28,13 @@ describe("storage", () => {
     ).toBe(false);
   });
 
-  it("validates functional support context without treating it as required", () => {
+  it("validates support, appearance, vacation, and flexible-task fields", () => {
     const snapshot = emptySnapshot();
     snapshot.settings.defaultSupportNeed = "start";
+    snapshot.settings.vacationMode = true;
+    snapshot.settings.routineBeforeVacationId = "routine-test";
+    snapshot.settings.theme = "system";
+    snapshot.settings.interfaceColor = "rose";
     snapshot.energyLogs = [
       {
         id: "energy-1",
@@ -81,81 +44,32 @@ describe("storage", () => {
         createdAt: "2026-07-10T12:00:00.000Z",
       },
     ];
-
-    expect(isDayFlowSnapshot(snapshot)).toBe(true);
-    expect(
-      isDayFlowSnapshot({
-        ...snapshot,
-        settings: { ...snapshot.settings, defaultSupportNeed: "diagnosis" },
-      }),
-    ).toBe(false);
-    expect(
-      isDayFlowSnapshot({
-        ...snapshot,
-        energyLogs: [{ ...snapshot.energyLogs[0], supportNeed: "diagnosis" }],
-      }),
-    ).toBe(false);
-  });
-
-  it("validates vacation settings and optional flexible tasks", () => {
-    const snapshot = emptySnapshot();
-    snapshot.settings.vacationMode = true;
-    snapshot.settings.routineBeforeVacationId = "routine-test";
     snapshot.flexTasks = [
       {
         id: "task-1",
         date: "2026-07-10",
-        title: "Study calculus",
+        title: "Write one page",
         durationMinutes: 45,
         minimumMinutes: 10,
         importance: "high",
         effort: "deep",
         category: "study",
-        tinyStart: "Answer one question.",
+        tinyStart: "Open the document.",
         done: false,
         createdAt: "2026-07-10T12:00:00.000Z",
       },
     ];
 
     expect(isDayFlowSnapshot(snapshot)).toBe(true);
-    expect(
-      isDayFlowSnapshot({
-        ...snapshot,
-        flexTasks: [{ ...snapshot.flexTasks[0], minimumMinutes: 60 }],
-      }),
-    ).toBe(false);
+    expect(isDayFlowSnapshot({ ...snapshot, settings: { ...snapshot.settings, theme: "sepia" } })).toBe(false);
+    expect(isDayFlowSnapshot({ ...snapshot, settings: { ...snapshot.settings, interfaceColor: "neon" } })).toBe(false);
+    expect(isDayFlowSnapshot({ ...snapshot, flexTasks: [{ ...snapshot.flexTasks[0], minimumMinutes: 60 }] })).toBe(false);
   });
 
-  it("rejects malformed backups without changing existing data", () => {
-    saveItem(STORAGE_KEYS.settings, { activeRoutineId: "keep-me" });
-    expect(importSnapshotJSON("{}")) .toBe(false);
-    expect(importSnapshotJSON("not json")).toBe(false);
-    expect(loadItem<{ activeRoutineId: string } | null>(STORAGE_KEYS.settings, null)).toEqual({
-      activeRoutineId: "keep-me",
-    });
-  });
-
-  it("imports a valid snapshot and records the current schema", () => {
+  it("accepts older snapshots that predate synced appearance", () => {
     const snapshot = emptySnapshot();
-    snapshot.settings.energyMode = "low";
-    expect(importSnapshotJSON(JSON.stringify(snapshot))).toBe(true);
-    expect(loadItem(STORAGE_KEYS.settings, snapshot.settings)).toEqual(snapshot.settings);
-    expect(loadItem(STORAGE_KEYS.schema, 0)).toBe(SCHEMA_VERSION);
-  });
-
-  it("reseeds shape-sensitive data while preserving stable user data", () => {
-    saveItem(STORAGE_KEYS.schema, SCHEMA_VERSION - 1);
-    saveItem(STORAGE_KEYS.routines, [{ id: "old" }]);
-    saveItem(STORAGE_KEYS.habits, [{ id: "old" }]);
-    saveItem(STORAGE_KEYS.habitLogs, [{ id: "old" }]);
-    saveItem(STORAGE_KEYS.applications, [{ id: "preserved" }]);
-
-    migrateIfNeeded();
-
-    expect(loadItem(STORAGE_KEYS.routines, null)).toBeNull();
-    expect(loadItem(STORAGE_KEYS.habits, null)).toBeNull();
-    expect(loadItem(STORAGE_KEYS.habitLogs, null)).toBeNull();
-    expect(loadItem(STORAGE_KEYS.applications, [])).toEqual([{ id: "preserved" }]);
-    expect(loadItem(STORAGE_KEYS.schema, 0)).toBe(SCHEMA_VERSION);
+    delete snapshot.settings.theme;
+    delete snapshot.settings.interfaceColor;
+    expect(isDayFlowSnapshot(snapshot)).toBe(true);
   });
 });

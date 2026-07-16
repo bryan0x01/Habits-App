@@ -22,6 +22,7 @@ export default function ReviewPage() {
   const now = useNow(60_000);
   const {
     hydrated,
+    habits,
     habitLogs,
     routines,
     blockLogs,
@@ -33,8 +34,8 @@ export default function ReviewPage() {
 
   const data = React.useMemo(
     () =>
-      computeWeeklyReview({ habitLogs, routines, blockLogs, applications, frictionLogs, now }),
-    [habitLogs, routines, blockLogs, applications, frictionLogs, now],
+      computeWeeklyReview({ habits, habitLogs, routines, blockLogs, applications, frictionLogs, now }),
+    [habits, habitLogs, routines, blockLogs, applications, frictionLogs, now],
   );
 
   const nextWeekKey = weekKeyOf(addDays(now, 7));
@@ -67,14 +68,14 @@ export default function ReviewPage() {
                     <div key={m.key} className="space-y-1">
                       <div className="flex items-center justify-between text-sm">
                         <span>
-                          <DayFlowIcon name={m.key} /> {m.label}
+                          <DayFlowIcon name={m.icon} /> {m.label}
                         </span>
                         <span className="text-muted-foreground">
                           {m.done}/{m.total} days
                         </span>
                       </div>
                       <Progress
-                        value={(m.done / m.total) * 100}
+                        value={m.total === 0 ? 0 : (m.done / m.total) * 100}
                         indicatorClassName={m.done >= 5 ? "bg-success" : "bg-primary"}
                       />
                     </div>
@@ -84,12 +85,14 @@ export default function ReviewPage() {
             </Card>
 
             {/* Applications + project blocks */}
-            <div className="grid grid-cols-2 gap-3">
-              <StatCard
-                icon={<Send className="size-4" />}
-                value={data.applicationsSent}
-                label="applications sent"
-              />
+            <div className={applications.length > 0 ? "grid grid-cols-2 gap-3" : "grid grid-cols-1"}>
+              {applications.length > 0 ? (
+                <StatCard
+                  icon={<Send className="size-4" />}
+                  value={data.applicationsSent}
+                  label="applications sent"
+                />
+              ) : null}
               <StatCard
                 icon={<Hammer className="size-4" />}
                 value={data.projectBlocks}
@@ -173,29 +176,30 @@ export default function ReviewPage() {
                   Three draft priorities. Keep them small and specific.
                 </p>
                 <PlanField
-                  label="🎓 School / work"
+                  label="School / work"
                   value={plan.school}
                   onChange={(v) => setWeekPlan(nextWeekKey, "school", v)}
-                  placeholder="e.g. Finish the OS project milestone"
+                  placeholder="e.g. Finish one work or school milestone"
                 />
                 <PlanField
-                  label="💪 Health / gym"
+                  label="Health / movement"
                   value={plan.health}
                   onChange={(v) => setWeekPlan(nextWeekKey, "health", v)}
-                  placeholder="e.g. Gym 4 days, lights out by 11"
+                  placeholder="e.g. Move twice, protect bedtime"
                 />
                 <PlanField
-                  label="🚀 Career / project"
+                  label="Career / project"
                   value={plan.career}
                   onChange={(v) => setWeekPlan(nextWeekKey, "career", v)}
-                  placeholder="e.g. Apply to 5 roles, ship Halynt feature"
+                  placeholder="e.g. Move one meaningful project forward"
                 />
               </CardContent>
             </Card>
 
             <p className="px-2 pb-2 text-center text-sm text-muted-foreground">
-              You showed up {data.activeDays} day{data.activeDays === 1 ? "" : "s"} this
-              week. That&apos;s worth something. 💜
+              {data.activeDays === 0
+                ? "No check-ins yet. The week is still open."
+                : `You showed up ${data.activeDays} day${data.activeDays === 1 ? "" : "s"} this week. That counts.`}
             </p>
           </>
         )}

@@ -1,20 +1,25 @@
 "use client";
 
 import * as React from "react";
-import { DayFlowIcon } from "@/components/dayflow-icon";
 import { Check, MoreHorizontal, Pencil, Plus, Zap } from "lucide-react";
 
 import { BlockEditorSheet } from "@/components/block-editor-sheet";
 import { CreateRoutineDialog } from "@/components/create-routine-dialog";
+import { IconTile, routineIconName } from "@/components/dayflow-icon";
 import { PageContainer, LoadingCards } from "@/components/page-container";
 import { PageHeader } from "@/components/page-header";
 import { RoutineActionsSheet } from "@/components/routine-actions-sheet";
 import { RoutineTemplateDialog } from "@/components/routine-template-dialog";
 import { useStore } from "@/components/store-provider";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { categoryMeta, IMPORTANCE_META } from "@/lib/constants";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { blocksForDay } from "@/lib/data/routines";
 import { prettyTime, WEEKDAY_SHORT, WEEK_ORDER, weekdayOf } from "@/lib/time";
 import type { Routine, RoutineBlock, Weekday } from "@/lib/types";
@@ -23,214 +28,146 @@ import { cn } from "@/lib/utils";
 
 export default function RoutinesPage() {
   const now = useNow(60_000);
-  const { hydrated, routines, settings } = useStore();
-
+  const { hydrated, routines, settings, setActiveRoutine } = useStore();
   const [editingId, setEditingId] = React.useState(settings.activeRoutineId);
   const [day, setDay] = React.useState<Weekday>(() => weekdayOf(now));
   const [actionsFor, setActionsFor] = React.useState<Routine | null>(null);
-  const [blockEditor, setBlockEditor] = React.useState<{
-    open: boolean;
-    block?: RoutineBlock;
-  }>({ open: false });
+  const [blockEditor, setBlockEditor] = React.useState<{ open: boolean; block?: RoutineBlock }>({ open: false });
 
-  // Point the editor at the active routine once data has hydrated.
   React.useEffect(() => {
     if (hydrated) setEditingId(settings.activeRoutineId);
-  }, [hydrated]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [hydrated, settings.activeRoutineId]);
 
-  const editing =
-    routines.find((r) => r.id === editingId) ??
-    routines.find((r) => r.id === settings.activeRoutineId) ??
-    routines[0];
-
+  const active = routines.find((routine) => routine.id === settings.activeRoutineId) ?? routines[0];
+  const editing = routines.find((routine) => routine.id === editingId) ?? active;
   const dayBlocks = editing ? blocksForDay(editing, day) : [];
 
   return (
     <>
-      <PageHeader title="Routines" subtitle="Templates you can make your own" />
+      <PageHeader title="Routines" subtitle="Build the sequence, not a perfect day" />
       <PageContainer className="space-y-5">
-        {!hydrated || !editing ? (
+        {!hydrated || !active || !editing ? (
           <LoadingCards />
         ) : (
           <>
-            <section className="space-y-2">
-              <div className="flex items-center justify-between px-1 pb-1">
-                <div>
-                  <h2 className="text-sm font-semibold">Your routines</h2>
-                  <p className="text-xs text-muted-foreground">
-                    Pick a template or start with a blank week.
-                  </p>
+            <Card className="overflow-hidden border-primary/20 bg-primary/[0.035]">
+              <CardContent className="space-y-4 p-4">
+                <div className="flex items-start gap-3">
+                  <IconTile name={routineIconName(active)} className="size-12 rounded-2xl" iconClassName="size-6" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[0.68rem] font-bold uppercase tracking-[0.16em] text-primary">Current rhythm</p>
+                    <h2 className="mt-0.5 truncate text-xl font-bold tracking-tight">{active.name}</h2>
+                    <p className="mt-1 text-sm leading-snug text-muted-foreground">{active.description}</p>
+                  </div>
                 </div>
-                <div className="flex gap-2">
-                  <RoutineTemplateDialog onAdded={setEditingId} />
-                  <CreateRoutineDialog onCreated={setEditingId} />
+                <div className="flex items-center justify-between border-t border-border/70 pt-3 text-xs text-muted-foreground">
+                  <span>{active.blocks.length} scheduled anchors</span>
+                  <button type="button" onClick={() => setActionsFor(active)} className="font-semibold text-primary">
+                    Manage
+                  </button>
                 </div>
-              </div>
-              {routines.map((r) => {
-                const active = r.id === settings.activeRoutineId;
-                const isEditing = r.id === editing.id;
-                return (
-                  <Card
-                    key={r.id}
-                    className={cn(
-                      "transition-colors",
-                      isEditing ? "border-primary/60 ring-1 ring-primary/30" : "",
-                    )}
-                  >
-                    <CardContent className="flex items-center gap-3 p-3">
-                      <button
-                        type="button"
-                        onClick={() => setEditingId(r.id)}
-                        className="flex min-w-0 flex-1 items-center gap-3 text-left"
-                      >
-                        <span className="text-3xl" aria-hidden>
-                          <DayFlowIcon name={r.id.includes("charlotte") ? "charlotte" : r.id.includes("monterrey") ? "monterrey" : r.id.includes("weekend") ? "weekend" : r.id.includes("minimum") ? "minimum" : "routine"} className="size-5" />
-                        </span>
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-2">
-                            <p className="truncate font-semibold">{r.name}</p>
-                            {active ? (
-                              <Badge className="shrink-0 px-1.5 py-0 text-[0.6rem]">
-                                Active
-                              </Badge>
-                            ) : null}
-                          </div>
-                          <p className="truncate text-xs text-muted-foreground">
-                            {r.blocks.length} blocks · {r.description}
-                          </p>
-                        </div>
-                      </button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        aria-label={`Options for ${r.name}`}
-                        className="size-9 shrink-0"
-                        onClick={() => setActionsFor(r)}
-                      >
-                        <MoreHorizontal className="size-5" />
-                      </Button>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </section>
+              </CardContent>
+            </Card>
+
+            <div className="grid grid-cols-2 gap-2">
+              <RoutineTemplateDialog onAdded={setEditingId} />
+              <CreateRoutineDialog onCreated={setEditingId} />
+            </div>
 
             <section className="space-y-3">
-              <div className="flex items-center justify-between px-1">
-                <h2 className="text-sm font-semibold">
-                  Editing · {editing.name}
-                </h2>
-                <button
-                  type="button"
-                  onClick={() => setActionsFor(editing)}
-                  className="flex items-center gap-1 text-sm font-medium text-primary"
-                >
-                  <Pencil className="size-3.5" />
-                  Rename
-                </button>
+              <div className="space-y-2 px-1">
+                <div className="flex items-end justify-between gap-3">
+                  <div>
+                    <h2 className="text-base font-bold">Edit schedule</h2>
+                    <p className="text-xs text-muted-foreground">Change one day at a time.</p>
+                  </div>
+                  <Button variant="ghost" size="icon" aria-label={`Options for ${editing.name}`} onClick={() => setActionsFor(editing)}>
+                    <MoreHorizontal className="size-5" />
+                  </Button>
+                </div>
+                <Select value={editing.id} onValueChange={setEditingId}>
+                  <SelectTrigger aria-label="Routine to edit">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {routines.map((routine) => (
+                      <SelectItem key={routine.id} value={routine.id}>{routine.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {editing.id !== active.id ? (
+                  <Button variant="outline" size="sm" className="w-full" onClick={() => setActiveRoutine(editing.id)}>
+                    <Check className="size-4" />
+                    Make this my current routine
+                  </Button>
+                ) : null}
               </div>
 
-              <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4">
-                {WEEK_ORDER.map((d) => {
-                  const selected = d === day;
-                  const isToday = d === weekdayOf(now);
-                  const count = blocksForDay(editing, d).length;
+              <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
+                {WEEK_ORDER.map((weekday) => {
+                  const selected = weekday === day;
+                  const isToday = weekday === weekdayOf(now);
+                  const count = blocksForDay(editing, weekday).length;
                   return (
                     <button
-                      key={d}
+                      key={weekday}
                       type="button"
-                      onClick={() => setDay(d)}
+                      onClick={() => setDay(weekday)}
+                      aria-pressed={selected}
                       className={cn(
-                        "flex min-w-[3.25rem] flex-col items-center gap-0.5 rounded-xl border px-3 py-2 text-xs font-medium transition-colors",
-                        selected
-                          ? "border-primary bg-primary text-primary-foreground"
-                          : "border-border bg-card hover:bg-accent",
+                        "flex min-w-14 flex-col items-center rounded-2xl border px-3 py-2 text-xs font-semibold",
+                        selected ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card",
                       )}
                     >
-                      {WEEKDAY_SHORT[d]}
-                      <span
-                        className={cn(
-                          "text-[0.6rem]",
-                          selected ? "text-primary-foreground/80" : "text-muted-foreground",
-                        )}
-                      >
-                        {count > 0 ? count : "–"}
+                      {WEEKDAY_SHORT[weekday]}
+                      <span className={cn("mt-0.5 text-[0.65rem]", selected ? "text-primary-foreground/75" : "text-muted-foreground")}>
+                        {count || "—"}
                       </span>
-                      {isToday ? (
-                        <span
-                          className={cn(
-                            "size-1 rounded-full",
-                            selected ? "bg-primary-foreground" : "bg-primary",
-                          )}
-                        />
-                      ) : (
-                        <span className="size-1" />
-                      )}
+                      <span className={cn("mt-1 size-1 rounded-full", isToday ? (selected ? "bg-primary-foreground" : "bg-primary") : "bg-transparent")} />
                     </button>
                   );
                 })}
               </div>
 
               {dayBlocks.length === 0 ? (
-                <p className="rounded-2xl border border-dashed p-6 text-center text-sm text-muted-foreground">
-                  No blocks on this day yet. Add one below. 🌿
-                </p>
+                <div className="rounded-3xl border border-dashed p-6 text-center">
+                  <p className="font-semibold">Nothing scheduled here</p>
+                  <p className="mt-1 text-sm text-muted-foreground">Blank space can be intentional. Add an anchor only if it helps.</p>
+                </div>
               ) : (
                 <ol className="space-y-2">
-                  {dayBlocks.map((block) => {
-                    const cat = categoryMeta(block.category);
-                    const imp = IMPORTANCE_META[block.importance];
-                    return (
-                      <li key={block.id}>
-                        <button
-                          type="button"
-                          onClick={() => setBlockEditor({ open: true, block })}
-                          className="flex w-full items-center gap-3 rounded-2xl border bg-card p-3 text-left transition-colors hover:bg-accent"
-                        >
-                          <span
-                            className={cn("size-2 shrink-0 rounded-full", imp.dot)}
-                            title={`${imp.label} importance`}
-                          />
-                          <div className="w-14 shrink-0">
-                            <p className="text-sm font-semibold tabular-nums">
-                              {prettyTime(block.start)}
-                            </p>
-                            <p className="text-[0.65rem] text-muted-foreground tabular-nums">
-                              {prettyTime(block.end)}
-                            </p>
+                  {dayBlocks.map((block) => (
+                    <li key={block.id}>
+                      <button
+                        type="button"
+                        onClick={() => setBlockEditor({ open: true, block })}
+                        className="flex w-full items-center gap-3 rounded-2xl border bg-card p-3 text-left hover:bg-accent"
+                      >
+                        <IconTile name={block.category} />
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="truncate font-semibold">{block.title}</p>
+                            <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
+                              {prettyTime(block.start)}–{prettyTime(block.end)}
+                            </span>
                           </div>
-                          <div className="min-w-0 flex-1">
-                            <div className="flex flex-wrap items-center gap-1.5">
-                              <p className="font-medium">{block.title}</p>
-                              <Badge
-                                variant="secondary"
-                                className={cn("border-0", cat.className)}
-                              >
-                                <DayFlowIcon name={block.category} /> {cat.label}
-                              </Badge>
-                            </div>
-                            {block.tinyStart ? (
-                              <p className="mt-0.5 flex items-center gap-1 truncate text-xs text-muted-foreground">
-                                <Zap className="size-3 shrink-0 text-primary" />
-                                {block.tinyStart}
-                              </p>
-                            ) : null}
-                          </div>
-                          <Pencil className="size-4 shrink-0 text-muted-foreground" />
-                        </button>
-                      </li>
-                    );
-                  })}
+                          {block.tinyStart ? (
+                            <p className="mt-1 flex items-center gap-1 truncate text-xs text-muted-foreground">
+                              <Zap className="size-3 shrink-0 text-primary" />
+                              {block.tinyStart}
+                            </p>
+                          ) : null}
+                        </div>
+                        <Pencil className="size-4 shrink-0 text-muted-foreground" />
+                      </button>
+                    </li>
+                  ))}
                 </ol>
               )}
 
-              <Button
-                variant="outline"
-                className="w-full border-dashed"
-                onClick={() => setBlockEditor({ open: true, block: undefined })}
-              >
+              <Button variant="outline" className="w-full border-dashed" onClick={() => setBlockEditor({ open: true })}>
                 <Plus className="size-4" />
-                Add block to {WEEKDAY_SHORT[day]}
+                Add an anchor to {WEEKDAY_SHORT[day]}
               </Button>
             </section>
           </>
@@ -240,14 +177,14 @@ export default function RoutinesPage() {
       <RoutineActionsSheet
         routine={actionsFor}
         open={actionsFor !== null}
-        onOpenChange={(o) => !o && setActionsFor(null)}
-        onEdit={(id) => setEditingId(id)}
+        onOpenChange={(open) => !open && setActionsFor(null)}
+        onEdit={setEditingId}
       />
 
       {editing ? (
         <BlockEditorSheet
           open={blockEditor.open}
-          onOpenChange={(o) => setBlockEditor((s) => ({ ...s, open: o }))}
+          onOpenChange={(open) => setBlockEditor((state) => ({ ...state, open }))}
           routineId={editing.id}
           block={blockEditor.block}
           defaultDay={day}

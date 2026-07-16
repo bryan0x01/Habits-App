@@ -4,12 +4,11 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  BriefcaseBusiness,
   CalendarDays,
+  ChartNoAxesColumnIncreasing,
   Home,
-  LineChart,
-  Repeat,
-  Settings,
+  SlidersHorizontal,
+  Sprout,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -17,18 +16,17 @@ import { cn } from "@/lib/utils";
 const NAV_ITEMS = [
   { href: "/", label: "Today", icon: Home },
   { href: "/routines", label: "Routines", icon: CalendarDays },
-  { href: "/habits", label: "Habits", icon: Repeat },
-  { href: "/applications", label: "Apps", icon: BriefcaseBusiness },
-  { href: "/review", label: "Review", icon: LineChart },
-  { href: "/settings", label: "Settings", icon: Settings },
+  { href: "/habits", label: "Habits", icon: Sprout },
+  { href: "/review", label: "Review", icon: ChartNoAxesColumnIncreasing },
+  { href: "/settings", label: "Settings", icon: SlidersHorizontal },
 ] as const;
 
 export function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/85 backdrop-blur-lg safe-bottom">
-      <div className="mx-auto flex max-w-md items-stretch justify-between px-1">
+    <nav className="pointer-events-none fixed inset-x-0 bottom-0 z-40 px-2 pb-2 safe-bottom">
+      <div className="pointer-events-auto mx-auto flex max-w-md items-stretch justify-between rounded-[1.4rem] border border-border/80 bg-card/90 p-1 shadow-lg shadow-foreground/10 backdrop-blur-xl">
         {NAV_ITEMS.map((item) => {
           const active =
             item.href === "/"
@@ -41,21 +39,20 @@ export function BottomNav() {
               href={item.href}
               aria-current={active ? "page" : undefined}
               className={cn(
-                "flex flex-1 flex-col items-center gap-1 rounded-xl px-1 py-2 text-[0.65rem] font-medium transition-colors",
+                "flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-[1rem] px-0.5 py-1.5 text-[0.62rem] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60",
                 active
-                  ? "text-primary"
-                  : "text-muted-foreground hover:text-foreground",
+                  ? "bg-hero text-hero-foreground shadow-sm"
+                  : "text-muted-foreground hover:bg-accent hover:text-foreground",
               )}
             >
               <span
                 className={cn(
-                  "flex h-8 w-full items-center justify-center rounded-full transition-colors",
-                  active && "bg-primary/10",
+                  "flex h-8 w-full items-center justify-center rounded-xl transition-colors",
                 )}
               >
                 <Icon className="size-5" strokeWidth={active ? 2.5 : 2} />
               </span>
-              {item.label}
+              <span className="max-w-full truncate">{item.label}</span>
             </Link>
           );
         })}

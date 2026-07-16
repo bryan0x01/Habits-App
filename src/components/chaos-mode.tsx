@@ -27,6 +27,7 @@ export function ChaosMode() {
     habitStatus,
     setHabitStatus,
     setBlockStatus,
+    setEnergyMode,
   } = useStore();
 
   const view = React.useMemo(
@@ -43,12 +44,19 @@ export function ChaosMode() {
 
   return (
     <div className="space-y-3">
-      <p className="rounded-2xl bg-rose-500/10 px-4 py-3 text-sm font-medium text-rose-700 dark:text-rose-300">
-        Rescue mode. Only these three are in play.
-      </p>
+      <div className="flex items-center gap-3 rounded-2xl bg-rose-500/10 px-4 py-3 text-sm text-rose-700 dark:text-rose-300">
+        <p className="min-w-0 flex-1 font-medium">Rescue mode. Only these three are in play.</p>
+        <button
+          type="button"
+          onClick={() => setEnergyMode("low")}
+          className="shrink-0 rounded-xl bg-background/80 px-3 py-2 text-xs font-semibold text-foreground shadow-sm"
+        >
+          I&apos;m steadier
+        </button>
+      </div>
 
       {/* 1 — one tiny start */}
-      <Card className="border-primary/30">
+      <Card data-rescue-card className="border-primary/30">
         <CardContent className="space-y-3 p-4">
           <div className="flex items-center gap-2">
             <span className="flex size-8 items-center justify-center rounded-full bg-primary/15 text-primary">
@@ -76,7 +84,7 @@ export function ChaosMode() {
       </Card>
 
       {/* 2 — one minimum task */}
-      <Card>
+      <Card data-rescue-card>
         <CardContent className="space-y-3 p-4">
           <div className="flex items-center gap-2">
             <span className="flex size-8 items-center justify-center rounded-full bg-teal-500/15 text-teal-600 dark:text-teal-400">
@@ -110,7 +118,7 @@ export function ChaosMode() {
       </Card>
 
       {/* 3 — one recovery action */}
-      <Card className="border-warning/40 bg-warning/10">
+      <Card data-rescue-card className="border-warning/40 bg-warning/10">
         <CardContent className="space-y-3 p-4">
           <div className="flex items-center gap-2">
             <span className="flex size-8 items-center justify-center rounded-full bg-warning/20 text-warning">

@@ -16,7 +16,7 @@ export function PageContainer({
   );
 }
 
-/** Lightweight placeholder shown until localStorage has hydrated. */
+/** Lightweight placeholder shown while account data is being prepared. */
 export function LoadingCards({ count = 3 }: { count?: number }) {
   return (
     <div className="space-y-3">

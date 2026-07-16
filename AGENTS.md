@@ -1,4 +1,4 @@
-# AGENTS.md — DayFlow handoff & working guide
+# AGENTS.md — DayFlow by Halynt handoff & working guide
 
 > Onboarding doc for the next agent or developer picking up **DayFlow**. Read this
 > before making changes. For the product pitch and deploy steps, see
@@ -11,14 +11,14 @@
 
 DayFlow is a **mobile-first, ADHD-friendly productivity PWA**. It answers "what do
 I do right now?" and helps you recover when you fall off schedule. It's a **Next.js
-15 App Router** app, **TypeScript strict**, **Tailwind 3 + shadcn/ui**, persisting
-everything to **`localStorage`** first, with optional Supabase magic-link auth
-and private cross-device snapshot sync.
+15 App Router** app, **TypeScript strict**, **Tailwind 3 + shadcn/ui**, with
+**Supabase as the only durable source of truth**. Signed-out use is an explicitly
+temporary in-memory preview; magic-link auth unlocks private cross-device saves.
 
 **Status:** MVP is feature-complete and deploy-ready. `npm run check` runs lint,
-the automated Vitest suite, and the production build/type-check. Six screens are
-wired to a single client-side store, and the critical framework-free domain logic
-has regression coverage.
+the domain and component Vitest suites, and the production build/type-check. Six
+screens are wired to a single client-side store; Playwright covers first-run,
+persistence, and Rescue flows.
 
 ---
 
@@ -31,33 +31,36 @@ npm run build    # production build + type-check — MUST pass before shipping
 npm start        # serve the production build (needed to test PWA/offline)
 npm run lint     # ESLint (next/core-web-vitals) — MUST pass
 npm run test     # Vitest regression suite — MUST pass
-npm run check    # lint + tests + production build
+npm run test:components # rendered component behavior — MUST pass
+npm run test:e2e # Playwright first-run + Rescue flows
+npm run check    # lint + domain/component tests + production build
 npm run icons    # regenerate PWA icons (scripts/generate-icons.mjs)
 ```
 
 **Always run `npm run check` before declaring done** — lint alone cannot catch
 type/module export errors (see gotcha #3).
 
-No environment variables are required for local-only use. Supabase sync needs the
-project URL and publishable key in `.env.local` and the deployment environment.
+No environment variables are required to preview the UI, but signed-out changes
+are intentionally temporary. Durable use needs the Supabase project URL and
+publishable key in `.env.local` and the deployment environment.
 
 ---
 
 ## 3. Architecture in one paragraph
 
 Every screen is a **client component** that reads a single React context,
-[`StoreProvider`](src/components/store-provider.tsx). The store hydrates from
-`localStorage` on mount, exposes typed state + action callbacks, and persists each
-slice back to `localStorage` via effects. Pure domain logic (what's happening now,
+[`StoreProvider`](src/components/store-provider.tsx). The store owns the active
+in-memory snapshot and exposes typed state + action callbacks. `CloudProvider`
+loads the authenticated user's validated Supabase snapshot before the working UI
+appears, then debounces subsequent snapshot upserts. Pure domain logic (what's happening now,
 day states, weekly analytics) lives in `src/lib/*` as framework-free functions that
 take store data + a `Date` and return view models. UI is composed from shadcn/ui
 primitives in `src/components/ui` plus feature components in `src/components`.
-`CloudProvider` wraps the store in the root layout; after an optional magic-link
-sign-in it syncs the validated `DayFlowSnapshot` in the background.
+`AppearanceController` applies account-synced light/dark/system and accent choices.
 
 ```
-User taps → component calls useStore() action → setState → persist effect writes
-localStorage → derived lib/* function recomputes → UI re-renders
+Sign in → CloudProvider pulls Supabase snapshot → StoreProvider applies it → UI
+User taps → useStore() updates memory → derived logic re-renders → debounced upsert
 ```
 
 ### Directory map
@@ -65,7 +68,7 @@ localStorage → derived lib/* function recomputes → UI re-renders
 ```
 src/
 ├── app/                      # App Router — one folder per screen
-│   ├── layout.tsx            # providers (Theme, Store), PWA metadata, BottomNav, SW register
+│   ├── layout.tsx            # Store/Cloud/Appearance providers, metadata, nav, SW register
 │   ├── page.tsx              # Today dashboard
 │   ├── routines/ habits/ applications/ review/ settings/   # the other 5 screens
 │   ├── error.tsx             # route error boundary
@@ -79,25 +82,25 @@ src/
 │   └── *.tsx                 # feature components (see §6)
 └── lib/
     ├── types.ts              # ⭐ all data models
-    ├── storage.ts            # ⭐ localStorage wrapper, keys, schema migration, export/import
-    ├── constants.ts          # metadata: categories, energy modes, statuses, priority companies…
+    ├── storage.ts            # ⭐ snapshot validation + explicit export/import boundary
+    ├── constants.ts          # metadata: categories, energy modes, statuses, app options…
     ├── schedule.ts           # "what now / next / missed" logic for Today
     ├── planner.ts            # local brain-dump parsing, prioritization, and Rescue
     ├── day-state.ts          # habit day states (Minimum saved / Strong / Full) + weekly momentum
     ├── routines.ts           # blank/copy routine builders
     ├── review.ts             # Weekly Review analytics
-    ├── applications.ts       # priority-company / follow-up / this-week helpers
+    ├── applications.ts       # priority / follow-up / this-week helpers
     ├── habits.ts             # cadence helpers
     ├── time.ts               # date-fns wrappers (dateKey, weekdayOf, prettyTime, …)
     ├── use-now.ts            # ticking clock hook (client-only)
     ├── utils.ts              # cn(), uid(), clamp()
-    └── data/                 # seed routines + life-mode templates, habits (11)
+    └── data/                 # generic starter rhythms, templates, and habits
 middleware.ts                  # refreshes Supabase auth sessions
 supabase/migrations/           # RLS-protected cloud-sync schema
 docs/SUPABASE_SETUP.md         # Supabase dashboard + Vercel steps
 public/  manifest.webmanifest · sw.js · icons/
 scripts/ generate-icons.mjs  # dependency-free PNG generator
-tests/                        # Vitest coverage for domain logic and persistence
+tests/                        # domain + component Vitest and Playwright E2E coverage
 ```
 
 ---
@@ -105,34 +108,32 @@ tests/                        # Vitest coverage for domain logic and persistence
 ## 4. State & persistence (the crux)
 
 - **One store.** [`store-provider.tsx`](src/components/store-provider.tsx) holds
-  every persisted slice as `useState`. `useStore()` is the only way components read
-  or mutate data. Don't touch `localStorage` directly from components.
-- **Hydration.** On mount the store runs `migrateIfNeeded()` then loads each key.
-  Until `hydrated === true`, components render defaults. **Server render uses
-  defaults, so every page gates on `hydrated` and shows `<LoadingCards />`** to
-  avoid hydration mismatches and flashes. Follow this pattern in new pages.
-- **Persistence.** One `useEffect` per slice writes to `localStorage` when it
-  changes — but only after `hydrated` (so the initial default render doesn't clobber
-  stored data). Add a matching effect when you add a slice.
-- **Cloud sync.** `CloudProvider` uses the store-owned `snapshot` (not a stale
-  `localStorage` read) and debounces background writes. On a new device, a valid
-  remote snapshot wins; on a new account, existing local data uploads once.
+  every slice as `useState`. `useStore()` is the only way components read or
+  mutate active data. Do not add browser persistence or access Web Storage.
+- **Hydration.** The store becomes client-ready after mount. `CloudProvider` keeps
+  authenticated users on a boot screen until the remote snapshot is loaded, so
+  starter defaults can never overwrite their account. Pages still gate on
+  `hydrated` and show `<LoadingCards />` to avoid server/client mismatches.
+- **Persistence.** Authenticated snapshots are debounced directly to the private
+  `dayflow_snapshots` row. Signed-out preview state lives only in memory and the
+  header/Settings UI must continue to say that it is temporary.
+- **Remote wins.** A valid remote snapshot always wins on sign-in. If the account
+  has no row, the current generic starter snapshot is created once.
 - **Time is client-only.** Anything time-dependent uses the `useNow()` hook (ticks
   every 30–60s). Never compute "today" during server render.
 
 ### Adding a new persisted slice — checklist
 
 1. Add the type to [`types.ts`](src/lib/types.ts) (and to `DayFlowSnapshot`).
-2. Add a key to `STORAGE_KEYS` in [`storage.ts`](src/lib/storage.ts); include it in
-   `buildSnapshot()` and `importSnapshotJSON()`.
-3. In the store: add `useState`, a line in `hydrateFromStorage()`, a persist
-   `useEffect`, action callbacks, reset in `resetData()`, and expose on the context
-   value + `AppStore` interface.
-4. Decide whether a shape change needs a `SCHEMA_VERSION` bump (see §5).
+2. Extend the boundary validator in [`storage.ts`](src/lib/storage.ts).
+3. In the store: add `useState`, include it in `snapshot`/`applySnapshot`, add
+   action callbacks, reset in `resetData()`, and expose it via `AppStore`.
+4. Add backward-compatibility coverage. Only change the database migration if the
+   row itself changes; slices inside the JSON snapshot need no new table column.
 
 ---
 
-## 5. Data models & schema versioning
+## 5. Data models & snapshot compatibility
 
 All models are in [`types.ts`](src/lib/types.ts): `Routine`, `RoutineBlock`
 (`importance`, `notificationMinutesBefore`), `Habit` (`category`, `minimum`),
@@ -140,14 +141,12 @@ All models are in [`types.ts`](src/lib/types.ts): `Routine`, `RoutineBlock`
 resumeVersion/referralContact/followUpDate/…), `EnergyLog`, `FrictionLog`,
 `WeekPlan`, `UserSettings`. Everything is plain & serializable on purpose.
 
-- `localStorage` keys are prefixed `dayflow:` (see `STORAGE_KEYS`).
-- **`SCHEMA_VERSION`** (currently `2`) guards incompatible shape changes. On
-  mismatch, `migrateIfNeeded()` **clears routines/habits/habitLogs/blockLogs and
-  reseeds**, but **preserves** applications, energy logs, friction logs, priorities,
-  and week plans (stable shapes). If you change the shape of habits or routine
-  blocks incompatibly, **bump `SCHEMA_VERSION`**. If you change a preserved slice's
-  shape incompatibly, extend the migration to clear it too.
-- Routines are **not static** — the 4 templates in
+- `SNAPSHOT_VERSION` identifies the current export/cloud payload. Keep additions
+  optional where possible so existing account snapshots remain valid.
+- `isDayFlowSnapshot()` is the trust boundary for Supabase and imported JSON. An
+  incompatible change needs a deliberate normalization/migration path; never
+  silently discard an authenticated user's history.
+- Routines are **not static** — the public templates in
   [`data/routines.ts`](src/lib/data/routines.ts) are deep-cloned into the store on
   first run and are fully user-editable thereafter. Seed block ids are
   `` `${routineId}-${day}-${HHmm}` ``; user-added blocks use `uid("block")`.
@@ -160,13 +159,14 @@ resumeVersion/referralContact/followUpDate/…), `EnergyLog`, `FrictionLog`,
 | Screen / feature | Entry | Key components / logic |
 | --- | --- | --- |
 | **Today** | [`app/page.tsx`](src/app/page.tsx) | `WhatNowCard` + `NextBestActionCard`, `ChaosMode` (chaos energy), `VacationBanner`, `TopPriorities`, `FlexPlan` (brain dump + rescue), compact `TodayOverview`, `HabitDayStateCard`, `TodayTimeline`; weekly/recruiting summaries stay on their dedicated screens |
+| **First run** | [`components/onboarding.tsx`](src/components/onboarding.tsx) | required but skippable 60-second setup: default support + closest editable routine |
 | **Routines** | [`app/routines/page.tsx`](src/app/routines/page.tsx) | `CreateRoutineDialog` (blank routines), `RoutineActionsSheet` (activate/duplicate/rename/delete), `BlockEditorSheet` (add/edit/delete blocks, multi-day creation, end>start validation) |
 | **Habits** | [`app/habits/page.tsx`](src/app/habits/page.tsx) | `HabitCard`, `HabitDayStateCard`, `WeeklyMomentum`, `AddHabitDialog`; grouped by category |
-| **Applications** | [`app/applications/page.tsx`](src/app/applications/page.tsx) | `ApplicationCard`, `ApplicationDialog`; helpers in `applications.ts` |
+| **Applications** | [`app/applications/page.tsx`](src/app/applications/page.tsx) | optional Settings-linked tool; `ApplicationCard`, `ApplicationDialog`; helpers in `applications.ts` |
 | **Weekly Review** | [`app/review/page.tsx`](src/app/review/page.tsx) | analytics in `review.ts`; "Plan next week" writes `WeekPlan` |
-| **Settings** | [`app/settings/page.tsx`](src/app/settings/page.tsx) | routine picker, energy/theme, magic-link cloud sync, export/import/reset, reminders placeholder |
+| **Settings** | [`app/settings/page.tsx`](src/app/settings/page.tsx) | routine picker, energy/theme, magic-link cloud sync, web-push controls, export/import/reset |
 | **Friction logging** | `FrictionDialog` / `SkipTaskButton` | reasons in `constants.ts` (`FRICTION_REASONS`) |
-| **Shared shell** | `PageHeader`, `PageContainer`, `BottomNav`, `ThemeToggle` | `LoadingCards` for the loading state |
+| **Shared shell** | `PageHeader`, `PageContainer`, `BottomNav`, `AppearanceController` | five primary destinations + `LoadingCards` |
 
 ### ADHD-feature logic lives here
 - **What now / next / missed** → `computeToday()` in [`schedule.ts`](src/lib/schedule.ts). "Missed" = an *important* (`importance !== "low"`), non-optional block that already ended untouched. Minimum-day makes non-`high` blocks `optional`.
@@ -221,14 +221,14 @@ resumeVersion/referralContact/followUpDate/…), `EnergyLog`, `FrictionLog`,
 5. **No `next/font`.** Deliberately avoided (it fetches fonts at build time → breaks
    offline/sandboxed builds). The font is a system stack via `--font-sans` in
    `globals.css`. Don't add `next/font/google`.
-6. **Hardcoded IDs.** `review.ts` maps its weekly metrics to seeded habit IDs
-   (`habit-gym`, `habit-study`, `habit-english`, `habit-read`, `habit-clean`) — delete
-   those habits and the metric reads 0. Priority companies are hardcoded in
-   `constants.ts` (`PRIORITY_COMPANIES` / `PRIORITY_LOCATIONS`).
+6. **Public defaults only.** Starter habits, routines, example companies, and
+   review targets must stay generic. Personal account snapshots are user data and
+   must not be rewritten merely because seed templates change.
 7. **Icons are generated**, not committed art. Re-run `npm run icons` if you change
    the brand mark; it hand-encodes PNGs with zlib (no image deps).
-8. **Schema migration wipes seed data** on `SCHEMA_VERSION` bump (see §5) — expected,
-   but tell the user if a change forces it.
+8. **Snapshot compatibility matters.** Prefer additive optional fields. If a
+   breaking payload change is unavoidable, add a tested normalizer before raising
+   the accepted snapshot version.
 9. **Production browser tabs can retain old build errors** after rebuilding while
    a tab is open. Verify in a fresh tab before treating a chunk mismatch as a
    service-worker regression.
@@ -248,14 +248,14 @@ resumeVersion/referralContact/followUpDate/…), `EnergyLog`, `FrictionLog`,
 
 - **Add a routine-block field:** extend `RoutineBlock` in `types.ts` → add to
   `BlockInput` + `addBlock/updateBlock` in the store → add a control in
-  `BlockEditorSheet` → surface it in `today-timeline.tsx` / routines list. Decide on
-  a `SCHEMA_VERSION` bump.
+  `BlockEditorSheet` → surface it in `today-timeline.tsx` / routines list → keep the
+  snapshot validator backward-compatible.
 - **Add a screen:** create `app/<name>/page.tsx` (`"use client"`, gate on
   `hydrated`), wrap in `PageHeader` + `PageContainer`, add a nav item in
-  [`bottom-nav.tsx`](src/components/bottom-nav.tsx) (mind that 6 items already fill
-  the bar).
-- **Add a habit / routine template:** edit `data/habits.ts` / `data/routines.ts` and
-  bump `SCHEMA_VERSION` so existing installs reseed.
+  [`bottom-nav.tsx`](src/components/bottom-nav.tsx). Keep the primary nav to five
+  or fewer choices; put specialist tools in Settings.
+- **Add a habit / routine template:** edit `data/habits.ts` / `data/routines.ts`.
+  New accounts receive it; never overwrite an existing account snapshot to reseed.
 - **Cloud schema changes:** update the snapshot validator in `storage.ts`, the
   store snapshot shape, and `supabase/migrations/`. Keep RLS enabled and never use
   a Supabase secret/service-role key in client code. See `docs/SUPABASE_SETUP.md`.
@@ -268,9 +268,10 @@ resumeVersion/referralContact/followUpDate/…), `EnergyLog`, `FrictionLog`,
   environment variables configured. See `docs/SUPABASE_SETUP.md`.
 - Web Push is implemented end to end. Deployment still needs VAPID secrets, the
   push migration/function, and the one-minute Supabase Cron from `docs/NOTIFICATIONS_SETUP.md`.
-- Automated tests cover the core domain and persistence layers; full component and
-  end-to-end browser automation can be expanded as the product grows.
-- External-service roadmap: AI assistance, Google Calendar, real web push, and
+- Automated tests cover core domain/persistence logic, the onboarding/timer/time
+  components, and first-run + Rescue browser flows. Broader per-screen E2E can
+  expand as the product grows.
+- External-service roadmap: AI assistance, Google Calendar, and
   richer multi-device conflict resolution. See README's "Future improvements".
 
 ---
@@ -280,13 +281,16 @@ resumeVersion/referralContact/followUpDate/…), `EnergyLog`, `FrictionLog`,
 - [ ] `npm run build` passes (type-check included).
 - [ ] `npm run lint` clean.
 - [ ] `npm run test` passes.
+- [ ] `npm run test:components` passes.
+- [ ] `npm run test:e2e` passes for onboarding or Rescue changes.
 - [ ] Preview the affected screen(s) at **mobile (375px)** and **desktop**; check
       **light and dark**.
-- [ ] Interactions persist — confirm the relevant `dayflow:*` key in `localStorage`.
+- [ ] Signed-in changes survive a refresh and another device through Supabase.
+- [ ] Signed-out preview clearly says it is temporary and writes no product data
+      to Web Storage.
 - [ ] No console errors.
-- [ ] If a data shape changed, `SCHEMA_VERSION` handled.
+- [ ] If a data shape changed, old valid snapshots still load or a migration exists.
 
-_Last updated to reflect: the adaptive-support release (planner/loose ends,
-vacation mode, cloud sync, push reminders) plus the security-hardening audit
-(auth-callback redirect validation, global headers, SW auth exclusion, loose-end
-carry-forward, dead-component cleanup)._
+_Last updated to reflect: the Supabase-first public-product redesign, generic
+starter rhythms, account-synced appearance colors, semantic visuals, simplified
+navigation, hardened push delivery, and domain/component/E2E coverage._

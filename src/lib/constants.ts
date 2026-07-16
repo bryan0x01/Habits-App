@@ -11,6 +11,9 @@ import type {
 
 export const APP_NAME = "DayFlow";
 export const APP_TAGLINE = "What to do now — and how to get back on track.";
+export const PARENT_BRAND = "Halynt";
+export const PRODUCT_NAME = `${APP_NAME} by ${PARENT_BRAND}`;
+export const PRODUCT_ATTRIBUTION = `A ${PARENT_BRAND} product`;
 
 export interface EnergyModeMeta {
   id: EnergyMode;
@@ -222,10 +225,13 @@ export interface AppTypeMeta {
 }
 
 export const APPLICATION_TYPES: AppTypeMeta[] = [
+  { id: "full-time", label: "Full-time" },
+  { id: "part-time", label: "Part-time" },
+  { id: "contract", label: "Contract" },
+  { id: "freelance", label: "Freelance" },
   { id: "internship", label: "Internship" },
   { id: "new-grad", label: "New grad" },
   { id: "co-op", label: "Co-op" },
-  { id: "part-time", label: "Part-time" },
 ];
 
 export function appTypeMeta(type: ApplicationType): AppTypeMeta {
@@ -238,16 +244,3 @@ export const APP_PRIORITY_META: Record<Importance, { label: string; className: s
   medium: { label: "Medium", className: "bg-amber-500/15 text-amber-700 dark:text-amber-300", dot: "bg-amber-500" },
   low: { label: "Low", className: "bg-slate-500/15 text-slate-600 dark:text-slate-300", dot: "bg-slate-400" },
 };
-
-/**
- * Companies (and locations) the user is actively targeting — surfaced with a
- * star so they never get lost in the pipeline.
- */
-export const PRIORITY_COMPANIES = [
-  "Wells Fargo",
-  "Ally",
-  "Bank of America",
-  "CEMEX",
-  "Capital One",
-];
-export const PRIORITY_LOCATIONS = ["Charlotte"];

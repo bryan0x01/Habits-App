@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { computeWeeklyReview, weekKeyOf } from "@/lib/review";
 import type { FrictionLog } from "@/lib/types";
-import { application, block, blockLog, habitLog, routine } from "./fixtures";
+import { application, block, blockLog, habit, habitLog, routine } from "./fixtures";
 
 const thursday = new Date(2026, 6, 9, 12);
 
@@ -16,12 +16,13 @@ describe("weekly review", () => {
     const project = block("project-1", "09:00", "10:00", "high", { category: "project" });
     const data = computeWeeklyReview({
       now: thursday,
+      habits: [habit("habit-move"), habit("habit-focus"), habit("habit-wind-down")],
       routines: [routine([project])],
       habitLogs: [
-        habitLog("habit-gym", "2026-07-06"),
-        habitLog("habit-gym", "2026-07-06"),
-        habitLog("habit-gym", "2026-07-07"),
-        habitLog("habit-study", "2026-07-06"),
+        habitLog("habit-move", "2026-07-06"),
+        habitLog("habit-move", "2026-07-06"),
+        habitLog("habit-move", "2026-07-07"),
+        habitLog("habit-focus", "2026-07-06"),
         habitLog("habit-read", "2026-07-01"),
       ],
       blockLogs: [blockLog("project-1", "2026-07-06")],
@@ -29,7 +30,7 @@ describe("weekly review", () => {
       frictionLogs: [],
     });
 
-    expect(data.dayMetrics.find((metric) => metric.key === "gym")?.done).toBe(2);
+    expect(data.dayMetrics.find((metric) => metric.key === "habit-move")?.done).toBe(2);
     expect(data.projectBlocks).toBe(1);
     expect(data.applicationsSent).toBe(1);
     expect(data.bestDay).toEqual({ weekday: 1, wins: 4 });
@@ -40,13 +41,14 @@ describe("weekly review", () => {
   it("prioritizes actionable suggestions", () => {
     const base = {
       now: thursday,
+      habits: [habit("habit-reset", { name: "Reset one space" })],
       routines: [],
       habitLogs: [],
       blockLogs: [],
       frictionLogs: [] as FrictionLog[],
     };
     const noApps = computeWeeklyReview({ ...base, applications: [] });
-    expect(noApps.suggestion).toContain("No applications went out");
+    expect(noApps.suggestion).toContain("Reset one space happened 0 days");
 
     const friction = (id: string, date: string): FrictionLog => ({
       id,

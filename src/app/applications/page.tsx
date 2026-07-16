@@ -15,7 +15,7 @@ import {
   applicationsSentThisWeek,
   followUpsDueThisWeek,
   isActive,
-  isPriorityCompany,
+  isPriorityApplication,
   priorityInPipeline,
 } from "@/lib/applications";
 import { APPLICATION_STATUSES, APP_PRIORITY_META } from "@/lib/constants";
@@ -83,8 +83,8 @@ export default function ApplicationsPage() {
             <BriefcaseBusiness className="mx-auto mb-3 size-8 text-muted-foreground" />
             <p className="font-medium">No applications yet</p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Track internships, new-grad roles, and referrals here so nothing
-              slips. One at a time is plenty.
+              Track roles, deadlines, and follow-ups here so nothing slips. One
+              at a time is plenty.
             </p>
             <Button className="mt-4" onClick={openAdd}>
               <Plus className="size-4" />
@@ -117,7 +117,7 @@ export default function ApplicationsPage() {
                           className="flex w-full items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-left text-sm hover:bg-accent"
                         >
                           <span className="flex min-w-0 items-center gap-1.5">
-                            {isPriorityCompany(a) ? (
+                            {isPriorityApplication(a) ? (
                               <Star className="size-3.5 shrink-0 fill-amber-400 text-amber-400" />
                             ) : null}
                             <span className="truncate">

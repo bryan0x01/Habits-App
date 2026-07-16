@@ -24,7 +24,7 @@ import {
   appStatusMeta,
   appTypeMeta,
 } from "@/lib/constants";
-import { isPriorityCompany } from "@/lib/applications";
+import { isPriorityApplication } from "@/lib/applications";
 import type { Application, ApplicationStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -49,7 +49,7 @@ export function ApplicationCard({
   const meta = appStatusMeta(application.status);
   const priority = application.priority ?? "medium";
   const priorityMeta = APP_PRIORITY_META[priority];
-  const starred = isPriorityCompany(application);
+  const starred = isPriorityApplication(application);
   const deadline = fmt(application.deadline);
   const followUp = fmt(application.followUpDate);
 
@@ -63,7 +63,7 @@ export function ApplicationCard({
               {starred ? (
                 <Star
                   className="size-4 shrink-0 fill-amber-400 text-amber-400"
-                  aria-label="Priority company"
+                  aria-label="High-priority application"
                 />
               ) : null}
               <p className="truncate font-semibold">{application.role}</p>

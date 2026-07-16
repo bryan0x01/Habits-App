@@ -46,7 +46,7 @@ export function CreateRoutineDialog({ onCreated }: { onCreated: (id: string) => 
       }}
     >
       <DialogTrigger asChild>
-        <Button variant="secondary" size="sm">
+        <Button variant="secondary" className="w-full">
           <Plus className="size-4" />
           New routine
         </Button>

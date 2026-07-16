@@ -2,15 +2,18 @@
 
 import * as React from "react";
 import type { Session, User } from "@supabase/supabase-js";
+import { Cloud } from "lucide-react";
 
 import { useStore } from "@/components/store-provider";
 import { createSupabaseBrowserClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { isDayFlowSnapshot } from "@/lib/storage";
 
-type SyncStatus = "local" | "signed-out" | "syncing" | "synced" | "error";
+type SyncStatus = "checking" | "demo" | "signed-out" | "syncing" | "synced" | "error";
 
 interface CloudContextValue {
   configured: boolean;
+  ready: boolean;
+  isPersistent: boolean;
   user: User | null;
   status: SyncStatus;
   error: string | null;
@@ -31,14 +34,17 @@ export function CloudProvider({ children }: { children: React.ReactNode }) {
     hydrated,
     snapshot,
     importSnapshot,
+    resetData,
   } = useStore();
   const [session, setSession] = React.useState<Session | null>(null);
   const [status, setStatus] = React.useState<SyncStatus>(
-    isSupabaseConfigured ? "signed-out" : "local",
+    isSupabaseConfigured ? "checking" : "demo",
   );
+  const [ready, setReady] = React.useState(!isSupabaseConfigured);
   const [error, setError] = React.useState<string | null>(null);
   const [retryToken, setRetryToken] = React.useState(0);
   const snapshotRef = React.useRef(snapshot);
+  const authUserRef = React.useRef<string | null>(null);
   const initializedUserRef = React.useRef<string | null>(null);
   const skipNextPushRef = React.useRef(false);
 
@@ -53,27 +59,57 @@ export function CloudProvider({ children }: { children: React.ReactNode }) {
     if (!supabase) return;
 
     let alive = true;
+    let sessionSettled = false;
+    const sessionTimeout = window.setTimeout(() => {
+      if (!alive || sessionSettled) return;
+      setStatus("signed-out");
+      setReady(true);
+    }, 2500);
     supabase.auth.getSession().then(({ data, error: sessionError }) => {
       if (!alive) return;
-      if (sessionError) setError(sessionError.message);
+      sessionSettled = true;
+      window.clearTimeout(sessionTimeout);
+      if (sessionError) {
+        setError(sessionError.message);
+        setStatus("error");
+        setReady(true);
+        return;
+      }
+      authUserRef.current = data.session?.user.id ?? null;
       setSession(data.session);
-      setStatus(data.session ? "syncing" : "signed-out");
+      if (data.session) {
+        setStatus("syncing");
+        setReady(false);
+      } else {
+        setStatus("signed-out");
+        setReady(true);
+      }
     });
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      const nextUserId = nextSession?.user.id ?? null;
+      if (authUserRef.current === nextUserId) {
+        setSession(nextSession);
+        return;
+      }
+      const previousUserId = authUserRef.current;
+      authUserRef.current = nextUserId;
       initializedUserRef.current = null;
       setSession(nextSession);
       setError(null);
       setStatus(nextSession ? "syncing" : "signed-out");
+      setReady(!nextSession);
+      if (previousUserId && !nextUserId) resetData();
     });
 
     return () => {
       alive = false;
+      window.clearTimeout(sessionTimeout);
       subscription.unsubscribe();
     };
-  }, [supabase]);
+  }, [resetData, supabase]);
 
   React.useEffect(() => {
     const retry = () => setRetryToken((token) => token + 1);
@@ -81,8 +117,8 @@ export function CloudProvider({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener("online", retry);
   }, []);
 
-  // On a new device the saved cloud snapshot wins. On a new account, the local
-  // snapshot is uploaded once, so existing DayFlow users do not lose their data.
+  // The private cloud snapshot always wins. A brand-new account saves the
+  // current in-memory starter/preview snapshot once, so setup work is preserved.
   React.useEffect(() => {
     if (!supabase || !session?.user || !hydrated) return;
     if (initializedUserRef.current === session.user.id) return;
@@ -100,6 +136,7 @@ export function CloudProvider({ children }: { children: React.ReactNode }) {
       if (readError) {
         setError(readError.message);
         setStatus("error");
+        setReady(true);
         return;
       }
 
@@ -114,12 +151,14 @@ export function CloudProvider({ children }: { children: React.ReactNode }) {
         if (writeError) {
           setError(writeError.message);
           setStatus("error");
+          setReady(true);
           return;
         }
       }
 
       initializedUserRef.current = session.user.id;
       setStatus("synced");
+      setReady(true);
     };
 
     void initializeSync();
@@ -128,7 +167,7 @@ export function CloudProvider({ children }: { children: React.ReactNode }) {
     };
   }, [hydrated, importSnapshot, retryToken, session?.user, supabase]);
 
-  // Keep the UI local-first. A brief debounce groups quick taps into one write.
+  // A brief debounce groups quick taps into one Supabase write.
   React.useEffect(() => {
     if (!supabase || !session?.user || !hydrated) return;
     if (initializedUserRef.current !== session.user.id) return;
@@ -176,14 +215,34 @@ export function CloudProvider({ children }: { children: React.ReactNode }) {
   const value = React.useMemo<CloudContextValue>(
     () => ({
       configured: isSupabaseConfigured,
+      ready,
+      isPersistent: Boolean(session?.user) && status !== "error",
       user: session?.user ?? null,
       status,
       error,
       sendMagicLink,
       signOut,
     }),
-    [error, sendMagicLink, session?.user, signOut, status],
+    [error, ready, sendMagicLink, session?.user, signOut, status],
   );
 
-  return <CloudContext.Provider value={value}>{children}</CloudContext.Provider>;
+  return (
+    <CloudContext.Provider value={value}>
+      {ready ? (
+        children
+      ) : (
+        <div className="flex min-h-dvh items-center justify-center bg-background px-6 text-foreground">
+          <div className="flex max-w-xs items-center gap-3 rounded-2xl border bg-card p-4 shadow-sm">
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <Cloud className="size-5 animate-pulse" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold">Opening DayFlow by Halynt</p>
+              <p className="text-xs text-muted-foreground">Loading your private plan from Supabase…</p>
+            </div>
+          </div>
+        </div>
+      )}
+    </CloudContext.Provider>
+  );
 }

@@ -2,83 +2,177 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * DayFlow design language — "ink & iris".
+ *
+ * One warm paper surface, one ink surface (the hero), one iris accent.
+ * Color is reserved for meaning (state, category); everything else stays
+ * quiet so an ADHD brain always knows where to look first.
+ */
 @layer base {
   :root {
     --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
       "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif,
       "Apple Color Emoji", "Segoe UI Emoji";
 
-    --background: 250 40% 99%;
-    --foreground: 240 20% 12%;
+    --background: 42 36% 96%;
+    --foreground: 256 28% 15%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 240 20% 12%;
+    --card: 40 40% 99%;
+    --card-foreground: 256 28% 15%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 20% 12%;
+    --popover: 40 40% 99%;
+    --popover-foreground: 256 28% 15%;
 
-    --primary: 258 82% 62%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 258 56% 50%;
+    --primary-foreground: 42 45% 98%;
 
-    --secondary: 255 40% 96%;
-    --secondary-foreground: 258 45% 30%;
+    --secondary: 254 30% 93%;
+    --secondary-foreground: 258 40% 28%;
 
-    --muted: 250 25% 95%;
-    --muted-foreground: 240 8% 46%;
+    --muted: 44 20% 91%;
+    --muted-foreground: 256 10% 44%;
 
-    --accent: 255 45% 95%;
-    --accent-foreground: 258 45% 30%;
+    --accent: 254 34% 92%;
+    --accent-foreground: 258 40% 28%;
 
-    --destructive: 0 74% 55%;
+    --destructive: 0 68% 52%;
     --destructive-foreground: 0 0% 100%;
 
-    --success: 152 58% 42%;
+    --success: 152 55% 38%;
     --success-foreground: 0 0% 100%;
 
-    --warning: 38 92% 50%;
-    --warning-foreground: 40 60% 12%;
+    --warning: 36 92% 46%;
+    --warning-foreground: 40 60% 10%;
 
-    --border: 250 20% 90%;
-    --input: 250 20% 90%;
-    --ring: 258 82% 62%;
+    --border: 44 18% 86%;
+    --input: 44 18% 84%;
+    --ring: 258 56% 50%;
+
+    /* The ink surface: What-Now hero, focus moments. */
+    --hero: 257 30% 15%;
+    --hero-foreground: 42 45% 96%;
+    --hero-soft: 257 24% 22%;
+    --hero-accent: 258 88% 78%;
 
     --radius: 1rem;
   }
 
   .dark {
-    --background: 250 24% 8%;
-    --foreground: 250 20% 96%;
+    --background: 257 26% 7%;
+    --foreground: 42 28% 93%;
 
-    --card: 250 22% 11%;
-    --card-foreground: 250 20% 96%;
+    --card: 257 22% 10%;
+    --card-foreground: 42 28% 93%;
 
-    --popover: 250 22% 11%;
-    --popover-foreground: 250 20% 96%;
+    --popover: 257 22% 10%;
+    --popover-foreground: 42 28% 93%;
 
-    --primary: 258 84% 70%;
-    --primary-foreground: 258 40% 12%;
+    --primary: 258 78% 76%;
+    --primary-foreground: 258 35% 12%;
 
-    --secondary: 250 18% 18%;
-    --secondary-foreground: 250 20% 92%;
+    --secondary: 257 18% 16%;
+    --secondary-foreground: 42 24% 90%;
 
-    --muted: 250 16% 18%;
-    --muted-foreground: 250 12% 65%;
+    --muted: 257 16% 16%;
+    --muted-foreground: 255 12% 66%;
 
-    --accent: 250 18% 20%;
-    --accent-foreground: 250 20% 92%;
+    --accent: 257 18% 19%;
+    --accent-foreground: 42 24% 90%;
 
-    --destructive: 0 62% 52%;
+    --destructive: 0 62% 54%;
     --destructive-foreground: 0 0% 100%;
 
-    --success: 152 52% 46%;
+    --success: 152 50% 44%;
     --success-foreground: 152 40% 10%;
 
-    --warning: 38 90% 58%;
+    --warning: 36 88% 56%;
     --warning-foreground: 40 60% 10%;
 
-    --border: 250 14% 22%;
-    --input: 250 14% 24%;
-    --ring: 258 84% 70%;
+    --border: 257 14% 19%;
+    --input: 257 14% 22%;
+    --ring: 258 78% 76%;
+
+    --hero: 257 28% 12%;
+    --hero-foreground: 42 35% 95%;
+    --hero-soft: 257 22% 18%;
+    --hero-accent: 258 90% 80%;
+  }
+
+  :root[data-accent="blue"] {
+    --primary: 218 72% 48%;
+    --secondary: 215 48% 92%;
+    --secondary-foreground: 218 52% 25%;
+    --accent: 214 46% 92%;
+    --accent-foreground: 218 52% 25%;
+    --ring: 218 72% 48%;
+    --hero: 220 38% 14%;
+    --hero-soft: 220 30% 22%;
+    --hero-accent: 211 92% 76%;
+  }
+
+  :root[data-accent="teal"] {
+    --primary: 169 68% 34%;
+    --secondary: 166 36% 91%;
+    --secondary-foreground: 169 56% 20%;
+    --accent: 166 38% 91%;
+    --accent-foreground: 169 56% 20%;
+    --ring: 169 68% 34%;
+    --hero: 172 35% 12%;
+    --hero-soft: 172 28% 20%;
+    --hero-accent: 165 72% 70%;
+  }
+
+  :root[data-accent="rose"] {
+    --primary: 344 66% 48%;
+    --secondary: 344 42% 92%;
+    --secondary-foreground: 344 50% 25%;
+    --accent: 344 42% 92%;
+    --accent-foreground: 344 50% 25%;
+    --ring: 344 66% 48%;
+    --hero: 340 34% 13%;
+    --hero-soft: 340 28% 21%;
+    --hero-accent: 344 86% 78%;
+  }
+
+  :root[data-accent="amber"] {
+    --primary: 34 88% 39%;
+    --secondary: 39 48% 90%;
+    --secondary-foreground: 31 60% 20%;
+    --accent: 39 48% 90%;
+    --accent-foreground: 31 60% 20%;
+    --ring: 34 88% 39%;
+    --hero: 32 34% 12%;
+    --hero-soft: 32 27% 20%;
+    --hero-accent: 40 92% 70%;
+  }
+
+  .dark[data-accent="blue"] {
+    --primary: 211 86% 72%;
+    --primary-foreground: 220 45% 11%;
+    --ring: 211 86% 72%;
+    --hero-accent: 211 92% 78%;
+  }
+
+  .dark[data-accent="teal"] {
+    --primary: 166 67% 62%;
+    --primary-foreground: 172 48% 9%;
+    --ring: 166 67% 62%;
+    --hero-accent: 166 74% 72%;
+  }
+
+  .dark[data-accent="rose"] {
+    --primary: 344 80% 73%;
+    --primary-foreground: 342 44% 11%;
+    --ring: 344 80% 73%;
+    --hero-accent: 344 88% 79%;
+  }
+
+  .dark[data-accent="amber"] {
+    --primary: 40 90% 66%;
+    --primary-foreground: 31 55% 10%;
+    --ring: 40 90% 66%;
+    --hero-accent: 40 92% 72%;
   }
 }
 
@@ -89,13 +183,19 @@
 
   html {
     -webkit-tap-highlight-color: transparent;
+    overflow-x: hidden;
   }
 
   body {
     @apply bg-background text-foreground antialiased;
     /* Prevent horizontal jitter on mobile and respect the notch. */
     overscroll-behavior-y: none;
+    overflow-x: hidden;
     text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: hsl(var(--primary) / 0.2);
   }
 
   /* Larger, comfortable tap targets everywhere by default. */
@@ -127,5 +227,47 @@
   .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
+  }
+
+  /* Signature motion — one slow draw, one soft pulse. Nothing bounces. */
+  @keyframes flow-draw {
+    from {
+      stroke-dashoffset: 1;
+    }
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  @keyframes now-pulse {
+    0%,
+    100% {
+      box-shadow: 0 0 0 0 hsl(var(--primary) / 0.35);
+    }
+    50% {
+      box-shadow: 0 0 0 6px hsl(var(--primary) / 0);
+    }
+  }
+
+  .animate-flow-draw {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: flow-draw 1.6s ease-out forwards;
+  }
+
+  .animate-now-pulse {
+    animation: now-pulse 2.4s ease-in-out infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-flow-draw {
+      animation: none;
+      stroke-dashoffset: 0;
+    }
+
+    .animate-now-pulse,
+    .animate-fade-in {
+      animation: none;
+    }
   }
 }

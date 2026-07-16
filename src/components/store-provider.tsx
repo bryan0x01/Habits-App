@@ -10,12 +10,9 @@ import {
   seedRoutines,
 } from "@/lib/data/routines";
 import {
-  STORAGE_KEYS,
-  clearAllData,
-  importSnapshotJSON,
-  loadItem,
-  migrateIfNeeded,
-  saveItem,
+  isDayFlowSnapshot,
+  parseSnapshotJSON,
+  serializeSnapshot,
 } from "@/lib/storage";
 import { SNAPSHOT_VERSION } from "@/lib/storage";
 import { dateKey } from "@/lib/time";
@@ -41,12 +38,14 @@ import type {
   HabitCadence,
   HabitCategory,
   HabitLog,
+  InterfaceColor,
   Importance,
   LogStatus,
   Priority,
   Routine,
   RoutineBlock,
   SupportNeed,
+  ThemeMode,
   UserSettings,
   WeekPlan,
 } from "@/lib/types";
@@ -59,6 +58,8 @@ const DEFAULT_SETTINGS: UserSettings = {
   onboarded: false,
   medicationTracking: false,
   defaultSupportNeed: "varies",
+  theme: "system",
+  interfaceColor: "iris",
 };
 
 const MAX_PRIORITIES = 3;
@@ -131,12 +132,15 @@ export interface AppStore {
   setEnergyMode: (mode: EnergyMode) => void;
   setMinimumDay: (on: boolean) => void;
   setMedicationTracking: (on: boolean) => void;
+  setThemeMode: (theme: ThemeMode) => void;
+  setInterfaceColor: (color: InterfaceColor) => void;
   setDefaultSupportNeed: (need: SupportNeed) => void;
   supportNeed: (date?: string) => SupportNeed;
   setSupportNeed: (need: SupportNeed, date?: string) => void;
   medicationStatus: (date?: string) => EnergyLog["medication"] | null;
   setMedicationStatus: (status: EnergyLog["medication"] | null, date?: string) => void;
   completeOnboarding: () => void;
+  restartOnboarding: () => void;
   setVacationMode: (on: boolean) => void;
 
   // Routines
@@ -214,38 +218,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [weekPlans, setWeekPlans] = React.useState<WeekPlan[]>([]);
   const [flexTasks, setFlexTasks] = React.useState<FlexTask[]>([]);
 
-  const hydrateFromStorage = React.useCallback(() => {
-    setSettings({ ...DEFAULT_SETTINGS, ...loadItem(STORAGE_KEYS.settings, {}) });
-    setRoutines(loadItem<Routine[] | null>(STORAGE_KEYS.routines, null) ?? seedRoutines());
-    setHabits(loadItem<Habit[] | null>(STORAGE_KEYS.habits, null) ?? DEFAULT_HABITS);
-    setHabitLogs(loadItem<HabitLog[]>(STORAGE_KEYS.habitLogs, []));
-    setBlockLogs(loadItem<BlockLog[]>(STORAGE_KEYS.blockLogs, []));
-    setPriorities(loadItem<Priority[]>(STORAGE_KEYS.priorities, []));
-    setApplications(loadItem<Application[]>(STORAGE_KEYS.applications, []));
-    setEnergyLogs(loadItem<EnergyLog[]>(STORAGE_KEYS.energyLogs, []));
-    setFrictionLogs(loadItem<FrictionLog[]>(STORAGE_KEYS.frictionLogs, []));
-    setWeekPlans(loadItem<WeekPlan[]>(STORAGE_KEYS.weekPlans, []));
-    setFlexTasks(loadItem<FlexTask[]>(STORAGE_KEYS.flexTasks, []));
-  }, []);
-
   React.useEffect(() => {
-    migrateIfNeeded();
-    hydrateFromStorage();
+    // Browser-only effects and Supabase hydration begin after the server pass.
     setHydrated(true);
-  }, [hydrateFromStorage]);
-
-  // Persist each slice after hydration.
-  React.useEffect(() => { if (hydrated) saveItem(STORAGE_KEYS.settings, settings); }, [settings, hydrated]);
-  React.useEffect(() => { if (hydrated) saveItem(STORAGE_KEYS.routines, routines); }, [routines, hydrated]);
-  React.useEffect(() => { if (hydrated) saveItem(STORAGE_KEYS.habits, habits); }, [habits, hydrated]);
-  React.useEffect(() => { if (hydrated) saveItem(STORAGE_KEYS.habitLogs, habitLogs); }, [habitLogs, hydrated]);
-  React.useEffect(() => { if (hydrated) saveItem(STORAGE_KEYS.blockLogs, blockLogs); }, [blockLogs, hydrated]);
-  React.useEffect(() => { if (hydrated) saveItem(STORAGE_KEYS.priorities, priorities); }, [priorities, hydrated]);
-  React.useEffect(() => { if (hydrated) saveItem(STORAGE_KEYS.applications, applications); }, [applications, hydrated]);
-  React.useEffect(() => { if (hydrated) saveItem(STORAGE_KEYS.energyLogs, energyLogs); }, [energyLogs, hydrated]);
-  React.useEffect(() => { if (hydrated) saveItem(STORAGE_KEYS.frictionLogs, frictionLogs); }, [frictionLogs, hydrated]);
-  React.useEffect(() => { if (hydrated) saveItem(STORAGE_KEYS.weekPlans, weekPlans); }, [weekPlans, hydrated]);
-  React.useEffect(() => { if (hydrated) saveItem(STORAGE_KEYS.flexTasks, flexTasks); }, [flexTasks, hydrated]);
+  }, []);
 
   const nowIso = () => new Date().toISOString();
 
@@ -283,6 +259,14 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   const setMedicationTracking = React.useCallback((on: boolean) => {
     setSettings((current) => ({ ...current, medicationTracking: on }));
+  }, []);
+
+  const setThemeMode = React.useCallback((theme: ThemeMode) => {
+    setSettings((current) => ({ ...current, theme }));
+  }, []);
+
+  const setInterfaceColor = React.useCallback((interfaceColor: InterfaceColor) => {
+    setSettings((current) => ({ ...current, interfaceColor }));
   }, []);
 
   const setDefaultSupportNeed = React.useCallback((need: SupportNeed) => {
@@ -338,6 +322,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   const completeOnboarding = React.useCallback(() => {
     setSettings((s) => ({ ...s, onboarded: true }));
+  }, []);
+
+  const restartOnboarding = React.useCallback(() => {
+    setSettings((s) => ({ ...s, onboarded: false }));
   }, []);
 
   const setVacationMode = React.useCallback((on: boolean) => {
@@ -488,7 +476,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       {
         id: uid("habit"),
         name: input.name.trim(),
-        emoji: input.emoji?.trim() || "✅",
+        emoji: input.emoji?.trim() || input.category || "home",
         cadence: input.cadence ?? "daily",
         category: input.category ?? "home",
         minimum: input.minimum ?? false,
@@ -685,28 +673,38 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   );
 
   /* ---- data management ---- */
-  const exportData = React.useCallback(() => JSON.stringify(snapshot, null, 2), [snapshot]);
+  const exportData = React.useCallback(() => serializeSnapshot(snapshot), [snapshot]);
+
+  const applySnapshot = React.useCallback((nextSnapshot: DayFlowSnapshot) => {
+    if (!isDayFlowSnapshot(nextSnapshot)) return false;
+    setSettings({ ...DEFAULT_SETTINGS, ...nextSnapshot.settings });
+    setRoutines(nextSnapshot.routines.length > 0 ? nextSnapshot.routines : seedRoutines());
+    setHabits(nextSnapshot.habits);
+    setHabitLogs(nextSnapshot.habitLogs);
+    setBlockLogs(nextSnapshot.blockLogs);
+    setPriorities(nextSnapshot.priorities);
+    setApplications(nextSnapshot.applications);
+    setEnergyLogs(nextSnapshot.energyLogs);
+    setFrictionLogs(nextSnapshot.frictionLogs);
+    setWeekPlans(nextSnapshot.weekPlans);
+    setFlexTasks(nextSnapshot.flexTasks ?? []);
+    return true;
+  }, []);
 
   const importData = React.useCallback(
     (json: string) => {
-      const ok = importSnapshotJSON(json);
-      if (ok) hydrateFromStorage();
-      return ok;
+      const parsed = parseSnapshotJSON(json);
+      return parsed ? applySnapshot(parsed) : false;
     },
-    [hydrateFromStorage],
+    [applySnapshot],
   );
 
   const importSnapshot = React.useCallback(
-    (nextSnapshot: DayFlowSnapshot) => {
-      const ok = importSnapshotJSON(JSON.stringify(nextSnapshot));
-      if (ok) hydrateFromStorage();
-      return ok;
-    },
-    [hydrateFromStorage],
+    (nextSnapshot: DayFlowSnapshot) => applySnapshot(nextSnapshot),
+    [applySnapshot],
   );
 
   const resetData = React.useCallback(() => {
-    clearAllData();
     setSettings(DEFAULT_SETTINGS);
     setRoutines(seedRoutines());
     setHabits(DEFAULT_HABITS);
@@ -744,12 +742,15 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setEnergyMode,
     setMinimumDay,
     setMedicationTracking,
+    setThemeMode,
+    setInterfaceColor,
     setDefaultSupportNeed,
     supportNeed,
     setSupportNeed,
     medicationStatus,
     setMedicationStatus,
     completeOnboarding,
+    restartOnboarding,
     setVacationMode,
     createRoutine,
     duplicateRoutine,

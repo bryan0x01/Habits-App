@@ -10,11 +10,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 const STATUS_COPY = {
-  local: "Local-only mode",
-  "signed-out": "Sign in to sync this device",
-  syncing: "Syncing your changes…",
-  synced: "Synced privately",
-  error: "Sync needs attention",
+  checking: "Checking your account…",
+  demo: "Preview only — changes are temporary",
+  "signed-out": "Sign in to save your plan",
+  syncing: "Saving your changes…",
+  synced: "Saved privately in Supabase",
+  error: "Saving needs attention",
 } as const;
 
 export function CloudSyncCard() {
@@ -60,7 +61,7 @@ export function CloudSyncCard() {
         <CardContent className="flex items-center gap-3 p-4">
           <CloudOff className="size-5 text-muted-foreground" />
           <p className="text-sm text-muted-foreground">
-            Cloud sync will be available after this deployment gets its Supabase settings.
+            Preview mode only. Add this deployment&apos;s Supabase settings before relying on it for real data.
           </p>
         </CardContent>
       </Card>
@@ -78,7 +79,7 @@ export function CloudSyncCard() {
             <div>
               <p className="text-sm font-semibold">Sync across your devices</p>
               <p className="text-xs text-muted-foreground">
-                One email link keeps your routines private and available wherever you are.
+                Sign in with one email link. Until then, changes are temporary and disappear on refresh.
               </p>
             </div>
           </div>
@@ -99,7 +100,7 @@ export function CloudSyncCard() {
             </div>
             <Button onClick={() => void submit()} disabled={!email.trim() || sending}>
               <Mail className="size-4" />
-              {sending ? "Sending" : "Sync"}
+              {sending ? "Sending" : "Send link"}
             </Button>
           </div>
           {message ? <p className="text-xs text-muted-foreground">{message}</p> : null}
