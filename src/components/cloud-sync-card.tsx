@@ -23,6 +23,29 @@ export function CloudSyncCard() {
   const [message, setMessage] = React.useState<string | null>(null);
   const [sending, setSending] = React.useState(false);
 
+  // Surface the outcome of the magic-link callback (?auth=error|ok), then clean
+  // the URL so the message doesn't stick around on refresh.
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const auth = params.get("auth");
+    if (auth === "error") {
+      setMessage(
+        "That sign-in link didn't work. Links expire fast and must be opened in the same browser. Send a fresh one, and make sure this site's URL is in your Supabase redirect list.",
+      );
+    } else if (auth === "ok") {
+      setMessage("You're signed in. Your data now syncs privately across devices.");
+    }
+    if (auth) {
+      params.delete("auth");
+      const query = params.toString();
+      window.history.replaceState(
+        null,
+        "",
+        window.location.pathname + (query ? `?${query}` : ""),
+      );
+    }
+  }, []);
+
   const submit = async () => {
     if (!email.trim()) return;
     setSending(true);
