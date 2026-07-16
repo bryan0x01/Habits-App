@@ -1,19 +1,13 @@
 import { endOfWeek, isWithinInterval, parseISO, startOfWeek } from "date-fns";
 
-import { PRIORITY_COMPANIES, PRIORITY_LOCATIONS } from "@/lib/constants";
 import { dateKey } from "@/lib/time";
 import type { Application } from "@/lib/types";
 
 const WEEK_OPTS = { weekStartsOn: 1 as const };
 
-/** A company/location the user is actively targeting. */
-export function isPriorityCompany(app: Application): boolean {
-  const company = app.company.toLowerCase();
-  const location = (app.location ?? "").toLowerCase();
-  return (
-    PRIORITY_COMPANIES.some((c) => company.includes(c.toLowerCase())) ||
-    PRIORITY_LOCATIONS.some((l) => location.includes(l.toLowerCase()))
-  );
+/** A role the user explicitly marked as high priority. */
+export function isPriorityApplication(app: Application): boolean {
+  return app.priority === "high";
 }
 
 /** Terminal states drop out of the "in flight" pipeline. */
@@ -57,7 +51,7 @@ export function followUpsDueThisWeek(apps: Application[], now: Date): Applicatio
 }
 
 export function priorityInPipeline(apps: Application[]): number {
-  return apps.filter((a) => isActive(a) && isPriorityCompany(a)).length;
+  return apps.filter((a) => isActive(a) && isPriorityApplication(a)).length;
 }
 
 /** Apply an edit while preserving recruiting history and timestamps. */

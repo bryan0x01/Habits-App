@@ -1,6 +1,7 @@
 import { addDays, startOfWeek } from "date-fns";
 
 import { applicationsSentThisWeek } from "@/lib/applications";
+import { isHabitDueOn } from "@/lib/habits";
 import { dateKey, weekdayOf } from "@/lib/time";
 import type {
   Application,
@@ -8,6 +9,7 @@ import type {
   FrictionLog,
   FrictionReason,
   HabitLog,
+  Habit,
   Routine,
   Weekday,
 } from "@/lib/types";
@@ -17,7 +19,7 @@ const WEEK_OPTS = { weekStartsOn: 1 as const };
 export interface ReviewMetric {
   key: string;
   label: string;
-  emoji: string;
+  icon: string;
   done: number;
   total: number;
 }
@@ -33,22 +35,6 @@ export interface WeeklyReviewData {
   totalWins: number;
   activeDays: number;
 }
-
-const HABIT_METRICS = [
-  { key: "gym", habitId: "habit-gym", label: "Gym / cardio", emoji: "🏋️" },
-  { key: "study", habitId: "habit-study", label: "Study", emoji: "📖" },
-  { key: "english", habitId: "habit-english", label: "English", emoji: "🗣️" },
-  { key: "reading", habitId: "habit-read", label: "Reading", emoji: "📚" },
-  { key: "cleaning", habitId: "habit-clean", label: "Cleaning", emoji: "🧹" },
-] as const;
-
-const METRIC_SUGGESTION: Record<string, (n: number) => string> = {
-  gym: (n) => `Gym landed ${n} day${n === 1 ? "" : "s"}. Lay out tomorrow's gym clothes tonight — that's the whole start.`,
-  study: (n) => `Study happened ${n} day${n === 1 ? "" : "s"}. Block one 25-minute sprint and protect it.`,
-  english: (n) => `English got ${n} day${n === 1 ? "" : "s"}. One 10-minute lesson counts — stack it after lunch.`,
-  reading: (n) => `Reading happened ${n} day${n === 1 ? "" : "s"}. Try one page before bed.`,
-  cleaning: (n) => `Cleaning was ${n} day${n === 1 ? "" : "s"}. A 10-minute timer on one surface is plenty.`,
-};
 
 const FRICTION_SUGGESTION: Record<FrictionReason, string> = {
   "too-tired": "“Too tired” came up most. Move your hardest block earlier, when energy is higher.",
@@ -66,6 +52,7 @@ export function weekKeyOf(date: Date): string {
 }
 
 export function computeWeeklyReview(params: {
+  habits: Habit[];
   habitLogs: HabitLog[];
   routines: Routine[];
   blockLogs: BlockLog[];
@@ -73,7 +60,7 @@ export function computeWeeklyReview(params: {
   frictionLogs: FrictionLog[];
   now: Date;
 }): WeeklyReviewData {
-  const { habitLogs, routines, blockLogs, applications, frictionLogs, now } = params;
+  const { habits, habitLogs, routines, blockLogs, applications, frictionLogs, now } = params;
   const weekStart = startOfWeek(now, WEEK_OPTS);
   const days = Array.from({ length: 7 }, (_, i) => {
     const d = addDays(weekStart, i);
@@ -92,21 +79,24 @@ export function computeWeeklyReview(params: {
     return dates.size;
   };
 
-  const dayMetrics: ReviewMetric[] = HABIT_METRICS.map((m) => ({
-    key: m.key,
-    label: m.label,
-    emoji: m.emoji,
-    done: doneDays(m.habitId),
-    total: 7,
+  const metricHabits = [...habits]
+    .sort((a, b) => Number(Boolean(b.minimum)) - Number(Boolean(a.minimum)))
+    .slice(0, 5);
+  const dayMetrics: ReviewMetric[] = metricHabits.map((habit) => ({
+    key: habit.id,
+    label: habit.name,
+    icon: habit.emoji || habit.category,
+    done: doneDays(habit.id),
+    total: days.filter((day) => isHabitDueOn(habit, day.weekday)).length,
   }));
 
-  // Project / Halynt blocks completed this week (across all routines).
+  // Project blocks completed this week (across all routines).
   const blockById = new Map<string, Routine["blocks"][number]>();
   for (const r of routines) for (const b of r.blocks) blockById.set(b.id, b);
   const projectBlocks = blockLogs.filter((l) => {
     if (l.status !== "done" || !keySet.has(l.date)) return false;
     const block = blockById.get(l.blockId);
-    return Boolean(block && (block.category === "project" || /halynt/i.test(block.title)));
+    return block?.category === "project";
   }).length;
 
   const applicationsSent = applicationsSentThisWeek(applications, now);
@@ -147,7 +137,12 @@ export function computeWeeklyReview(params: {
     projectBlocks,
     topFriction,
     bestDay,
-    suggestion: buildSuggestion({ dayMetrics, applicationsSent, topFriction }),
+    suggestion: buildSuggestion({
+      dayMetrics,
+      applicationsSent,
+      tracksApplications: applications.length > 0,
+      topFriction,
+    }),
     totalWins,
     activeDays,
   };
@@ -156,13 +151,15 @@ export function computeWeeklyReview(params: {
 function buildSuggestion({
   dayMetrics,
   applicationsSent,
+  tracksApplications,
   topFriction,
 }: {
   dayMetrics: ReviewMetric[];
   applicationsSent: number;
+  tracksApplications: boolean;
   topFriction: { reason: FrictionReason; count: number }[];
 }): string {
-  if (applicationsSent === 0) {
+  if (tracksApplications && applicationsSent === 0) {
     return "No applications went out this week. Next week, aim for just one — open a saved role and apply.";
   }
   if (topFriction[0] && topFriction[0].count >= 2) {
@@ -170,7 +167,7 @@ function buildSuggestion({
   }
   const lowest = [...dayMetrics].sort((a, b) => a.done - b.done)[0];
   if (lowest && lowest.done <= 2) {
-    return METRIC_SUGGESTION[lowest.key]?.(lowest.done) ?? "Pick one habit to nudge up by a day next week.";
+    return `${lowest.label} happened ${lowest.done} day${lowest.done === 1 ? "" : "s"}. Make its first step visible and aim for one more day — not a perfect week.`;
   }
   return "You kept a steady shape this week. Same rhythm next week — it's working.";
 }

@@ -6,12 +6,6 @@ import type {
   Weekday,
 } from "@/lib/types";
 
-/**
- * Seeded routine templates. On first run these are deep-cloned into the store
- * so they become fully user-editable (rename, duplicate, add/edit/delete
- * blocks). Times are sensible defaults meant to be personalized.
- */
-
 type BlockSeed = {
   start: string;
   end: string;
@@ -24,371 +18,211 @@ type BlockSeed = {
   notes?: string;
 };
 
+const WEEKDAYS: Weekday[] = [1, 2, 3, 4, 5];
+const WEEKEND: Weekday[] = [0, 6];
+const ALL_DAYS: Weekday[] = [0, 1, 2, 3, 4, 5, 6];
+
 function defaultNotify(importance: Importance): number | undefined {
   if (importance === "high") return 15;
   if (importance === "medium") return 10;
   return undefined;
 }
 
-function buildBlocks(
-  routineId: string,
-  day: Weekday,
-  seeds: BlockSeed[],
-): RoutineBlock[] {
-  return seeds.map((s) => ({
-    id: `${routineId}-${day}-${s.start.replace(":", "")}`,
+function buildBlocks(routineId: string, day: Weekday, seeds: BlockSeed[]): RoutineBlock[] {
+  return seeds.map((seed) => ({
+    id: `${routineId}-${day}-${seed.start.replace(":", "")}`,
     day,
-    title: s.title,
-    start: s.start,
-    end: s.end,
-    category: s.category,
-    importance: s.importance,
-    tinyStart: s.tinyStart,
-    backup: s.backup,
-    notificationMinutesBefore: s.notify ?? defaultNotify(s.importance),
-    notes: s.notes,
+    title: seed.title,
+    start: seed.start,
+    end: seed.end,
+    category: seed.category,
+    importance: seed.importance,
+    tinyStart: seed.tinyStart,
+    backup: seed.backup,
+    notificationMinutesBefore: seed.notify ?? defaultNotify(seed.importance),
+    notes: seed.notes,
   }));
 }
 
-/* ------------------------------------------------------------------ */
-/* Charlotte routine                                                  */
-/* ------------------------------------------------------------------ */
-
-const CHARLOTTE = "charlotte";
-
-const charlotteWorkClassDay = (day: Weekday): RoutineBlock[] =>
-  buildBlocks(CHARLOTTE, day, [
-    { start: "06:15", end: "07:15", title: "Gym", category: "gym", importance: "high", tinyStart: "Put your gym shoes on.", backup: "A 10-minute walk or stretch counts." },
-    { start: "08:00", end: "16:30", title: "Work", category: "work", importance: "high", tinyStart: "Open your laptop and the first task.", backup: "Just clear email + one priority." },
-    { start: "17:30", end: "18:45", title: "Class", category: "class", importance: "high", tinyStart: "Sit down, open the syllabus.", backup: "Show up — notes are optional." },
-    { start: "19:15", end: "20:15", title: "Study", category: "study", importance: "medium", tinyStart: "Open notes, review one page.", backup: "Skim today's notes for 5 minutes." },
-    { start: "20:15", end: "21:00", title: "Dinner", category: "reset", importance: "medium", tinyStart: "Pick something easy to make." },
-    { start: "21:30", end: "22:00", title: "Shutdown", category: "sleep", importance: "high", tinyStart: "Write tomorrow's top 3.", backup: "Just lay out tomorrow's clothes." },
-  ]);
-
-const charlotteTuesday = (): RoutineBlock[] =>
-  buildBlocks(CHARLOTTE, 2, [
-    { start: "06:15", end: "07:15", title: "Gym", category: "gym", importance: "high", tinyStart: "Shoes on, water bottle filled.", backup: "10 minutes of movement is a win." },
-    { start: "08:30", end: "17:15", title: "Classes", category: "class", importance: "high", tinyStart: "Pack your bag, head to the first class.", backup: "Attend the must-be-there ones." },
-    { start: "17:45", end: "18:45", title: "Study", category: "study", importance: "medium", tinyStart: "Review one lecture's notes.", backup: "Read one page of notes." },
-    { start: "19:15", end: "20:30", title: "Technical skills", category: "project", importance: "medium", tinyStart: "Open the editor, run one example.", backup: "Watch one short tutorial." },
-    { start: "21:30", end: "22:00", title: "Shutdown", category: "sleep", importance: "high", tinyStart: "Write tomorrow's top 3." },
-  ]);
-
-const charlotteThursday = (): RoutineBlock[] =>
-  buildBlocks(CHARLOTTE, 4, [
-    { start: "06:15", end: "07:00", title: "Cardio", category: "gym", importance: "high", tinyStart: "Shoes on, 5-minute warm-up.", backup: "A brisk 15-minute walk." },
-    { start: "08:30", end: "17:15", title: "Classes", category: "class", importance: "high", tinyStart: "Head to the first class.", backup: "Attend the must-be-there ones." },
-    { start: "17:45", end: "19:00", title: "Halynt / project", category: "project", importance: "medium", tinyStart: "Open the board, pick one task.", backup: "Just review yesterday's progress." },
-    { start: "19:30", end: "20:15", title: "English", category: "english", importance: "medium", tinyStart: "One lesson or 10 minutes of reading.", backup: "Watch a show in English." },
-    { start: "21:30", end: "22:00", title: "Shutdown", category: "sleep", importance: "high", tinyStart: "Write tomorrow's top 3." },
-  ]);
-
-const charlotteFriday = (): RoutineBlock[] =>
-  buildBlocks(CHARLOTTE, 5, [
-    { start: "06:15", end: "07:15", title: "Gym", category: "gym", importance: "high", tinyStart: "Put your gym shoes on.", backup: "A short walk still counts." },
-    { start: "08:00", end: "12:00", title: "Work", category: "work", importance: "high", tinyStart: "Open your laptop, first task.", backup: "Clear the essentials." },
-    { start: "13:00", end: "14:30", title: "Applications", category: "applications", importance: "medium", tinyStart: "Open one saved job and apply.", backup: "Just save 3 roles for later." },
-    { start: "14:45", end: "16:00", title: "Halynt", category: "project", importance: "medium", tinyStart: "Pick one project task." },
-    { start: "16:15", end: "17:15", title: "Technical skills", category: "project", importance: "low", tinyStart: "One coding kata.", backup: "Watch a 10-minute tutorial." },
-    { start: "19:00", end: "21:30", title: "Social", category: "social", importance: "low", tinyStart: "Text a friend to make a plan.", backup: "A short call counts." },
-  ]);
-
-const charlotteSaturday = (): RoutineBlock[] =>
-  buildBlocks(CHARLOTTE, 6, [
-    { start: "09:00", end: "10:00", title: "Gym", category: "gym", importance: "high", tinyStart: "Shoes on, head out.", backup: "A walk works too." },
-    { start: "10:30", end: "12:30", title: "Halynt / project", category: "project", importance: "medium", tinyStart: "Open the project, one task." },
-    { start: "13:30", end: "14:30", title: "Chores", category: "chores", importance: "low", tinyStart: "Set a 15-minute timer, start anywhere.", backup: "Just dishes + one laundry load." },
-    { start: "15:00", end: "16:30", title: "Homework", category: "study", importance: "medium", tinyStart: "Open the assignment, read the prompt." },
-    { start: "19:00", end: "22:00", title: "Social", category: "social", importance: "low", tinyStart: "Say yes to one plan." },
-  ]);
-
-const charlotteSunday = (): RoutineBlock[] =>
-  buildBlocks(CHARLOTTE, 0, [
-    { start: "09:00", end: "09:45", title: "Cardio", category: "gym", importance: "high", tinyStart: "Shoes on, 5-minute warm-up.", backup: "A brisk walk counts." },
-    { start: "10:30", end: "11:30", title: "Reset", category: "reset", importance: "high", tinyStart: "Clear one surface, start a laundry load.", backup: "Make the bed + tidy the desk." },
-    { start: "11:30", end: "12:15", title: "Planning", category: "reset", importance: "high", tinyStart: "Open the week, block your must-dos.", backup: "Just pick 3 priorities." },
-    { start: "13:30", end: "14:30", title: "Applications", category: "applications", importance: "medium", tinyStart: "Apply to one role." },
-    { start: "15:00", end: "16:00", title: "Reading", category: "reset", importance: "low", tinyStart: "Read one chapter.", backup: "10 minutes counts." },
-    { start: "21:00", end: "21:45", title: "Shutdown", category: "sleep", importance: "high", tinyStart: "Set out tomorrow, then wind down." },
-  ]);
-
-const charlotteRoutine: Routine = {
-  id: CHARLOTTE,
-  name: "Charlotte",
-  description: "Work + school weeks: gym, classes, study, projects, and applications.",
-  emoji: "🎓",
-  seeded: true,
-  blocks: [
-    ...charlotteWorkClassDay(1),
-    ...charlotteTuesday(),
-    ...charlotteWorkClassDay(3),
-    ...charlotteThursday(),
-    ...charlotteFriday(),
-    ...charlotteSaturday(),
-    ...charlotteSunday(),
-  ],
-};
-
-/* ------------------------------------------------------------------ */
-/* Monterrey routine                                                  */
-/* ------------------------------------------------------------------ */
-
-const MONTERREY = "monterrey";
-
-const monterreyWeekday = (day: Weekday): RoutineBlock[] => {
-  const focusIsApplications = day === 1 || day === 3 || day === 5;
-  const focus: BlockSeed = focusIsApplications
-    ? { start: "16:30", end: "18:00", title: "Applications", category: "applications", importance: "medium", tinyStart: "Open one saved job and apply.", backup: "Just save 3 roles for later." }
-    : { start: "16:30", end: "18:00", title: "Projects", category: "project", importance: "medium", tinyStart: "Open the project, pick one task.", backup: "Review yesterday's progress." };
-
-  return buildBlocks(MONTERREY, day, [
-    { start: "07:00", end: "07:20", title: "Wake up", category: "reset", importance: "high", tinyStart: "Feet on the floor, curtains open.", backup: "Sit up and drink a glass of water." },
-    { start: "07:20", end: "07:50", title: "Shower & skincare", category: "reset", importance: "high", tinyStart: "Start the shower." },
-    { start: "08:15", end: "08:55", title: "Commute", category: "reset", importance: "low", tinyStart: "Grab your bag and headphones.", backup: "Queue a podcast for the ride." },
-    { start: "09:00", end: "14:00", title: "CEMEX", category: "work", importance: "high", tinyStart: "Open your laptop, first task.", backup: "Focus on the one must-do deliverable." },
-    { start: "14:00", end: "15:00", title: "Lunch & reset", category: "reset", importance: "medium", tinyStart: "Step away from the desk to eat." },
-    { start: "15:30", end: "16:15", title: "English", category: "english", importance: "high", tinyStart: "One lesson or 10 minutes of reading.", backup: "Watch something in English." },
-    focus,
-    { start: "19:30", end: "20:15", title: "Dinner", category: "reset", importance: "low", tinyStart: "Keep it simple." },
-    { start: "21:30", end: "22:00", title: "Shutdown", category: "sleep", importance: "high", tinyStart: "Write tomorrow's top 3.", backup: "Lay out tomorrow's clothes." },
-  ]);
-};
-
-const monterreySaturday = (): RoutineBlock[] =>
-  buildBlocks(MONTERREY, 6, [
-    { start: "10:00", end: "11:00", title: "Gym", category: "gym", importance: "high", tinyStart: "Shoes on, head out.", backup: "A walk works too." },
-    { start: "11:30", end: "12:30", title: "Chores", category: "chores", importance: "low", tinyStart: "15-minute timer, start anywhere.", backup: "Just dishes + laundry." },
-    { start: "13:30", end: "15:00", title: "Project", category: "project", importance: "medium", tinyStart: "Open the project, one task." },
-    { start: "15:30", end: "16:15", title: "English", category: "english", importance: "medium", tinyStart: "One lesson." },
-    { start: "19:00", end: "22:00", title: "Social", category: "social", importance: "low", tinyStart: "Say yes to one plan." },
-  ]);
-
-const monterreySunday = (): RoutineBlock[] =>
-  buildBlocks(MONTERREY, 0, [
-    { start: "10:00", end: "11:00", title: "Reset", category: "reset", importance: "high", tinyStart: "Clear one surface + start laundry.", backup: "Make the bed + tidy the desk." },
-    { start: "11:30", end: "12:15", title: "English", category: "english", importance: "medium", tinyStart: "One lesson." },
-    { start: "13:00", end: "14:30", title: "Project", category: "project", importance: "medium", tinyStart: "One task moves it forward." },
-    { start: "15:00", end: "15:45", title: "Planning", category: "reset", importance: "high", tinyStart: "Block the week's must-dos.", backup: "Pick 3 priorities." },
-    { start: "22:00", end: "22:30", title: "Sleep early", category: "sleep", importance: "high", tinyStart: "Screens off, lights low." },
-  ]);
-
-const monterreyRoutine: Routine = {
-  id: MONTERREY,
-  name: "Monterrey",
-  description: "CEMEX weeks: work 9–2, English daily, and projects or applications by day.",
-  emoji: "🏙️",
-  seeded: true,
-  blocks: [
-    ...monterreyWeekday(1),
-    ...monterreyWeekday(2),
-    ...monterreyWeekday(3),
-    ...monterreyWeekday(4),
-    ...monterreyWeekday(5),
-    ...monterreySaturday(),
-    ...monterreySunday(),
-  ],
-};
-
-/* ------------------------------------------------------------------ */
-/* Weekend routine                                                    */
-/* ------------------------------------------------------------------ */
-
-const WEEKEND = "weekend";
-
-const weekendRoutine: Routine = {
-  id: WEEKEND,
-  name: "Weekend",
-  description: "A gentler two-day rhythm: move, reset, one project push, and real rest.",
-  emoji: "🌤️",
-  seeded: true,
-  blocks: [
-    ...buildBlocks(WEEKEND, 6, [
-      { start: "09:30", end: "10:30", title: "Gym", category: "gym", importance: "high", tinyStart: "Shoes on, head out.", backup: "A 20-minute walk counts." },
-      { start: "11:00", end: "12:00", title: "Reset & chores", category: "chores", importance: "medium", tinyStart: "15-minute timer, start anywhere.", backup: "Just the dishes + a load of laundry." },
-      { start: "13:00", end: "14:30", title: "Project time", category: "project", importance: "medium", tinyStart: "Open the project, one task.", backup: "Review where you left off." },
-      { start: "15:00", end: "15:45", title: "English", category: "english", importance: "low", tinyStart: "One lesson." },
-      { start: "19:00", end: "22:00", title: "Social", category: "social", importance: "low", tinyStart: "Say yes to one plan." },
-    ]),
-    ...buildBlocks(WEEKEND, 0, [
-      { start: "10:00", end: "11:00", title: "Slow reset", category: "reset", importance: "high", tinyStart: "Clear one surface + start laundry.", backup: "Make the bed + tidy the desk." },
-      { start: "11:30", end: "12:15", title: "Plan the week", category: "reset", importance: "high", tinyStart: "Block your must-dos for the week.", backup: "Just pick 3 priorities." },
-      { start: "13:00", end: "14:00", title: "Study / English", category: "english", importance: "medium", tinyStart: "One lesson or 20 minutes." },
-      { start: "15:00", end: "16:00", title: "Read & recharge", category: "reset", importance: "low", tinyStart: "Read one chapter.", backup: "10 minutes counts." },
-      { start: "21:30", end: "22:00", title: "Wind down", category: "sleep", importance: "high", tinyStart: "Screens off, lights low." },
-    ]),
-  ],
-};
-
-/* ------------------------------------------------------------------ */
-/* Minimum Day routine                                                */
-/* ------------------------------------------------------------------ */
-
-const MINIMUM = "minimum";
-
-const minimumDaySeeds: BlockSeed[] = [
-  { start: "07:30", end: "07:50", title: "Wake & meds", category: "reset", importance: "high", tinyStart: "Feet on the floor, water + meds." },
-  { start: "08:00", end: "08:20", title: "Shower", category: "reset", importance: "high", tinyStart: "Just start the water." },
-  { start: "10:00", end: "12:00", title: "One key task", category: "work", importance: "high", tinyStart: "Pick the single most important thing.", backup: "20 focused minutes counts." },
-  { start: "18:00", end: "18:20", title: "Move a little", category: "gym", importance: "medium", tinyStart: "Stretch or take a short walk." },
-  { start: "21:30", end: "22:00", title: "Wind down", category: "sleep", importance: "high", tinyStart: "Lay out tomorrow, lights low." },
-];
-
-const ALL_DAYS: Weekday[] = [0, 1, 2, 3, 4, 5, 6];
-
-const minimumRoutine: Routine = {
-  id: MINIMUM,
-  name: "Minimum Day",
-  description: "The floor, not the ceiling. Five essentials to keep the day from slipping.",
-  emoji: "🛟",
-  seeded: true,
-  blocks: ALL_DAYS.flatMap((d) => buildBlocks(MINIMUM, d, minimumDaySeeds)),
-};
-
-/* ------------------------------------------------------------------ */
-
-function weekdayRoutine(
-  id: string,
-  name: string,
-  description: string,
-  emoji: string,
-  weekdaySeeds: BlockSeed[],
-  weekendSeeds: BlockSeed[],
-): Routine {
+function weeklyRoutine(input: {
+  id: string;
+  name: string;
+  description: string;
+  emoji: string;
+  weekdays: BlockSeed[];
+  weekend: BlockSeed[];
+}): Routine {
   return {
-    id,
-    name,
-    description,
-    emoji,
+    id: input.id,
+    name: input.name,
+    description: input.description,
+    emoji: input.emoji,
     seeded: true,
     blocks: [
-      ...([1, 2, 3, 4, 5] as Weekday[]).flatMap((day) =>
-        buildBlocks(id, day, weekdaySeeds),
-      ),
-      ...([0, 6] as Weekday[]).flatMap((day) =>
-        buildBlocks(id, day, weekendSeeds),
-      ),
+      ...WEEKDAYS.flatMap((day) => buildBlocks(input.id, day, input.weekdays)),
+      ...WEEKEND.flatMap((day) => buildBlocks(input.id, day, input.weekend)),
     ],
   };
 }
 
-const studentRoutine = weekdayRoutine(
-  "student-performance",
-  "Student",
-  "Classes, retrieval practice, spaced review, movement, and a consistent shutdown.",
-  "ST",
-  [
-    { start: "07:30", end: "08:15", title: "Wake, eat, pack", category: "reset", importance: "high", tinyStart: "Feet down, water, then check the bag.", backup: "Water, food, and the must-have class item." },
-    { start: "09:00", end: "14:00", title: "Classes / campus", category: "class", importance: "high", tinyStart: "Open today's schedule and go to the first room." },
-    { start: "15:00", end: "15:25", title: "Recall today's material", category: "study", importance: "high", tinyStart: "Close the notes and write what you remember.", backup: "Answer three questions from memory.", notes: "Retrieval practice: recall first, then check the notes." },
-    { start: "15:35", end: "16:25", title: "Assignment focus", category: "study", importance: "medium", tinyStart: "Open the assignment and read the first prompt.", backup: "Work one problem or draft one paragraph." },
-    { start: "16:25", end: "16:40", title: "Move and reset", category: "gym", importance: "medium", tinyStart: "Stand up and walk for five minutes." },
-    { start: "19:00", end: "19:25", title: "Spaced review", category: "study", importance: "medium", tinyStart: "Review one older topic, not today's notes.", backup: "Do five flashcards." },
-    { start: "21:30", end: "22:00", title: "Set tomorrow's cue", category: "sleep", importance: "high", tinyStart: "Pack the bag and choose tomorrow's first study question." },
-  ],
-  [
-    { start: "10:00", end: "10:25", title: "Weekly recall", category: "study", importance: "high", tinyStart: "List the week's topics without notes.", backup: "Recall one topic for ten minutes." },
-    { start: "10:40", end: "11:30", title: "One assignment push", category: "study", importance: "medium", tinyStart: "Pick the closest deadline and open it.", backup: "Complete one small section." },
-    { start: "12:00", end: "12:30", title: "Plan study spacing", category: "reset", importance: "medium", tinyStart: "Choose three short review sessions for next week.", backup: "Schedule the next review only." },
-    { start: "15:00", end: "16:00", title: "Move or socialize", category: "social", importance: "low", tinyStart: "Text someone or step outside." },
-    { start: "22:00", end: "22:30", title: "Protect sleep", category: "sleep", importance: "high", tinyStart: "Put tomorrow's alarm on and lower the lights." },
-  ],
-);
+export const BALANCED_ROUTINE_ID = "balanced-week";
 
-const frontlineRoutine = weekdayRoutine(
-  "frontline-shift",
-  "Frontline / shift",
-  "A practical workday with prep, protected breaks, essentials, and decompression.",
-  "SH",
-  [
-    { start: "07:00", end: "07:30", title: "Shift prep", category: "reset", importance: "high", tinyStart: "Water, food, uniform, keys." },
-    { start: "08:00", end: "12:00", title: "Shift - first half", category: "work", importance: "high", tinyStart: "Clock in and confirm the first responsibility." },
-    { start: "12:00", end: "12:30", title: "Meal and real break", category: "reset", importance: "high", tinyStart: "Step away, eat, and sit if you can.", notes: "Move this block to match the break your workplace actually allows." },
-    { start: "12:30", end: "16:30", title: "Shift - second half", category: "work", importance: "high", tinyStart: "Return to the next concrete responsibility." },
-    { start: "17:00", end: "17:20", title: "Decompress", category: "reset", importance: "high", tinyStart: "Change clothes, drink water, no decisions for ten minutes." },
-    { start: "18:00", end: "18:30", title: "One home essential", category: "chores", importance: "medium", tinyStart: "Pick food, laundry, or cleanup - only one.", backup: "Prepare what tomorrow needs." },
-    { start: "21:30", end: "22:00", title: "Sleep setup", category: "sleep", importance: "high", tinyStart: "Set out shift items and lower the lights." },
+const balancedRoutine = weeklyRoutine({
+  id: BALANCED_ROUTINE_ID,
+  name: "Balanced week",
+  description: "A flexible workday with food, focus, recovery, and a clear stopping point.",
+  emoji: "balance",
+  weekdays: [
+    { start: "07:30", end: "08:15", title: "Start gently", category: "reset", importance: "high", tinyStart: "Water, light, then get dressed.", backup: "Water and one essential are enough." },
+    { start: "09:00", end: "10:30", title: "First focus", category: "work", importance: "high", tinyStart: "Open the one outcome before messages.", backup: "Ten focused minutes counts." },
+    { start: "10:30", end: "11:00", title: "Messages and admin", category: "work", importance: "medium", tinyStart: "Reply, schedule, or archive the top three." },
+    { start: "12:30", end: "13:15", title: "Lunch away", category: "reset", importance: "high", tinyStart: "Leave the work surface and eat." },
+    { start: "14:00", end: "15:15", title: "Second focus", category: "project", importance: "medium", tinyStart: "Resume from the next written action.", backup: "Finish one small artifact." },
+    { start: "17:30", end: "18:00", title: "Move or decompress", category: "gym", importance: "low", tinyStart: "Step outside or stretch for five minutes." },
+    { start: "21:30", end: "22:00", title: "Close the day", category: "sleep", importance: "high", tinyStart: "Prepare one cue for tomorrow, then lower the lights." },
   ],
-  [
+  weekend: [
+    { start: "09:30", end: "10:00", title: "Slow start", category: "reset", importance: "high", tinyStart: "Water and food before decisions." },
+    { start: "11:00", end: "11:30", title: "One home reset", category: "chores", importance: "medium", tinyStart: "Set a ten-minute timer on one surface." },
+    { start: "14:00", end: "15:00", title: "Rest, people, or movement", category: "social", importance: "low", tinyStart: "Choose the option that gives energy back." },
+    { start: "21:30", end: "22:00", title: "Gentle close", category: "sleep", importance: "high", tinyStart: "Check tomorrow's first commitment." },
+  ],
+});
+
+const studentRoutine = weeklyRoutine({
+  id: "student-week",
+  name: "Student week",
+  description: "Classes, short recall sessions, assignments, movement, and a steady close.",
+  emoji: "student",
+  weekdays: [
+    { start: "07:30", end: "08:15", title: "Wake, eat, pack", category: "reset", importance: "high", tinyStart: "Water, food, then check the bag." },
+    { start: "09:00", end: "14:00", title: "Classes / campus", category: "class", importance: "high", tinyStart: "Open today's schedule and go to the first place." },
+    { start: "15:00", end: "15:25", title: "Recall today", category: "study", importance: "high", tinyStart: "Write what you remember before opening notes.", backup: "Answer three questions from memory." },
+    { start: "15:40", end: "16:30", title: "Assignment focus", category: "study", importance: "medium", tinyStart: "Open the nearest deadline and read the first prompt." },
+    { start: "16:30", end: "16:45", title: "Move and reset", category: "gym", importance: "low", tinyStart: "Stand up and walk for five minutes." },
+    { start: "19:00", end: "19:25", title: "Spaced review", category: "study", importance: "medium", tinyStart: "Review one older topic.", backup: "Do five flashcards." },
+    { start: "21:30", end: "22:00", title: "Pack tomorrow", category: "sleep", importance: "high", tinyStart: "Pack the bag and choose the first study question." },
+  ],
+  weekend: [
+    { start: "10:00", end: "10:25", title: "Weekly recall", category: "study", importance: "high", tinyStart: "List the week's topics without notes." },
+    { start: "10:40", end: "11:30", title: "One assignment push", category: "study", importance: "medium", tinyStart: "Pick the closest deadline and open it." },
+    { start: "12:00", end: "12:25", title: "Place next reviews", category: "reset", importance: "medium", tinyStart: "Schedule the next review only." },
+    { start: "15:00", end: "16:00", title: "Move or connect", category: "social", importance: "low", tinyStart: "Text someone or step outside." },
+  ],
+});
+
+const shiftRoutine = weeklyRoutine({
+  id: "shift-week",
+  name: "Shift week",
+  description: "Prep, protected breaks, decompression, and one home essential.",
+  emoji: "shift",
+  weekdays: [
+    { start: "07:00", end: "07:30", title: "Shift prep", category: "reset", importance: "high", tinyStart: "Water, food, clothes, keys." },
+    { start: "08:00", end: "12:00", title: "Shift — first half", category: "work", importance: "high", tinyStart: "Clock in and confirm the first responsibility." },
+    { start: "12:00", end: "12:30", title: "Meal and real break", category: "reset", importance: "high", tinyStart: "Step away and eat if you can.", notes: "Move this to match the break your workplace actually allows." },
+    { start: "12:30", end: "16:30", title: "Shift — second half", category: "work", importance: "high", tinyStart: "Return to the next concrete responsibility." },
+    { start: "17:00", end: "17:20", title: "Decompress", category: "reset", importance: "high", tinyStart: "Change clothes and take ten minutes without decisions." },
+    { start: "18:00", end: "18:30", title: "One home essential", category: "chores", importance: "medium", tinyStart: "Choose food, laundry, or cleanup — one only." },
+    { start: "21:30", end: "22:00", title: "Next-shift setup", category: "sleep", importance: "high", tinyStart: "Check the next shift and prepare essentials." },
+  ],
+  weekend: [
     { start: "09:30", end: "10:00", title: "Slow start", category: "reset", importance: "high", tinyStart: "Water and breakfast before plans." },
-    { start: "11:00", end: "11:30", title: "Life admin", category: "chores", importance: "medium", tinyStart: "Handle the one thing that would become a problem." },
+    { start: "11:00", end: "11:30", title: "Life admin", category: "chores", importance: "medium", tinyStart: "Handle the one thing that could become a problem." },
     { start: "14:00", end: "15:00", title: "Recovery or people", category: "social", importance: "low", tinyStart: "Choose rest, movement, or someone you like." },
-    { start: "21:30", end: "22:00", title: "Next-shift setup", category: "sleep", importance: "high", tinyStart: "Check the next shift time and prepare essentials." },
   ],
-);
+});
 
-const corporateRoutine = weekdayRoutine(
-  "corporate-focus",
-  "Corporate",
-  "Protected focus, communication windows, lunch away, and a clean shutdown.",
-  "CO",
-  [
-    { start: "08:30", end: "08:45", title: "Choose the day's outcome", category: "work", importance: "high", tinyStart: "Write the one deliverable that makes today useful." },
-    { start: "09:00", end: "10:30", title: "Protected focus", category: "work", importance: "high", tinyStart: "Open the deliverable before chat or email.", backup: "Move the deliverable forward for 25 minutes." },
-    { start: "10:30", end: "11:00", title: "Communication window", category: "work", importance: "medium", tinyStart: "Triage messages by reply, delegate, or schedule.", notes: "Keep notifications available if your role requires immediate response." },
-    { start: "11:00", end: "12:30", title: "Meetings and collaboration", category: "work", importance: "medium", tinyStart: "Open the agenda and name your decision needed." },
-    { start: "12:30", end: "13:15", title: "Lunch away", category: "reset", importance: "high", tinyStart: "Leave the work surface to eat." },
-    { start: "13:30", end: "15:00", title: "Second focus block", category: "project", importance: "medium", tinyStart: "Resume from the next written action.", backup: "Finish one small artifact." },
-    { start: "15:00", end: "15:25", title: "Messages and admin", category: "work", importance: "medium", tinyStart: "Clear only the messages that unblock someone." },
-    { start: "16:30", end: "17:00", title: "Close the loop", category: "reset", importance: "high", tinyStart: "Write what moved, what waits, and tomorrow's first action." },
+const focusWorkRoutine = weeklyRoutine({
+  id: "focus-work",
+  name: "Focus work",
+  description: "Protected focus, communication windows, lunch, and a clean shutdown.",
+  emoji: "focus-work",
+  weekdays: [
+    { start: "08:30", end: "08:45", title: "Choose the outcome", category: "work", importance: "high", tinyStart: "Write the one deliverable that makes today useful." },
+    { start: "09:00", end: "10:30", title: "Protected focus", category: "work", importance: "high", tinyStart: "Open the deliverable before chat or email." },
+    { start: "10:30", end: "11:00", title: "Communication window", category: "work", importance: "medium", tinyStart: "Reply, delegate, or schedule." },
+    { start: "11:00", end: "12:30", title: "Meetings / collaboration", category: "work", importance: "medium", tinyStart: "Open the agenda and name the decision needed." },
+    { start: "12:30", end: "13:15", title: "Lunch away", category: "reset", importance: "high", tinyStart: "Leave the work surface and eat." },
+    { start: "13:30", end: "15:00", title: "Second focus", category: "project", importance: "medium", tinyStart: "Resume from the next written action." },
+    { start: "16:30", end: "17:00", title: "Close the loop", category: "sleep", importance: "high", tinyStart: "Write what moved and tomorrow's first action." },
   ],
-  [
+  weekend: [
     { start: "10:00", end: "10:30", title: "Personal reset", category: "reset", importance: "high", tinyStart: "Choose one home task, then stop." },
     { start: "11:00", end: "12:00", title: "Move", category: "gym", importance: "medium", tinyStart: "Shoes on and outside." },
     { start: "14:00", end: "16:00", title: "Offline time", category: "social", importance: "low", tinyStart: "Put work apps away." },
   ],
-);
+});
 
-const businessRoutine = weekdayRoutine(
-  "owner-operator",
-  "Own business",
-  "Separate delivery, sales, operations, money, and recovery so everything is not urgent.",
-  "BO",
-  [
-    { start: "08:00", end: "08:20", title: "Owner check-in", category: "work", importance: "high", tinyStart: "Check cash, commitments, and the one business constraint." },
-    { start: "08:30", end: "10:30", title: "Create or deliver", category: "project", importance: "high", tinyStart: "Open the client or product deliverable before messages.", backup: "Ship one small customer-visible improvement." },
-    { start: "10:45", end: "11:30", title: "Sales and follow-up", category: "work", importance: "high", tinyStart: "Follow up with one real lead.", backup: "Send one useful message." },
+const ownerRoutine = weeklyRoutine({
+  id: "self-employed",
+  name: "Self-employed",
+  description: "Separate delivery, sales, operations, money, and recovery.",
+  emoji: "self-employed",
+  weekdays: [
+    { start: "08:00", end: "08:20", title: "Owner check-in", category: "work", importance: "high", tinyStart: "Check commitments and the one real constraint." },
+    { start: "08:30", end: "10:30", title: "Create or deliver", category: "project", importance: "high", tinyStart: "Open the customer-visible deliverable before messages." },
+    { start: "10:45", end: "11:30", title: "Sales and follow-up", category: "work", importance: "high", tinyStart: "Follow up with one real lead." },
     { start: "12:00", end: "12:45", title: "Lunch away", category: "reset", importance: "high", tinyStart: "Leave the work surface and eat." },
     { start: "13:00", end: "14:30", title: "Operations", category: "work", importance: "medium", tinyStart: "Pick the bottleneck that repeats most often." },
-    { start: "14:45", end: "15:15", title: "Money and metrics", category: "work", importance: "medium", tinyStart: "Open the cash view and record one decision." },
-    { start: "15:30", end: "16:30", title: "Buffer / decisions", category: "work", importance: "low", tinyStart: "Use this only for what truly appeared today." },
-    { start: "16:30", end: "17:00", title: "Delegate and detach", category: "reset", importance: "high", tinyStart: "Write tomorrow's first move and close work channels." },
+    { start: "14:45", end: "15:15", title: "Money pulse", category: "work", importance: "medium", tinyStart: "Open the cash view and record one decision." },
+    { start: "16:30", end: "17:00", title: "Delegate and detach", category: "sleep", importance: "high", tinyStart: "Write tomorrow's first move and close work channels." },
   ],
-  [
-    { start: "10:00", end: "10:30", title: "Business pulse", category: "work", importance: "medium", tinyStart: "Check only urgent customer or cash issues.", backup: "Skip it if nothing is truly urgent." },
+  weekend: [
+    { start: "10:00", end: "10:20", title: "Urgent-only pulse", category: "work", importance: "low", tinyStart: "Check only customer or cash emergencies." },
     { start: "11:00", end: "12:00", title: "Movement", category: "gym", importance: "medium", tinyStart: "Go outside for ten minutes." },
     { start: "13:00", end: "17:00", title: "Detach from work", category: "social", importance: "high", tinyStart: "Silence business notifications." },
   ],
-);
+});
+
+export const MINIMUM_ROUTINE_ID = "low-capacity-day";
+const minimumSeeds: BlockSeed[] = [
+  { start: "08:00", end: "08:20", title: "Water, food, essentials", category: "reset", importance: "high", tinyStart: "Drink water and choose the easiest food." },
+  { start: "09:00", end: "09:20", title: "Basic care", category: "reset", importance: "high", tinyStart: "Start the smallest care step." },
+  { start: "11:00", end: "11:25", title: "One useful move", category: "work", importance: "high", tinyStart: "Pick the single thing that reduces pressure.", backup: "Ten minutes still counts." },
+  { start: "17:00", end: "17:15", title: "Change state", category: "gym", importance: "low", tinyStart: "Stand by a window, stretch, or step outside." },
+  { start: "21:30", end: "22:00", title: "Prepare rest", category: "sleep", importance: "high", tinyStart: "Lower the lights and set one cue for tomorrow." },
+];
+const minimumRoutine: Routine = {
+  id: MINIMUM_ROUTINE_ID,
+  name: "Low-capacity day",
+  description: "Five anchors for days when the normal plan is too much.",
+  emoji: "minimum",
+  seeded: true,
+  blocks: ALL_DAYS.flatMap((day) => buildBlocks(MINIMUM_ROUTINE_ID, day, minimumSeeds)),
+};
 
 export const VACATION_ROUTINE_ID = "vacation-rhythm";
-
-const vacationRoutine = weekdayRoutine(
-  VACATION_ROUTINE_ID,
-  "Vacation rhythm",
-  "Four loose anchors: care, one highlight, movement, and a gentle close.",
-  "VA",
-  [
-    { start: "09:00", end: "09:30", title: "Morning anchor", category: "reset", importance: "high", tinyStart: "Water, food, essentials - then choose freely.", backup: "Water and anything medically essential." },
-    { start: "11:00", end: "13:00", title: "One trip highlight", category: "social", importance: "medium", tinyStart: "Pick one thing worth being present for.", backup: "A slow walk or coffee nearby counts." },
+const vacationRoutine = weeklyRoutine({
+  id: VACATION_ROUTINE_ID,
+  name: "Vacation rhythm",
+  description: "Four loose anchors: care, one highlight, movement, and a gentle close.",
+  emoji: "vacation",
+  weekdays: [
+    { start: "09:00", end: "09:30", title: "Morning anchor", category: "reset", importance: "high", tinyStart: "Water, food, essentials — then choose freely." },
+    { start: "11:00", end: "13:00", title: "One trip highlight", category: "social", importance: "medium", tinyStart: "Pick one thing worth being present for." },
     { start: "16:00", end: "16:30", title: "Move or reset", category: "gym", importance: "low", tinyStart: "Walk, swim, stretch, or rest on purpose." },
     { start: "22:00", end: "22:20", title: "Loose close", category: "sleep", importance: "high", tinyStart: "Check tomorrow's first commitment, then put planning away." },
   ],
-  [
-    { start: "09:00", end: "09:30", title: "Morning anchor", category: "reset", importance: "high", tinyStart: "Water, food, essentials - then choose freely." },
-    { start: "11:00", end: "13:00", title: "One trip highlight", category: "social", importance: "medium", tinyStart: "Pick one thing worth being present for.", backup: "Do nothing planned and enjoy it." },
+  weekend: [
+    { start: "09:00", end: "09:30", title: "Morning anchor", category: "reset", importance: "high", tinyStart: "Water, food, essentials — then choose freely." },
+    { start: "11:00", end: "13:00", title: "One trip highlight", category: "social", importance: "medium", tinyStart: "Pick one thing worth being present for." },
     { start: "16:00", end: "16:30", title: "Move or reset", category: "gym", importance: "low", tinyStart: "Walk, swim, stretch, or rest on purpose." },
     { start: "22:00", end: "22:20", title: "Loose close", category: "sleep", importance: "high", tinyStart: "Check tomorrow's first commitment, then put planning away." },
   ],
-);
+});
 
 export const LIFE_ROUTINE_TEMPLATES: Routine[] = [
+  balancedRoutine,
   studentRoutine,
-  frontlineRoutine,
-  corporateRoutine,
-  businessRoutine,
+  shiftRoutine,
+  focusWorkRoutine,
+  ownerRoutine,
+  minimumRoutine,
   vacationRoutine,
 ];
+
+export const ROUTINE_TEMPLATES: Routine[] = [balancedRoutine, minimumRoutine];
+export const DEFAULT_ROUTINE_ID = BALANCED_ROUTINE_ID;
 
 export function cloneRoutineTemplate(template: Routine): Routine {
   return typeof structuredClone === "function"
@@ -401,25 +235,12 @@ export function lifeRoutineTemplate(id: string): Routine | null {
   return template ? cloneRoutineTemplate(template) : null;
 }
 
-/* ------------------------------------------------------------------ */
-
-/** Fresh, deep-clonable seed templates. */
-export const ROUTINE_TEMPLATES: Routine[] = [
-  charlotteRoutine,
-  monterreyRoutine,
-  weekendRoutine,
-  minimumRoutine,
-];
-
-export const DEFAULT_ROUTINE_ID = MONTERREY;
-
 export function seedRoutines(): Routine[] {
-  // structuredClone keeps the store's copy independent of the module constant.
   return ROUTINE_TEMPLATES.map(cloneRoutineTemplate);
 }
 
 export function blocksForDay(routine: Routine, day: Weekday): RoutineBlock[] {
   return routine.blocks
-    .filter((b) => b.day === day)
+    .filter((block) => block.day === day)
     .sort((a, b) => a.start.localeCompare(b.start));
 }

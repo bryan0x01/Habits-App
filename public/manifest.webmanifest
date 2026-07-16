@@ -1,13 +1,13 @@
 {
-  "name": "DayFlow — ADHD-friendly routines",
+  "name": "DayFlow by Halynt — ADHD-friendly routines",
   "short_name": "DayFlow",
   "description": "See what to do now, what's next, and how to recover when you fall off schedule.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#121019",
-  "theme_color": "#7c5cff",
+  "background_color": "#f7f3e9",
+  "theme_color": "#6d48c5",
   "categories": ["productivity", "lifestyle", "health"],
   "icons": [
     {

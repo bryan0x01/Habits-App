@@ -5,11 +5,10 @@ import { Check, Trash2, Undo2 } from "lucide-react";
 
 import { SkipTaskButton } from "@/components/friction-dialog";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
-import { DayFlowIcon } from "@/components/dayflow-icon";
+import { IconTile } from "@/components/dayflow-icon";
 import { useStore } from "@/components/store-provider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { habitCategoryMeta } from "@/lib/constants";
 import { CADENCE_LABEL } from "@/lib/habits";
 import type { Habit } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -29,7 +28,6 @@ export function HabitCard({
   const status = habitStatus(habit.id, date);
   const done = status === "done";
   const skipped = status === "skipped";
-  const cat = habitCategoryMeta(habit.category);
 
   const subtitle = skipped
     ? "Let go today — no problem"
@@ -50,12 +48,12 @@ export function HabitCard({
         type="button"
         aria-label={done ? `Mark ${habit.name} not done` : `Mark ${habit.name} done`}
         onClick={() => setHabitStatus(habit.id, done ? null : "done", date)}
-        className={cn(
-          "flex size-11 shrink-0 items-center justify-center rounded-full text-xl transition-colors active:scale-95",
+      className={cn(
+          "flex size-11 shrink-0 items-center justify-center rounded-xl text-xl transition-colors active:scale-95",
           done ? "bg-success text-success-foreground" : "bg-secondary",
         )}
       >
-        {done ? <Check className="size-6" /> : <DayFlowIcon name={habit.category} className="size-5" />}
+        {done ? <Check className="size-6" /> : <IconTile name={habit.emoji || habit.category} className="size-11 bg-transparent" />}
       </button>
 
       <div className="min-w-0 flex-1">
@@ -78,13 +76,6 @@ export function HabitCard({
       </div>
 
       <div className="flex shrink-0 items-center gap-1">
-        <Badge
-          variant="secondary"
-          className={cn("border-0", cat.className)}
-          title={cat.label}
-        >
-          <DayFlowIcon name={habit.category} />
-        </Badge>
         {done || skipped ? (
           <Button
             variant="ghost"

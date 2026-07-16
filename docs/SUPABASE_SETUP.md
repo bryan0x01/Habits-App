@@ -1,7 +1,8 @@
-# Connect DayFlow to Supabase
+# Connect DayFlow by Halynt to Supabase
 
-DayFlow stays usable without an account. Signing in adds private, automatic
-sync for the same DayFlow data across devices.
+DayFlow can be explored without an account, but signed-out changes are an
+in-memory preview and disappear on refresh. Signing in enables the only
+persistent source of truth: a private Supabase snapshot shared across devices.
 
 ## 1. Apply the database migration
 
@@ -28,19 +29,17 @@ In **Authentication** → **URL Configuration**:
 
 ## 3. Add deployment variables
 
-This is the **complete** list of variables Vercel needs — it is the only place
-they are listed. Missing either Supabase value silently disables cloud sync in
-that deployment: the app still works, but **Settings → Cloud sync** shows
-"Cloud sync will be available after this deployment gets its Supabase settings"
-and sign-in never appears.
+This is the **complete** list of variables Vercel needs. Missing either Supabase
+value disables persistence in that deployment. The app opens in clearly
+labeled preview mode, and Settings explains that changes are temporary.
 
 In Vercel → your project → **Settings** → **Environment Variables**, add these
 for Production and Preview:
 
 | Variable | Required for | Value |
 | --- | --- | --- |
-| `NEXT_PUBLIC_SUPABASE_URL` | Cloud sync | `https://gtdsbcjnnpbarcainssf.supabase.co` |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Cloud sync | `sb_publishable_pl7absGS0Cf0qcMK81Iwiw_hwuLiYuD` |
+| `NEXT_PUBLIC_SUPABASE_URL` | Persistent data | your Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Persistent data | your project publishable key |
 | `NEXT_PUBLIC_VAPID_PUBLIC_KEY` | Push reminders only | see [NOTIFICATIONS_SETUP.md](NOTIFICATIONS_SETUP.md) |
 
 All three are `NEXT_PUBLIC_*`: they ship to the browser by design and are safe
@@ -58,8 +57,9 @@ The **Settings → Cloud sync** card is the only new entry point:
 
 1. Enter an email address.
 2. Open the sign-in link from the email.
-3. Existing local data uploads on a new account; an existing cloud backup
-   restores on a new device.
+3. A new account receives the generic starter snapshot; an existing account
+   restores its private snapshot before the main interface opens.
 
-DayFlow saves locally first, then syncs in the background. If the network is
-down, the app remains usable and catches up when connectivity returns.
+After account initialization, DayFlow debounces changes directly to Supabase.
+If a save fails, the header and Settings surface the error instead of claiming
+that the change is safely stored.

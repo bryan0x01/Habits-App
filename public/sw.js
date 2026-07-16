@@ -86,7 +86,7 @@ self.addEventListener("fetch", (event) => {
 });
 
 self.addEventListener("push", (event) => {
-  const fallback = { title: "DayFlow", body: "Your next block is coming up.", url: "/" };
+  const fallback = { title: "DayFlow by Halynt", body: "Your next block is coming up.", url: "/" };
   let payload = fallback;
   try { payload = { ...fallback, ...event.data.json() }; } catch { /* use gentle fallback */ }
   event.waitUntil(self.registration.showNotification(payload.title, {

@@ -1,9 +1,9 @@
 /**
  * DayFlow data models.
  *
- * These types are the single source of truth for everything persisted in
- * localStorage today. They are intentionally plain and serializable so the
- * exact same shapes can later back a Supabase schema without a rewrite.
+ * These types are the single source of truth for the private snapshot stored
+ * in Supabase. They are intentionally plain and serializable so cross-device
+ * sync plus file export/import stay predictable.
  */
 
 /** date-fns getDay() convention: 0 = Sunday … 6 = Saturday. */
@@ -19,6 +19,9 @@ export type SupportNeed =
   | "switch"
   | "overwhelmed"
   | "varies";
+
+export type ThemeMode = "light" | "dark" | "system";
+export type InterfaceColor = "iris" | "blue" | "teal" | "rose" | "amber";
 
 /** Categories for routine blocks. */
 export type BlockCategory =
@@ -151,7 +154,14 @@ export type ApplicationStatus =
   | "offer"
   | "rejected";
 
-export type ApplicationType = "internship" | "new-grad" | "co-op" | "part-time";
+export type ApplicationType =
+  | "full-time"
+  | "part-time"
+  | "contract"
+  | "freelance"
+  | "internship"
+  | "new-grad"
+  | "co-op";
 
 export interface Application {
   id: string;
@@ -221,6 +231,9 @@ export interface UserSettings {
   defaultSupportNeed?: SupportNeed;
   vacationMode?: boolean;
   routineBeforeVacationId?: string;
+  /** Appearance travels with the account instead of being device-only. */
+  theme?: ThemeMode;
+  interfaceColor?: InterfaceColor;
 }
 
 /** Draft priorities for the upcoming week, set from the Weekly Review. */
@@ -232,7 +245,7 @@ export interface WeekPlan {
   career: string;
 }
 
-/** Full serializable snapshot — used for export / import / future sync. */
+/** Full serializable snapshot — used for Supabase sync and export/import. */
 export interface DayFlowSnapshot {
   version: number;
   exportedAt: string;

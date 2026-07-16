@@ -5,7 +5,7 @@ import {
   applyApplicationPatch,
   followUpsDueThisWeek,
   isActive,
-  isPriorityCompany,
+  isPriorityApplication,
   priorityInPipeline,
 } from "@/lib/applications";
 import { application } from "./fixtures";
@@ -13,10 +13,9 @@ import { application } from "./fixtures";
 const thursday = new Date(2026, 6, 9, 12);
 
 describe("application helpers", () => {
-  it("matches priority companies and locations case-insensitively", () => {
-    expect(isPriorityCompany(application({ company: "Capital One" }))).toBe(true);
-    expect(isPriorityCompany(application({ company: "Startup", location: "Charlotte, NC" }))).toBe(true);
-    expect(isPriorityCompany(application({ company: "Startup", location: "Austin" }))).toBe(false);
+  it("uses the priority the person selected instead of hardcoded companies", () => {
+    expect(isPriorityApplication(application({ company: "Any company", priority: "high" }))).toBe(true);
+    expect(isPriorityApplication(application({ company: "Any company", priority: "medium" }))).toBe(false);
   });
 
   it("counts submissions only inside the Monday-Sunday week", () => {
@@ -46,9 +45,9 @@ describe("application helpers", () => {
     expect(isActive(application({ status: "offer" }))).toBe(false);
     expect(
       priorityInPipeline([
-        application({ id: "active", company: "CEMEX", status: "interview" }),
-        application({ id: "offer", company: "CEMEX", status: "offer" }),
-        application({ id: "other", company: "Other" }),
+        application({ id: "active", priority: "high", status: "interview" }),
+        application({ id: "offer", priority: "high", status: "offer" }),
+        application({ id: "other", company: "Other", priority: "medium" }),
       ]),
     ).toBe(1);
   });

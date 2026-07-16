@@ -1,4 +1,6 @@
-# DayFlow 🌊
+# DayFlow by Halynt
+
+> **A Halynt product.** DayFlow is the first focused tool in the Halynt product family.
 
 **What to do now — and how to get back on track.**
 
@@ -6,36 +8,42 @@ DayFlow is a mobile-first, installable **PWA** that helps people with ADHD-frien
 routines answer one question first: _"What should I do right now?"_ — and, just as
 importantly, _"How do I recover when I fall off?"_
 
+[**Open the live demo**](https://habits-app-eta.vercel.app) · [View the repository](https://github.com/bryan0x01/Habits-App)
+
 Instead of a giant, guilt-inducing to-do list, DayFlow surfaces the **one thing**
 that matters at this moment, offers a **tiny on-ramp** to start it, a **lighter
 backup** when it feels like too much, and a **kind path back** when a block slips.
 
-> DayFlow works fully offline with `localStorage`. Optional email sign-in adds
-> private Supabase sync across devices while keeping the app usable offline.
+> Supabase is the source of truth for saved plans. Signed-out visitors can
+> explore a clearly labeled temporary preview, but DayFlow never pretends that
+> unsaved browser state is permanent.
+
+## Preview
+
+| 60-second setup | What matters now | Editable real-week rhythms |
+| --- | --- | --- |
+| ![DayFlow onboarding](docs/screenshots/dayflow-onboarding-mobile.png) | ![DayFlow Today screen](docs/screenshots/dayflow-today-mobile.png) | ![DayFlow routine editor](docs/screenshots/dayflow-routines-mobile.png) |
 
 ---
 
 ## ✨ Features
 
-Six screens, each intentionally focused:
+Five primary screens, each intentionally focused, plus one optional career tool:
 
 | Screen | What it does |
 | --- | --- |
-| **Today** | The home base. "What now", committed outcomes, local brain-dump planning, one-tap Rescue, capacity/progress, habit day-state, and the day timeline. In **Rescue** mode it collapses to three moves. |
-| **Routines** | Start blank or add editable Student, Frontline, Corporate, Own Business, and Vacation rhythms alongside the original templates. |
-| **Habits** | 11 seeded daily habits grouped by category, with completion states, weekly momentum, and friction logging. Add your own; delete anytime. |
-| **Applications** | A CS-recruiting tracker: type (internship / new-grad / co-op / part-time), status pipeline, priority, deadlines, resume version, referral contact, and follow-ups. Filters by status **and** priority, flags follow-ups due this week, and stars target companies (Wells Fargo, Ally, BofA, CEMEX, Capital One, Charlotte roles). A weekly recruiting pulse also shows on Today. |
-| **Weekly Review** | Judgment-free, chart-free analytics: gym, study, English, reading, and cleaning days; applications sent; project blocks; top friction; your strongest day; one suggested improvement; and a **Plan next week** draft (school/work, health/gym, career/project). |
-| **Settings** | Active routine, Vacation Mode, capacity defaults, theme, optional magic-link cloud sync, data export/import, and reset. |
+| **Today** | The home base. One visible next action, recovery after a missed block, committed outcomes, habit minimums, and an optional full-plan drawer. In **Rescue** mode it collapses to three moves. |
+| **Routines** | Start blank or add editable Balanced, Student, Shift, Focus Work, Self-employed, Low-capacity, and Vacation rhythms. |
+| **Habits** | Eight broad starter habits with semantic icons, completion states, weekly momentum, and friction logging. Add your own; delete anytime. |
+| **Weekly Review** | Judgment-free, data-driven habit metrics, project progress, friction patterns, strongest day, and one suggested adjustment. |
+| **Settings** | Theme, five basic interface colors, routine and support defaults, Supabase sign-in, reminders, export/import, and reset. |
+| **Applications (optional)** | A career tracker available under Settings → Tools; it is no longer imposed on the primary navigation. |
 
-Four routine templates ship out of the box — **Charlotte** (work + school),
-**Monterrey** (CEMEX weeks), **Weekend**, and **Minimum Day** — each with realistic
-time blocks, tiny-starts, backup options, and per-block importance. On first run
-they're cloned into your local store so every one is fully editable.
-
-The template library adds five evidence-informed starting points: **Student**,
-**Frontline / shift**, **Corporate**, **Own business**, and **Vacation rhythm**.
-They are never imposed automatically and every time or block can be changed.
+New accounts start with **Balanced week** and **Low-capacity day**. The template
+library adds **Student week**, **Shift week**, **Focus work**, **Self-employed**,
+and **Vacation rhythm**. These are public starting points—no personal employer,
+location, class, or language goal is baked into a new user&apos;s plan. Every time
+and block can be changed.
 
 ---
 
@@ -70,8 +78,9 @@ overwhelm, time blindness, or shame spirals.
 - **Friction logging** — skipping asks a low-friction _"what got in the way?"_ (too
   big, no energy, distracted…). Over a week, the Review screen surfaces patterns so
   you can shrink the right tasks — framed as data, never as failure.
-- **Tone & UI** — friendly but not childish, big tap targets, cards over lists,
-  dark mode, and encouraging copy throughout ("Fell off? Totally normal.").
+- **Tone & UI** — friendly but not childish, big tap targets, semantic Lucide
+  icons, light/dark/system brightness, five synced interface colors, and
+  encouraging copy throughout.
 - **Progressive density** — Today contains only decisions needed today. Weekly
   momentum lives in Habits and recruiting analytics live in Applications.
 - **Clear my head** — a local, deterministic parser turns one-item-per-line brain
@@ -80,6 +89,11 @@ overwhelm, time blindness, or shame spirals.
   are kept, shrunk, or moved only after the user reviews and applies the plan.
 - **Vacation Mode** — temporarily swaps in four loose anchors and restores the
   prior routine when the trip ends.
+- **Visible time + focus sprint** — the current block drains as a ring, and an
+  optional 10/25/45-minute timer keeps one task in view without turning the app
+  into a stopwatch dashboard.
+- **One-minute onboarding** — choose the friction DayFlow should support and the
+  closest editable week shape, or keep the defaults in one tap.
 
 ---
 
@@ -90,9 +104,8 @@ overwhelm, time blindness, or shame spirals.
 - **Tailwind CSS 3** + **[shadcn/ui](https://ui.shadcn.com/)** (Radix primitives)
 - **[date-fns](https://date-fns.org/)** for date/time logic
 - **[lucide-react](https://lucide.dev/)** icons
-- **[next-themes](https://github.com/pacocoursey/next-themes)** for dark mode
-- **`localStorage`** for local-first persistence — wrapped in typed utilities
-- **Supabase** (optional) — magic-link Auth plus a private RLS-protected sync snapshot
+- **Supabase** — magic-link Auth plus one private RLS-protected snapshot per user
+- **Account-synced appearance** — light/dark/system plus five interface colors
 - **PWA**: web manifest, service worker, and generated icons
 - Deploy-ready for **Vercel**
 
@@ -101,16 +114,17 @@ overwhelm, time blindness, or shame spirals.
 Defined in [`src/lib/types.ts`](src/lib/types.ts): `Routine`, `RoutineBlock`
 (with `importance` and `notificationMinutesBefore`), `Habit` (with `category` and
 `minimum`), `HabitLog`, `BlockLog`, `Priority`, `Application`, `EnergyLog`,
-`FrictionLog`, `FlexTask`, `WeekPlan`, and `UserSettings`. They're plain and serializable on purpose, so
-the same shapes can back a Supabase schema later. A `SCHEMA_VERSION` guard in
-[`storage.ts`](src/lib/storage.ts) reseeds cleanly when these shapes evolve.
+`FrictionLog`, `FlexTask`, `WeekPlan`, and `UserSettings`. They are plain and
+serializable because the same validated shape is written to Supabase and used
+for file export/import.
 
 ### Persistence
 
-All storage flows through [`src/lib/storage.ts`](src/lib/storage.ts) (typed
-`loadItem`/`saveItem`, plus snapshot export/import). The single React
-[`StoreProvider`](src/components/store-provider.tsx) hydrates from `localStorage`
-on mount and persists every change. It saves:
+[`StoreProvider`](src/components/store-provider.tsx) owns the in-memory state.
+[`CloudProvider`](src/components/cloud-provider.tsx) loads the authenticated
+user&apos;s validated snapshot from Supabase, then debounces each change back to the
+same RLS-protected row. [`storage.ts`](src/lib/storage.ts) validates cloud reads
+and backup imports; it does not read or write browser storage. The snapshot saves:
 
 - the active routine plus all **editable routines and their blocks**
 - settings (energy mode, minimum day, theme)
@@ -120,9 +134,8 @@ on mount and persists every change. It saves:
 - next-week planning drafts
 - flexible brain-dump tasks and their local Rescue estimates
 
-When signed in, the store also syncs this snapshot to a single RLS-protected
-Supabase row per user. Local data remains the immediate/offline source of truth;
-cloud sync happens in the background.
+An authenticated Supabase snapshot is the only persistent source of truth.
+Signed-out changes live only in memory and disappear on refresh by design.
 
 ---
 
@@ -144,7 +157,7 @@ src/
 │   └── *.tsx           # Feature components (what-now, momentum, etc.)
 └── lib/
     ├── types.ts        # Data models
-    ├── storage.ts      # localStorage utilities + export/import
+    ├── storage.ts      # snapshot validation + export/import serialization
     ├── schedule.ts     # "What now / next / missed" logic
     ├── planner.ts      # local brain-dump and Rescue rules
     ├── day-state.ts    # Day states + streak-free weekly momentum
@@ -164,7 +177,7 @@ supabase/
 └── migrations/          # RLS-protected cloud-sync schema
 docs/
 └── SUPABASE_SETUP.md    # Dashboard + Vercel configuration steps
-tests/                   # Vitest domain and persistence regression suite
+tests/                   # Domain, component, and Playwright E2E regression suites
 ```
 
 ---
@@ -181,7 +194,7 @@ npm run dev
 Open [http://localhost:3000](http://localhost:3000). On your phone, open it over
 your local network (or a deployed URL) and use **"Add to Home Screen"** to install.
 
-> **No environment variables are required for local-only use.** To enable
+> **No environment variables are required for temporary preview use.** To enable
 > account sync, follow [the Supabase setup guide](docs/SUPABASE_SETUP.md) and add
 > the URL plus publishable key to `.env.local` and Vercel.
 
@@ -196,6 +209,7 @@ Full release verification:
 
 ```bash
 npm run check    # ESLint + regression tests + production build/type-check
+npm run test:e2e # first-run, persistence, and Rescue browser flows
 ```
 
 > The service worker only registers in **production** builds, so it never
@@ -233,7 +247,7 @@ the deployed app is installable as a PWA immediately.
 
 ## 🔭 Future improvements
 
-The MVP is deliberately local-only. Natural next steps:
+The Supabase-first core is complete. Natural next steps:
 
 - **Richer multi-device conflict handling** — signed-in devices already sync a
   private snapshot; future work can add live conflict resolution for simultaneous
@@ -243,9 +257,6 @@ The MVP is deliberately local-only. Natural next steps:
   personalized nudges.
 - **Google Calendar** — two-way sync so routine blocks reflect real meetings and
   free/busy time.
-- **Real web push notifications** — gentle, well-timed reminders for your next block.
-  Blocks already carry a `notificationMinutesBefore`; the Settings screen has the
-  toggle placeholder. This wires it to the Push API, respecting focus and quiet hours.
 - **Deeper calendar recurrence** — multi-day block creation is available today;
   future calendar sync could add date ranges, exceptions, and alternating weeks.
 
@@ -254,20 +265,23 @@ The MVP is deliberately local-only. Natural next steps:
 ## 📄 Resume bullets
 
 - Built a mobile-first, ADHD-friendly productivity **PWA** using **Next.js**,
-  **TypeScript**, **Tailwind CSS**, and **localStorage**.
+  **TypeScript**, **Tailwind CSS**, and a private **Supabase** snapshot layer.
 - Implemented adaptive routine flows with **energy modes**, **tiny-start** actions,
   **backup options**, and **minimum-day** recovery logic.
 - Designed **habit momentum tracking**, **application tracking**, and **weekly review
   analytics**.
-- Added **installable PWA** support with a **service worker** and
-  **notification-ready settings**.
+- Added **installable PWA** support with a **service worker**, private cloud sync,
+  hardened web-push delivery, and cross-midnight reminder deduplication.
+- Added regression coverage across pure domain logic, rendered components, and
+  first-run/Rescue browser journeys.
 
 ---
 
 ## 📝 Notes
 
-- All data is stored **locally on the device**. Clearing site data or using the
-  **Reset** button in Settings wipes it. Use **Export** in Settings to back up.
+- Persistent data requires Supabase sign-in. A signed-out preview is temporary;
+  use **Export** for an optional file backup and **Reset** to replace the synced
+  snapshot with a fresh starter state.
 - Placeholder routine times are sensible defaults meant to be personalized.
 
 Built with care for brains that work a little differently. 💜

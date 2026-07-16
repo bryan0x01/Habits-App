@@ -1,6 +1,8 @@
 import { createClient } from "npm:@supabase/supabase-js@2.110.2";
 import webpush from "npm:web-push@3.6.7";
 
+import { matchReminder } from "./matcher.ts";
+
 const required = (name: string) => {
   const value = Deno.env.get(name);
   if (!value) throw new Error(`Missing ${name}`);
@@ -28,24 +30,34 @@ Deno.serve(async (request) => {
     const { data: snapshots, error: snapshotError } = ids.length ? await supabase.from("dayflow_snapshots").select("user_id,data").in("user_id", ids) : { data: [], error: null };
     if (snapshotError) throw snapshotError;
     const byUser = new Map((snapshots ?? []).map((row) => [row.user_id, row.data]));
+    const now = new Date();
     let sent = 0;
 
     for (const item of subscriptions ?? []) {
       const snapshot = byUser.get(item.user_id);
       const routine = snapshot?.routines?.find((candidate: { id: string }) => candidate.id === snapshot.settings?.activeRoutineId);
       if (!routine) continue;
-      const local = partsAt(new Date(), item.timezone || "UTC");
+      const timezone = item.timezone || "UTC";
+      const local = partsAt(now, timezone);
       for (const block of routine.blocks ?? []) {
-        const lead = block.notificationMinutesBefore;
-        if (block.day !== local.weekday || typeof lead !== "number" || lead <= 0) continue;
-        const [hour, minute] = String(block.start).split(":").map(Number);
-        if (hour * 60 + minute - lead !== local.minutes) continue;
-        const delivery = { user_id: item.user_id, endpoint: item.endpoint, block_id: block.id, local_date: local.date, lead_minutes: lead };
+        // Window matching (see matcher.ts): a skipped cron tick self-heals on
+        // the next run, and the deliveries PK keeps retries from double-sending.
+        const match = matchReminder(block, local);
+        if (!match) continue;
+        const lead = block.notificationMinutesBefore as number;
+        // Compute the actual block occurrence, correcting for a late cron run.
+        // Without `minutesLate`, a 23:59 block caught up at 23:46 with a
+        // 15-minute lead would incorrectly claim the following date.
+        const blockInstant = new Date(
+          now.getTime() + match.minutesUntilStart * 60_000,
+        );
+        const occurrence = partsAt(blockInstant, timezone).date;
+        const delivery = { user_id: item.user_id, endpoint: item.endpoint, block_id: block.id, local_date: occurrence, lead_minutes: lead };
         const { error: claimError } = await supabase.from("notification_deliveries").insert(delivery);
         if (claimError?.code === "23505") continue;
         if (claimError) throw claimError;
         try {
-          await webpush.sendNotification(item.subscription, JSON.stringify({ title: `In ${lead} min: ${block.title}`, body: block.tinyStart || "Open DayFlow when you're ready.", tag: `block-${block.id}-${local.date}`, url: "/" }));
+          await webpush.sendNotification(item.subscription, JSON.stringify({ title: `In ${lead} min: ${block.title}`, body: block.tinyStart || "Open DayFlow when you're ready.", tag: `block-${block.id}-${occurrence}`, url: "/" }));
           sent += 1;
         } catch (pushError) {
           const status = (pushError as { statusCode?: number }).statusCode;

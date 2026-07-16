@@ -1,122 +1,14 @@
-import type {
-  Application,
-  BlockLog,
-  DayFlowSnapshot,
-  EnergyLog,
-  FlexTask,
-  FrictionLog,
-  Habit,
-  HabitLog,
-  Priority,
-  Routine,
-  UserSettings,
-  WeekPlan,
-} from "@/lib/types";
+import type { DayFlowSnapshot } from "@/lib/types";
 
 /**
- * Thin, typed wrapper around localStorage.
+ * Snapshot validation and file serialization.
  *
- * Everything the app persists flows through here so that swapping the backend
- * later (e.g. Supabase) is a matter of reimplementing these functions rather
- * than hunting for `localStorage` calls across the codebase.
+ * DayFlow no longer persists product data in browser storage. Supabase owns
+ * the private account snapshot; this module only protects the boundary where
+ * JSON enters the app (cloud reads and backup imports).
  */
 
-const PREFIX = "dayflow";
 export const SNAPSHOT_VERSION = 2;
-/** Bump when persisted shapes change incompatibly (triggers a reseed). */
-export const SCHEMA_VERSION = 2;
-
-export const STORAGE_KEYS = {
-  schema: `${PREFIX}:schemaVersion`,
-  settings: `${PREFIX}:settings`,
-  routines: `${PREFIX}:routines`,
-  habits: `${PREFIX}:habits`,
-  habitLogs: `${PREFIX}:habitLogs`,
-  blockLogs: `${PREFIX}:blockLogs`,
-  priorities: `${PREFIX}:priorities`,
-  applications: `${PREFIX}:applications`,
-  energyLogs: `${PREFIX}:energyLogs`,
-  frictionLogs: `${PREFIX}:frictionLogs`,
-  weekPlans: `${PREFIX}:weekPlans`,
-  flexTasks: `${PREFIX}:flexTasks`,
-} as const;
-
-export function isBrowser(): boolean {
-  return typeof window !== "undefined" && typeof window.localStorage !== "undefined";
-}
-
-export function loadItem<T>(key: string, fallback: T): T {
-  if (!isBrowser()) return fallback;
-  try {
-    const raw = window.localStorage.getItem(key);
-    if (raw === null) return fallback;
-    return JSON.parse(raw) as T;
-  } catch {
-    return fallback;
-  }
-}
-
-export function saveItem<T>(key: string, value: T): void {
-  if (!isBrowser()) return;
-  try {
-    window.localStorage.setItem(key, JSON.stringify(value));
-  } catch {
-    // Storage full or unavailable (private mode) — fail quietly.
-  }
-}
-
-export function removeItem(key: string): void {
-  if (!isBrowser()) return;
-  try {
-    window.localStorage.removeItem(key);
-  } catch {
-    /* ignore */
-  }
-}
-
-export function clearAllData(): void {
-  Object.values(STORAGE_KEYS).forEach(removeItem);
-}
-
-/**
- * Reconcile old localStorage with the current schema. When the schema version
- * changes, data whose shape changed (habits, routines, and their logs) is
- * dropped so fresh seeds can take over; user content with a stable shape
- * (applications) is preserved.
- */
-export function migrateIfNeeded(): void {
-  if (!isBrowser()) return;
-  const stored = loadItem<number | null>(STORAGE_KEYS.schema, null);
-  if (stored === SCHEMA_VERSION) return;
-
-  removeItem(STORAGE_KEYS.routines);
-  removeItem(STORAGE_KEYS.habits);
-  removeItem(STORAGE_KEYS.habitLogs);
-  removeItem(STORAGE_KEYS.blockLogs);
-  saveItem(STORAGE_KEYS.schema, SCHEMA_VERSION);
-}
-
-export function buildSnapshot(): DayFlowSnapshot {
-  return {
-    version: SNAPSHOT_VERSION,
-    exportedAt: new Date().toISOString(),
-    settings: loadItem<UserSettings>(STORAGE_KEYS.settings, {} as UserSettings),
-    routines: loadItem<Routine[]>(STORAGE_KEYS.routines, []),
-    habits: loadItem<Habit[]>(STORAGE_KEYS.habits, []),
-    habitLogs: loadItem<HabitLog[]>(STORAGE_KEYS.habitLogs, []),
-    blockLogs: loadItem<BlockLog[]>(STORAGE_KEYS.blockLogs, []),
-    priorities: loadItem<Priority[]>(STORAGE_KEYS.priorities, []),
-    applications: loadItem<Application[]>(STORAGE_KEYS.applications, []),
-    energyLogs: loadItem<EnergyLog[]>(STORAGE_KEYS.energyLogs, []),
-    frictionLogs: loadItem<FrictionLog[]>(STORAGE_KEYS.frictionLogs, []),
-    weekPlans: loadItem<WeekPlan[]>(STORAGE_KEYS.weekPlans, []),
-    flexTasks: loadItem<FlexTask[]>(STORAGE_KEYS.flexTasks, []),
-  };
-}
-
-export function exportSnapshotJSON(): string {
-  return JSON.stringify(buildSnapshot(), null, 2);
-}
 
 type JsonRecord = Record<string, unknown>;
 
@@ -138,6 +30,8 @@ function isOneOf<T extends string>(value: unknown, options: readonly T[]): value
 
 const ENERGY_MODES = ["high", "medium", "low", "chaos"] as const;
 const SUPPORT_NEEDS = ["start", "focus", "remember", "switch", "overwhelmed", "varies"] as const;
+const THEMES = ["light", "dark", "system"] as const;
+const INTERFACE_COLORS = ["iris", "blue", "teal", "rose", "amber"] as const;
 const LOG_STATUSES = ["done", "skipped"] as const;
 const IMPORTANCE = ["low", "medium", "high"] as const;
 const BLOCK_CATEGORIES = [
@@ -149,7 +43,15 @@ const HABIT_CATEGORIES = ["body", "school", "career", "home", "money", "sleep"] 
 const APPLICATION_STATUSES = [
   "saved", "applied", "assessment", "interview", "offer", "rejected",
 ] as const;
-const APPLICATION_TYPES = ["internship", "new-grad", "co-op", "part-time"] as const;
+const APPLICATION_TYPES = [
+  "full-time",
+  "part-time",
+  "contract",
+  "freelance",
+  "internship",
+  "new-grad",
+  "co-op",
+] as const;
 const FRICTION_REASONS = [
   "too-tired", "forgot", "too-late", "no-start", "social", "no-food", "other",
 ] as const;
@@ -226,7 +128,8 @@ function isEnergyLog(value: unknown): boolean {
     isRecord(value) &&
     hasStrings(value, ["id", "date", "createdAt"]) &&
     isOneOf(value.mode, ENERGY_MODES) &&
-    (value.medication === undefined || isOneOf(value.medication, ["taken", "not-taken"] as const)) &&
+    (value.medication === undefined ||
+      isOneOf(value.medication, ["taken", "not-taken"] as const)) &&
     (value.supportNeed === undefined || isOneOf(value.supportNeed, SUPPORT_NEEDS))
   );
 }
@@ -264,7 +167,7 @@ function isWeekPlan(value: unknown): boolean {
   return isRecord(value) && hasStrings(value, ["weekKey", "school", "health", "career"]);
 }
 
-/** Validate imported data before replacing any local state. */
+/** Validate cloud or imported data before it can replace in-memory state. */
 export function isDayFlowSnapshot(value: unknown): value is DayFlowSnapshot {
   if (!isRecord(value)) return false;
   if (value.version !== SNAPSHOT_VERSION || typeof value.exportedAt !== "string") return false;
@@ -277,10 +180,11 @@ export function isDayFlowSnapshot(value: unknown): value is DayFlowSnapshot {
     typeof settings.minimumDay !== "boolean" ||
     typeof settings.onboarded !== "boolean" ||
     (settings.medicationTracking !== undefined && typeof settings.medicationTracking !== "boolean") ||
-    (settings.defaultSupportNeed !== undefined &&
-      !isOneOf(settings.defaultSupportNeed, SUPPORT_NEEDS)) ||
+    (settings.defaultSupportNeed !== undefined && !isOneOf(settings.defaultSupportNeed, SUPPORT_NEEDS)) ||
     (settings.vacationMode !== undefined && typeof settings.vacationMode !== "boolean") ||
-    !isOptionalString(settings.routineBeforeVacationId)
+    !isOptionalString(settings.routineBeforeVacationId) ||
+    (settings.theme !== undefined && !isOneOf(settings.theme, THEMES)) ||
+    (settings.interfaceColor !== undefined && !isOneOf(settings.interfaceColor, INTERFACE_COLORS))
   ) {
     return false;
   }
@@ -305,29 +209,15 @@ export function isDayFlowSnapshot(value: unknown): value is DayFlowSnapshot {
   return requiredArraysValid && flexTasksValid;
 }
 
-/**
- * Restore a previously exported snapshot. Returns false on malformed input so
- * callers can surface a friendly error instead of corrupting state.
- */
-export function importSnapshotJSON(json: string): boolean {
+export function parseSnapshotJSON(json: string): DayFlowSnapshot | null {
   try {
-    const data: unknown = JSON.parse(json);
-    if (!isDayFlowSnapshot(data)) return false;
-
-    saveItem(STORAGE_KEYS.settings, data.settings);
-    saveItem(STORAGE_KEYS.routines, data.routines);
-    saveItem(STORAGE_KEYS.habits, data.habits);
-    saveItem(STORAGE_KEYS.habitLogs, data.habitLogs);
-    saveItem(STORAGE_KEYS.blockLogs, data.blockLogs);
-    saveItem(STORAGE_KEYS.priorities, data.priorities);
-    saveItem(STORAGE_KEYS.applications, data.applications);
-    saveItem(STORAGE_KEYS.energyLogs, data.energyLogs);
-    saveItem(STORAGE_KEYS.frictionLogs, data.frictionLogs);
-    saveItem(STORAGE_KEYS.weekPlans, data.weekPlans);
-    saveItem(STORAGE_KEYS.flexTasks, data.flexTasks ?? []);
-    saveItem(STORAGE_KEYS.schema, SCHEMA_VERSION);
-    return true;
+    const parsed: unknown = JSON.parse(json);
+    return isDayFlowSnapshot(parsed) ? parsed : null;
   } catch {
-    return false;
+    return null;
   }
+}
+
+export function serializeSnapshot(snapshot: DayFlowSnapshot): string {
+  return JSON.stringify(snapshot, null, 2);
 }

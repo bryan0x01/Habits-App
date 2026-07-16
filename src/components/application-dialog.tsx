@@ -54,7 +54,7 @@ const EMPTY: FormState = {
   company: "",
   role: "",
   status: "saved",
-  type: "internship",
+  type: "full-time",
   priority: "medium",
   location: "",
   link: "",
@@ -87,7 +87,7 @@ export function ApplicationDialog({
             company: application.company,
             role: application.role,
             status: application.status,
-            type: application.type ?? "internship",
+            type: application.type ?? "full-time",
             priority: application.priority ?? "medium",
             location: application.location ?? "",
             link: application.link ?? "",
@@ -140,7 +140,7 @@ export function ApplicationDialog({
               id="app-company"
               value={form.company}
               onChange={(e) => set("company", e.target.value)}
-              placeholder="Wells Fargo"
+              placeholder="Example company"
               autoFocus
             />
           </Field>
@@ -149,7 +149,7 @@ export function ApplicationDialog({
               id="app-role"
               value={form.role}
               onChange={(e) => set("role", e.target.value)}
-              placeholder="Software Engineer Intern"
+              placeholder="Product designer"
             />
           </Field>
 
@@ -213,7 +213,7 @@ export function ApplicationDialog({
                 id="app-location"
                 value={form.location}
                 onChange={(e) => set("location", e.target.value)}
-                placeholder="Charlotte, NC"
+                placeholder="Remote or city"
               />
             </Field>
             <Field label="Link" htmlFor="app-link">

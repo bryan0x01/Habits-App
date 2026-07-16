@@ -4,7 +4,7 @@ import { type NextRequest, NextResponse } from "next/server";
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabasePublishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
-/** Refresh the Supabase auth cookie without blocking a local-only deployment. */
+/** Refresh the Supabase auth cookie without blocking a preview-only deployment. */
 export async function updateSupabaseSession(request: NextRequest) {
   let response = NextResponse.next({ request });
 

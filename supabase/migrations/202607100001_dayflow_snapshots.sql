@@ -1,4 +1,4 @@
--- One private, local-first snapshot per authenticated DayFlow user.
+-- One private, Supabase-first snapshot per authenticated DayFlow user.
 -- The app never uses a service-role key; RLS is the security boundary.
 
 create table if not exists public.dayflow_snapshots (

@@ -62,6 +62,12 @@ const config: Config = {
           DEFAULT: "hsl(var(--warning))",
           foreground: "hsl(var(--warning-foreground))",
         },
+        hero: {
+          DEFAULT: "hsl(var(--hero))",
+          foreground: "hsl(var(--hero-foreground))",
+          soft: "hsl(var(--hero-soft))",
+          accent: "hsl(var(--hero-accent))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",

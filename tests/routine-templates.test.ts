@@ -8,12 +8,14 @@ import {
 } from "@/lib/data/routines";
 
 describe("life routine templates", () => {
-  it("offers the five researched contexts with every day covered", () => {
+  it("offers broad life contexts with every day covered", () => {
     expect(LIFE_ROUTINE_TEMPLATES.map((routine) => routine.id)).toEqual([
-      "student-performance",
-      "frontline-shift",
-      "corporate-focus",
-      "owner-operator",
+      "balanced-week",
+      "student-week",
+      "shift-week",
+      "focus-work",
+      "self-employed",
+      "low-capacity-day",
       VACATION_ROUTINE_ID,
     ]);
 
@@ -25,11 +27,11 @@ describe("life routine templates", () => {
   });
 
   it("returns independent editable copies", () => {
-    const first = lifeRoutineTemplate("student-performance");
-    const second = lifeRoutineTemplate("student-performance");
+    const first = lifeRoutineTemplate("student-week");
+    const second = lifeRoutineTemplate("student-week");
     expect(first).not.toBeNull();
     expect(second).not.toBeNull();
     first!.name = "Changed";
-    expect(second!.name).toBe("Student");
+    expect(second!.name).toBe("Student week");
   });
 });

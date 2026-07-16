@@ -5,15 +5,12 @@ import type { Habit } from "@/lib/types";
  * `minimum: true` marks the non-negotiables that make a "Day saved".
  */
 export const DEFAULT_HABITS: Habit[] = [
-  { id: "habit-gym", name: "Gym or cardio", emoji: "🏋️", cadence: "daily", category: "body", minimum: true, tinyStart: "Put your gym clothes on." },
-  { id: "habit-shower", name: "Shower", emoji: "🚿", cadence: "daily", category: "body", minimum: true, tinyStart: "Just start the water." },
-  { id: "habit-skincare-am", name: "Skincare AM", emoji: "🧴", cadence: "daily", category: "body", tinyStart: "Splash water, then moisturizer." },
-  { id: "habit-skincare-pm", name: "Skincare PM", emoji: "🌙", cadence: "daily", category: "body", tinyStart: "Just wash your face." },
-  { id: "habit-review", name: "Review tasks & emails", emoji: "📥", cadence: "daily", category: "career", minimum: true, tinyStart: "Open your inbox, scan the top 5." },
-  { id: "habit-study", name: "Study at least 1 hour", emoji: "📖", cadence: "daily", category: "school", minimum: true, tinyStart: "Open your notes, read one page." },
-  { id: "habit-english", name: "English practice", emoji: "🗣️", cadence: "daily", category: "school", tinyStart: "One lesson or 10 minutes." },
-  { id: "habit-read", name: "Read", emoji: "📚", cadence: "daily", category: "home", tinyStart: "Read one page." },
-  { id: "habit-clean", name: "Clean 10 minutes", emoji: "🧹", cadence: "daily", category: "home", tinyStart: "Set a 10-minute timer." },
-  { id: "habit-breakfast", name: "Prepare breakfast", emoji: "🍳", cadence: "daily", category: "home", tinyStart: "Grab something quick and easy." },
-  { id: "habit-spending", name: "Spending check", emoji: "💰", cadence: "daily", category: "money", tinyStart: "Open your banking app." },
+  { id: "habit-fuel", name: "Water + first meal", emoji: "fuel", cadence: "daily", category: "body", minimum: true, tinyStart: "Take one sip and choose the easiest food." },
+  { id: "habit-care", name: "Basic care", emoji: "care", cadence: "daily", category: "body", minimum: true, tinyStart: "Start the smallest care step." },
+  { id: "habit-focus", name: "Start one focus block", emoji: "focus", cadence: "weekdays", category: "career", minimum: true, tinyStart: "Open the task and work for two minutes." },
+  { id: "habit-move", name: "Move for 10 minutes", emoji: "move", cadence: "daily", category: "body", tinyStart: "Stand up, stretch, or put shoes on." },
+  { id: "habit-reset", name: "Reset one small space", emoji: "reset", cadence: "daily", category: "home", tinyStart: "Clear one surface for two minutes." },
+  { id: "habit-tomorrow", name: "Prepare tomorrow", emoji: "tomorrow", cadence: "daily", category: "home", minimum: true, tinyStart: "Put one needed item where you will see it." },
+  { id: "habit-wind-down", name: "Start winding down", emoji: "sleep", cadence: "daily", category: "sleep", tinyStart: "Lower one light and put the phone farther away." },
+  { id: "habit-money", name: "Money check-in", emoji: "money", cadence: "weekly", category: "money", tinyStart: "Open the balance and notice — no fixing required." },
 ];
