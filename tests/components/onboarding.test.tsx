@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react";
+import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const store = {
@@ -25,6 +26,12 @@ vi.mock("@/components/store-provider", () => ({
   useStore: () => store,
 }));
 
+vi.mock("@clerk/nextjs", () => ({
+  useAuth: () => ({ isLoaded: true, isSignedIn: false }),
+  SignUpButton: ({ children }: { children: ReactNode }) => children,
+  SignInButton: ({ children }: { children: ReactNode }) => children,
+}));
+
 import { Onboarding } from "@/components/onboarding";
 
 describe("Onboarding", () => {
@@ -39,15 +46,19 @@ describe("Onboarding", () => {
   it("personalizes support and activates the closest existing routine", () => {
     render(<Onboarding />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Make it fit my life" }));
+    fireEvent.click(screen.getByRole("button", { name: "Set up DayFlow" }));
     fireEvent.click(screen.getByRole("button", { name: /Focus/ }));
-    fireEvent.click(screen.getByRole("button", { name: "Choose my week" }));
+    fireEvent.click(screen.getByRole("button", { name: "Next" }));
     fireEvent.click(screen.getByRole("radio", { name: /Mostly school/ }));
-    fireEvent.click(screen.getByRole("button", { name: "Review my setup" }));
+    fireEvent.click(screen.getByRole("button", { name: "Next" }));
+
+    expect(screen.getByRole("button", { name: "Create account" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "I already have an account" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Not now" }));
 
     expect(screen.getByText("Staying focused")).toBeTruthy();
     expect(screen.getByText("Mostly school")).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "Start my DayFlow" }));
+    fireEvent.click(screen.getByRole("button", { name: "Go to Today" }));
 
     expect(store.setDefaultSupportNeed).toHaveBeenCalledWith("focus");
     expect(store.setActiveRoutine).toHaveBeenCalledWith("student-week");
@@ -57,9 +68,14 @@ describe("Onboarding", () => {
   it("offers a zero-friction path that keeps the editable defaults", () => {
     render(<Onboarding />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Use the default setup" }));
+    fireEvent.click(screen.getByRole("button", { name: "Use the starter setup" }));
 
-    expect(store.setActiveRoutine).not.toHaveBeenCalled();
+    expect(screen.getByRole("heading", { name: "Save your plan" })).toBeTruthy();
+    expect(store.completeOnboarding).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "Not now" }));
+    fireEvent.click(screen.getByRole("button", { name: "Go to Today" }));
+
+    expect(store.setActiveRoutine).toHaveBeenCalledWith("balanced-week");
     expect(store.completeOnboarding).toHaveBeenCalledOnce();
   });
 

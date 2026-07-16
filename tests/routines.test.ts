@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { buildBlankRoutine, buildRoutineCopy } from "@/lib/routines";
+import { buildBlankRoutine, buildRoutineCopy, buildRoutineFromDraft } from "@/lib/routines";
 import { block, routine } from "./fixtures";
 
 describe("routine builders", () => {
@@ -28,5 +28,29 @@ describe("routine builders", () => {
     expect(copy.seeded).toBe(false);
     expect(copy.blocks.map((item) => item.id)).toEqual(["copy-one", "copy-two"]);
     expect(source.blocks.map((item) => item.id)).toEqual(["one", "two"]);
+  });
+
+  it("turns a reviewed draft into a user-owned routine with fresh block ids", () => {
+    const result = buildRoutineFromDraft(
+      {
+        name: "Local draft",
+        description: "Reviewed first",
+        blocks: [
+          {
+            day: 1,
+            title: "Work",
+            start: "09:00",
+            end: "10:00",
+            category: "work",
+            importance: "high",
+          },
+        ],
+      },
+      "routine-local",
+      () => "block-local",
+    );
+
+    expect(result).toMatchObject({ id: "routine-local", seeded: false });
+    expect(result.blocks[0].id).toBe("block-local");
   });
 });

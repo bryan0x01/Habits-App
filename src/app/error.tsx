@@ -29,9 +29,9 @@ export default function Error({
       </div>
       <div>
         <ProductSignature className="text-xs" />
-        <h1 className="text-xl font-bold">Something glitched</h1>
+        <h1 className="text-xl font-bold">Something went wrong</h1>
         <p className="mt-1 max-w-xs text-sm text-muted-foreground">
-          Your saved plan stays in Supabase. Let&apos;s try that again.
+          Your saved plan is safe. Try again.
         </p>
       </div>
       <Button onClick={reset}>

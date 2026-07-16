@@ -1,4 +1,7 @@
+"use client";
+
 import * as React from "react";
+import { Show, UserButton } from "@clerk/nextjs";
 
 import { BrandIcon } from "@/components/brand-icon";
 import { CloudStatusIndicator } from "@/components/cloud-status-indicator";
@@ -34,6 +37,9 @@ export function PageHeader({
         <div className="flex shrink-0 items-center gap-1">
           {action}
           <CloudStatusIndicator />
+          <Show when="signed-in">
+            <UserButton />
+          </Show>
         </div>
       </div>
     </header>

@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Brain, Clock3, Plus, Sparkles, X } from "lucide-react";
+import { Brain, Clock3, ListFilter, Plus, X } from "lucide-react";
 
 import { useStore } from "@/components/store-provider";
 import { Badge } from "@/components/ui/badge";
@@ -15,20 +15,39 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { categoryMeta } from "@/lib/constants";
-import { parseBrainDump } from "@/lib/planner";
+import { learnPlanningProfile, organizeBrainDumpLocally } from "@/lib/local-planning-engine";
+import { useNow } from "@/lib/use-now";
 import type { FlexTaskDraft } from "@/lib/types";
 
 export function BrainDumpDialog({ compact = false }: { compact?: boolean }) {
-  const { addFlexTasks } = useStore();
+  const now = useNow(60_000);
+  const { addFlexTasks, settings, supportNeed, routines, blockLogs, flexTasks } = useStore();
   const [open, setOpen] = React.useState(false);
   const [input, setInput] = React.useState("");
   const [drafts, setDrafts] = React.useState<FlexTaskDraft[]>([]);
+  const [notice, setNotice] = React.useState<string | null>(null);
 
   const reset = () => {
     setInput("");
     setDrafts([]);
+    setNotice(null);
+  };
+
+  const organizeList = () => {
+    if (!input.trim()) return;
+    const profile = learnPlanningProfile({ routines, blockLogs, flexTasks, now });
+    setDrafts(organizeBrainDumpLocally({
+      input,
+      energyMode: settings.energyMode,
+      supportNeed: supportNeed(),
+      profile,
+    }));
+    setNotice(profile.sampleSize >= 3
+      ? `Organized on this device using ${profile.sampleSize} recent check-ins.`
+      : "Organized on this device. DayFlow will tune the order as you complete or skip blocks.");
   };
 
   return (
@@ -47,15 +66,17 @@ export function BrainDumpDialog({ compact = false }: { compact?: boolean }) {
       </DialogTrigger>
       <DialogContent className="max-h-[88dvh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Drop it here. Organize second.</DialogTitle>
+          <DialogTitle>Write down what&apos;s on your mind</DialogTitle>
           <DialogDescription>
-            One item per line. DayFlow estimates time and a minimum version without sending the text to an AI service.
+            Add one item per line. DayFlow will turn it into a short, editable list.
           </DialogDescription>
         </DialogHeader>
 
         {drafts.length === 0 ? (
           <div className="space-y-3">
+            <Label htmlFor="brain-dump">What needs to get out of your head?</Label>
             <Textarea
+              id="brain-dump"
               value={input}
               onChange={(event) => setInput(event.target.value)}
               rows={7}
@@ -65,17 +86,19 @@ export function BrainDumpDialog({ compact = false }: { compact?: boolean }) {
             <p className="text-xs text-muted-foreground">
               Add a duration or words like today, deadline, optional, study, email, gym, or project to improve the estimate.
             </p>
-            <Button
-              className="w-full"
-              disabled={!input.trim()}
-              onClick={() => setDrafts(parseBrainDump(input))}
-            >
-              <Sparkles className="size-4" />
-              Shape the dump
+            <Button className="w-full" disabled={!input.trim()} onClick={organizeList}>
+              <ListFilter className="size-4" />
+              Organize my list
             </Button>
+            <p className="text-center text-xs text-muted-foreground">
+              Nothing is uploaded. DayFlow uses simple rules plus your own check-ins.
+            </p>
           </div>
         ) : (
           <div className="space-y-2">
+            {notice ? (
+              <p className="rounded-xl bg-muted px-3 py-2 text-xs text-muted-foreground">{notice}</p>
+            ) : null}
             {drafts.map((draft, index) => {
               const category = categoryMeta(draft.category);
               return (
@@ -92,7 +115,7 @@ export function BrainDumpDialog({ compact = false }: { compact?: boolean }) {
                         </span>
                       </div>
                       <p className="mt-2 text-xs text-muted-foreground">
-                        Start: {draft.tinyStart}
+                        First step: {draft.tinyStart}
                       </p>
                     </div>
                     <button

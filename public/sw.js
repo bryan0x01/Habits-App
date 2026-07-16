@@ -3,8 +3,8 @@
  * Strategy:
  *   • Navigations  → network-first, fall back to cache, then the app shell ("/").
  *   • Static/asset → stale-while-revalidate.
- * The app itself keeps its data in localStorage, so once the shell loads it
- * remains fully usable offline.
+ * Signed-in data is saved to the user's account. The cached shell still opens
+ * offline, but account data needs a connection to refresh.
  */
 const CACHE = "dayflow-v2";
 const APP_SHELL = [
@@ -48,8 +48,12 @@ self.addEventListener("fetch", (event) => {
 
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
-  // Never intercept or cache auth flows (e.g. /auth/callback?code=…).
-  if (url.pathname.startsWith("/auth/")) return;
+  // Never intercept or cache Clerk sign-in, sign-up, or proxy traffic.
+  if (
+    url.pathname.startsWith("/sign-in") ||
+    url.pathname.startsWith("/sign-up") ||
+    url.pathname.startsWith("/__clerk")
+  ) return;
 
   if (request.mode === "navigate") {
     event.respondWith(

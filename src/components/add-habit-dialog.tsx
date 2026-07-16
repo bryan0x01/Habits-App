@@ -71,7 +71,7 @@ export function AddHabitDialog() {
         <DialogHeader>
           <DialogTitle>New habit</DialogTitle>
           <DialogDescription>
-            Keep it small and specific — future you will thank you.
+            Pick something clear enough to check off.
           </DialogDescription>
         </DialogHeader>
 
@@ -129,7 +129,7 @@ export function AddHabitDialog() {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="habit-tiny">Tiny start (optional)</Label>
+            <Label htmlFor="habit-tiny">First step (optional)</Label>
             <Input
               id="habit-tiny"
               value={tinyStart}
@@ -140,9 +140,9 @@ export function AddHabitDialog() {
 
           <label className="flex items-center justify-between rounded-xl border p-3">
             <span className="text-sm">
-              <span className="font-medium">Minimum habit</span>
+              <span className="font-medium">Daily basic</span>
               <span className="block text-xs text-muted-foreground">
-                Counts toward a &ldquo;Day saved&rdquo;.
+                Include this in your basics for the day.
               </span>
             </span>
             <Switch checked={minimum} onCheckedChange={setMinimum} />

@@ -195,7 +195,7 @@ function FlowRow({
             <p className="flex items-start gap-2">
               <Zap className="mt-0.5 size-4 shrink-0 text-primary" />
               <span>
-                <span className="font-medium">Tiny start:</span> {block.tinyStart}
+                <span className="font-medium">Start here:</span> {block.tinyStart}
               </span>
             </p>
           ) : null}

@@ -1,23 +1,38 @@
 "use client";
 
 import * as React from "react";
-import type { Session, User } from "@supabase/supabase-js";
+import { useClerk, useSession, useUser } from "@clerk/nextjs";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { Cloud } from "lucide-react";
 
 import { useStore } from "@/components/store-provider";
-import { createSupabaseBrowserClient, isSupabaseConfigured } from "@/lib/supabase/client";
+import {
+  createSupabaseBrowserClient,
+  isSupabaseConfigured,
+} from "@/lib/supabase/client";
 import { isDayFlowSnapshot } from "@/lib/storage";
 
-type SyncStatus = "checking" | "demo" | "signed-out" | "syncing" | "synced" | "error";
+type SyncStatus =
+  | "checking"
+  | "demo"
+  | "signed-out"
+  | "syncing"
+  | "synced"
+  | "error";
+
+interface CloudUser {
+  id: string;
+  email: string | null;
+}
 
 interface CloudContextValue {
   configured: boolean;
   ready: boolean;
   isPersistent: boolean;
-  user: User | null;
+  user: CloudUser | null;
   status: SyncStatus;
   error: string | null;
-  sendMagicLink: (email: string) => Promise<{ error: string | null }>;
+  supabase: SupabaseClient | null;
   signOut: () => Promise<void>;
 }
 
@@ -30,13 +45,13 @@ export function useCloud() {
 }
 
 export function CloudProvider({ children }: { children: React.ReactNode }) {
-  const {
-    hydrated,
-    snapshot,
-    importSnapshot,
-    resetData,
-  } = useStore();
-  const [session, setSession] = React.useState<Session | null>(null);
+  const { hydrated, snapshot, importSnapshot, resetData } = useStore();
+  const { isLoaded: sessionLoaded, session } = useSession();
+  const { isLoaded: userLoaded, user: clerkUser } = useUser();
+  const { signOut: clerkSignOut } = useClerk();
+  const userId = session?.user.id ?? null;
+  const authReady = sessionLoaded && userLoaded;
+
   const [status, setStatus] = React.useState<SyncStatus>(
     isSupabaseConfigured ? "checking" : "demo",
   );
@@ -44,72 +59,51 @@ export function CloudProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = React.useState<string | null>(null);
   const [retryToken, setRetryToken] = React.useState(0);
   const snapshotRef = React.useRef(snapshot);
-  const authUserRef = React.useRef<string | null>(null);
+  const activeUserRef = React.useRef<string | null>(null);
+  const authHandledRef = React.useRef(false);
   const initializedUserRef = React.useRef<string | null>(null);
   const skipNextPushRef = React.useRef(false);
 
   snapshotRef.current = snapshot;
 
   const supabase = React.useMemo(
-    () => (isSupabaseConfigured ? createSupabaseBrowserClient() : null),
-    [],
+    () =>
+      isSupabaseConfigured
+        ? createSupabaseBrowserClient(() => session?.getToken() ?? Promise.resolve(null))
+        : null,
+    [session],
   );
 
   React.useEffect(() => {
-    if (!supabase) return;
+    if (!isSupabaseConfigured) {
+      setStatus("demo");
+      setReady(true);
+      return;
+    }
+    if (!authReady) {
+      setStatus("checking");
+      setReady(false);
+      return;
+    }
 
-    let alive = true;
-    let sessionSettled = false;
-    const sessionTimeout = window.setTimeout(() => {
-      if (!alive || sessionSettled) return;
+    const previousUserId = activeUserRef.current;
+    if (authHandledRef.current && previousUserId === userId) return;
+
+    authHandledRef.current = true;
+    activeUserRef.current = userId;
+    initializedUserRef.current = null;
+    setError(null);
+
+    if (!userId) {
       setStatus("signed-out");
       setReady(true);
-    }, 2500);
-    supabase.auth.getSession().then(({ data, error: sessionError }) => {
-      if (!alive) return;
-      sessionSettled = true;
-      window.clearTimeout(sessionTimeout);
-      if (sessionError) {
-        setError(sessionError.message);
-        setStatus("error");
-        setReady(true);
-        return;
-      }
-      authUserRef.current = data.session?.user.id ?? null;
-      setSession(data.session);
-      if (data.session) {
-        setStatus("syncing");
-        setReady(false);
-      } else {
-        setStatus("signed-out");
-        setReady(true);
-      }
-    });
+      if (previousUserId) resetData();
+      return;
+    }
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
-      const nextUserId = nextSession?.user.id ?? null;
-      if (authUserRef.current === nextUserId) {
-        setSession(nextSession);
-        return;
-      }
-      const previousUserId = authUserRef.current;
-      authUserRef.current = nextUserId;
-      initializedUserRef.current = null;
-      setSession(nextSession);
-      setError(null);
-      setStatus(nextSession ? "syncing" : "signed-out");
-      setReady(!nextSession);
-      if (previousUserId && !nextUserId) resetData();
-    });
-
-    return () => {
-      alive = false;
-      window.clearTimeout(sessionTimeout);
-      subscription.unsubscribe();
-    };
-  }, [resetData, supabase]);
+    setStatus("syncing");
+    setReady(false);
+  }, [authReady, resetData, userId]);
 
   React.useEffect(() => {
     const retry = () => setRetryToken((token) => token + 1);
@@ -117,19 +111,19 @@ export function CloudProvider({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener("online", retry);
   }, []);
 
-  // The private cloud snapshot always wins. A brand-new account saves the
-  // current in-memory starter/preview snapshot once, so setup work is preserved.
+  // A saved account always wins. For a new account, save the current starter
+  // setup once so the person can continue without doing setup again.
   React.useEffect(() => {
-    if (!supabase || !session?.user || !hydrated) return;
-    if (initializedUserRef.current === session.user.id) return;
+    if (!supabase || !userId || !hydrated || !authReady) return;
+    if (initializedUserRef.current === userId) return;
 
     let cancelled = false;
-    const initializeSync = async () => {
+    const loadPlan = async () => {
       setStatus("syncing");
       const { data, error: readError } = await supabase
         .from("dayflow_snapshots")
         .select("data")
-        .eq("user_id", session.user.id)
+        .eq("user_id", userId)
         .maybeSingle();
 
       if (cancelled) return;
@@ -144,10 +138,9 @@ export function CloudProvider({ children }: { children: React.ReactNode }) {
         skipNextPushRef.current = true;
         importSnapshot(data.data);
       } else {
-        const { error: writeError } = await supabase.from("dayflow_snapshots").upsert({
-          user_id: session.user.id,
-          data: snapshotRef.current,
-        });
+        const { error: writeError } = await supabase
+          .from("dayflow_snapshots")
+          .upsert({ user_id: userId, data: snapshotRef.current });
         if (writeError) {
           setError(writeError.message);
           setStatus("error");
@@ -156,21 +149,21 @@ export function CloudProvider({ children }: { children: React.ReactNode }) {
         }
       }
 
-      initializedUserRef.current = session.user.id;
+      initializedUserRef.current = userId;
+      setError(null);
       setStatus("synced");
       setReady(true);
     };
 
-    void initializeSync();
+    void loadPlan();
     return () => {
       cancelled = true;
     };
-  }, [hydrated, importSnapshot, retryToken, session?.user, supabase]);
+  }, [authReady, hydrated, importSnapshot, retryToken, supabase, userId]);
 
-  // A brief debounce groups quick taps into one Supabase write.
   React.useEffect(() => {
-    if (!supabase || !session?.user || !hydrated) return;
-    if (initializedUserRef.current !== session.user.id) return;
+    if (!supabase || !userId || !hydrated) return;
+    if (initializedUserRef.current !== userId) return;
     if (skipNextPushRef.current) {
       skipNextPushRef.current = false;
       return;
@@ -178,10 +171,9 @@ export function CloudProvider({ children }: { children: React.ReactNode }) {
 
     const timer = window.setTimeout(async () => {
       setStatus("syncing");
-      const { error: writeError } = await supabase.from("dayflow_snapshots").upsert({
-        user_id: session.user.id,
-        data: snapshot,
-      });
+      const { error: writeError } = await supabase
+        .from("dayflow_snapshots")
+        .upsert({ user_id: userId, data: snapshot });
       if (writeError) {
         setError(writeError.message);
         setStatus("error");
@@ -192,38 +184,35 @@ export function CloudProvider({ children }: { children: React.ReactNode }) {
     }, 600);
 
     return () => window.clearTimeout(timer);
-  }, [hydrated, retryToken, session?.user, snapshot, supabase]);
-
-  const sendMagicLink = React.useCallback(
-    async (email: string) => {
-      if (!supabase) return { error: "Cloud sync is not configured." };
-      const redirectTo = `${window.location.origin}/auth/callback`;
-      const { error: authError } = await supabase.auth.signInWithOtp({
-        email: email.trim(),
-        options: { emailRedirectTo: redirectTo },
-      });
-      return { error: authError?.message ?? null };
-    },
-    [supabase],
-  );
+  }, [hydrated, retryToken, snapshot, supabase, userId]);
 
   const signOut = React.useCallback(async () => {
-    if (!supabase) return;
-    await supabase.auth.signOut();
-  }, [supabase]);
+    await clerkSignOut();
+  }, [clerkSignOut]);
+
+  const user = React.useMemo<CloudUser | null>(
+    () =>
+      userId
+        ? {
+            id: userId,
+            email: clerkUser?.primaryEmailAddress?.emailAddress ?? null,
+          }
+        : null,
+    [clerkUser?.primaryEmailAddress?.emailAddress, userId],
+  );
 
   const value = React.useMemo<CloudContextValue>(
     () => ({
       configured: isSupabaseConfigured,
       ready,
-      isPersistent: Boolean(session?.user) && status !== "error",
-      user: session?.user ?? null,
+      isPersistent: Boolean(userId) && status !== "error",
+      user,
       status,
       error,
-      sendMagicLink,
+      supabase,
       signOut,
     }),
-    [error, ready, sendMagicLink, session?.user, signOut, status],
+    [error, ready, signOut, status, supabase, user, userId],
   );
 
   return (
@@ -237,8 +226,8 @@ export function CloudProvider({ children }: { children: React.ReactNode }) {
               <Cloud className="size-5 animate-pulse" />
             </div>
             <div>
-              <p className="text-sm font-semibold">Opening DayFlow by Halynt</p>
-              <p className="text-xs text-muted-foreground">Loading your private plan from Supabase…</p>
+              <p className="text-sm font-semibold">Getting DayFlow ready</p>
+              <p className="text-xs text-muted-foreground">Loading your saved plan…</p>
             </div>
           </div>
         </div>

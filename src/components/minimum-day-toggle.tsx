@@ -18,11 +18,10 @@ export function MinimumDayToggle() {
         </div>
         <div className="min-w-0 flex-1">
           <Label htmlFor="minimum-day" className="text-sm font-semibold">
-            Protect the day
+            Basics only
           </Label>
           <p className="text-xs text-muted-foreground">
-            Rough day? Shrink it to just the non-negotiables. Everything else
-            becomes optional.
+            Keep only your important tasks. Everything else becomes optional.
           </p>
         </div>
         <Switch

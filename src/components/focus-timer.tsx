@@ -94,7 +94,7 @@ export function FocusTimer({
     return (
       <div className={cn("flex items-center gap-3", className)}>
         <p className="min-w-0 flex-1 text-sm font-medium">
-          Time. That focus counted — close it out?
+          Time&apos;s up. Did you finish it?
         </p>
         <Button
           size="sm"
@@ -130,7 +130,7 @@ export function FocusTimer({
         tone="hero"
       />
       <p className="min-w-0 flex-1 text-sm text-hero-foreground/80">
-        Just this, until the ring runs out.
+        Stay with this until the timer ends.
       </p>
       <Button
         size="sm"

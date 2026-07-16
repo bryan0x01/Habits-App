@@ -12,7 +12,7 @@ const habits = [
 ];
 
 describe("habit day states", () => {
-  it("moves from fresh to started to minimum saved", () => {
+  it("moves from not started to started to basics done", () => {
     expect(computeHabitDay(habits, [], monday).state).toBe("none");
 
     const started = computeHabitDay(habits, [habitLog("read", "2026-07-06")], monday);

@@ -69,10 +69,10 @@ export function TodayOverview() {
             <SlidersHorizontal className="size-4" />
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block text-sm font-semibold">Tune today</span>
+            <span className="block text-sm font-semibold">Adjust today</span>
             <span className="block truncate text-xs text-muted-foreground">
-              {currentEnergy.label} capacity · {supportNeedMeta(currentSupport).shortLabel}
-              {settings.minimumDay ? " · anchors only" : ""}
+              {currentEnergy.label} · {supportNeedMeta(currentSupport).shortLabel}
+              {settings.minimumDay ? " · basics only" : ""}
             </span>
           </span>
           <ChevronDown className={cn("size-4 text-muted-foreground transition-transform", open && "rotate-180")} />
@@ -81,7 +81,7 @@ export function TodayOverview() {
         {open ? (
           <div className="space-y-4 border-t bg-muted/20 p-4">
             <div className="space-y-2">
-              <p className="text-sm font-semibold">What can today hold?</p>
+              <p className="text-sm font-semibold">How are you feeling today?</p>
               <div className="grid grid-cols-4 gap-1.5" role="group" aria-label="Capacity right now">
                 {ENERGY_MODES.map((mode) => {
                   const selected = settings.energyMode === mode.id;
@@ -145,10 +145,10 @@ export function TodayOverview() {
               </div>
               <div className="min-w-0 flex-1">
                 <label htmlFor="today-minimum-day" className="text-sm font-semibold">
-                  Protect the day
+                  Basics only
                 </label>
                 <p className="text-xs text-muted-foreground">
-                  Keep only the anchors.
+                  Hide anything that can wait.
                 </p>
               </div>
               <Switch

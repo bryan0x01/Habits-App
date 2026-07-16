@@ -10,6 +10,7 @@ import { PageContainer, LoadingCards } from "@/components/page-container";
 import { PageHeader } from "@/components/page-header";
 import { RoutineActionsSheet } from "@/components/routine-actions-sheet";
 import { RoutineTemplateDialog } from "@/components/routine-template-dialog";
+import { SmartRoutineDialog } from "@/components/smart-routine-dialog";
 import { useStore } from "@/components/store-provider";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -44,7 +45,7 @@ export default function RoutinesPage() {
 
   return (
     <>
-      <PageHeader title="Routines" subtitle="Build the sequence, not a perfect day" />
+      <PageHeader title="Routines" subtitle="Set up the parts of your day that repeat" />
       <PageContainer className="space-y-5">
         {!hydrated || !active || !editing ? (
           <LoadingCards />
@@ -55,13 +56,13 @@ export default function RoutinesPage() {
                 <div className="flex items-start gap-3">
                   <IconTile name={routineIconName(active)} className="size-12 rounded-2xl" iconClassName="size-6" />
                   <div className="min-w-0 flex-1">
-                    <p className="text-[0.68rem] font-bold uppercase tracking-[0.16em] text-primary">Current rhythm</p>
+                    <p className="text-[0.68rem] font-bold uppercase tracking-[0.16em] text-primary">Current routine</p>
                     <h2 className="mt-0.5 truncate text-xl font-bold tracking-tight">{active.name}</h2>
                     <p className="mt-1 text-sm leading-snug text-muted-foreground">{active.description}</p>
                   </div>
                 </div>
                 <div className="flex items-center justify-between border-t border-border/70 pt-3 text-xs text-muted-foreground">
-                  <span>{active.blocks.length} scheduled anchors</span>
+                  <span>{active.blocks.length} scheduled blocks</span>
                   <button type="button" onClick={() => setActionsFor(active)} className="font-semibold text-primary">
                     Manage
                   </button>
@@ -70,6 +71,7 @@ export default function RoutinesPage() {
             </Card>
 
             <div className="grid grid-cols-2 gap-2">
+              <SmartRoutineDialog onCreated={setEditingId} />
               <RoutineTemplateDialog onAdded={setEditingId} />
               <CreateRoutineDialog onCreated={setEditingId} />
             </div>
@@ -132,7 +134,7 @@ export default function RoutinesPage() {
               {dayBlocks.length === 0 ? (
                 <div className="rounded-3xl border border-dashed p-6 text-center">
                   <p className="font-semibold">Nothing scheduled here</p>
-                  <p className="mt-1 text-sm text-muted-foreground">Blank space can be intentional. Add an anchor only if it helps.</p>
+                  <p className="mt-1 text-sm text-muted-foreground">Add a block if you want something here.</p>
                 </div>
               ) : (
                 <ol className="space-y-2">
@@ -167,7 +169,7 @@ export default function RoutinesPage() {
 
               <Button variant="outline" className="w-full border-dashed" onClick={() => setBlockEditor({ open: true })}>
                 <Plus className="size-4" />
-                Add an anchor to {WEEKDAY_SHORT[day]}
+                Add a block to {WEEKDAY_SHORT[day]}
               </Button>
             </section>
           </>

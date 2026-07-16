@@ -4,6 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import {
   BriefcaseBusiness,
+  BrainCircuit,
   ChevronDown,
   ChevronRight,
   Database,
@@ -95,7 +96,7 @@ export default function SettingsPage() {
 
   return (
     <>
-      <PageHeader title="Settings" subtitle="Make DayFlow fit your brain" />
+      <PageHeader title="Settings" subtitle="Your account and preferences" />
       <PageContainer className="space-y-3">
         {!hydrated ? (
           <LoadingCards />
@@ -106,12 +107,12 @@ export default function SettingsPage() {
               <ColorSelect />
             </SettingsGroup>
 
-            <SettingsGroup title="Plan & support" note="Routine, energy, and low-capacity days" icon={SlidersHorizontal}>
+            <SettingsGroup title="Plan & support" note="Routine, energy, and lighter days" icon={SlidersHorizontal}>
               <Card>
                 <CardContent className="space-y-3 p-4">
                   <div>
                     <p className="text-sm font-semibold">Current routine</p>
-                    <p className="text-xs text-muted-foreground">This drives Today and reminders.</p>
+                    <p className="text-xs text-muted-foreground">This is the schedule shown on Today.</p>
                   </div>
                   <Select value={settings.activeRoutineId} onValueChange={setActiveRoutine}>
                     <SelectTrigger aria-label="Current routine"><SelectValue /></SelectTrigger>
@@ -123,7 +124,7 @@ export default function SettingsPage() {
                   </Select>
                   <Button type="button" variant="ghost" size="sm" className="-ml-2 text-primary" onClick={restartOnboarding}>
                     <Sparkles className="size-4" />
-                    Revisit quick setup
+                    Run setup again
                   </Button>
                 </CardContent>
               </Card>
@@ -139,7 +140,7 @@ export default function SettingsPage() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <label htmlFor="medication-context" className="text-sm font-semibold">Medication context</label>
-                    <p className="text-xs text-muted-foreground">Optional context only; no dose or medical advice.</p>
+                    <p className="text-xs text-muted-foreground">Optional. DayFlow does not give medical advice.</p>
                   </div>
                   <Switch id="medication-context" checked={Boolean(settings.medicationTracking)} onCheckedChange={setMedicationTracking} />
                 </CardContent>
@@ -147,7 +148,7 @@ export default function SettingsPage() {
               <VacationModeCard />
             </SettingsGroup>
 
-            <SettingsGroup title="Saving & reminders" note="Supabase account and notifications" icon={Database} defaultOpen>
+            <SettingsGroup title="Account & reminders" note="Saving and notifications" icon={Database} defaultOpen>
               <div id="cloud" className="scroll-mt-24">
                 <CloudSyncCard />
               </div>
@@ -155,6 +156,20 @@ export default function SettingsPage() {
             </SettingsGroup>
 
             <SettingsGroup title="Tools & data" note="Career tracker, backups, and reset" icon={BriefcaseBusiness}>
+              <Card>
+                <CardContent className="flex items-start gap-3 p-4">
+                  <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    <BrainCircuit className="size-5" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold">Private planning</p>
+                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                      Routine drafts, list sorting, and personal patterns run inside DayFlow. Nothing is sent to an AI service.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+
               <Link href="/applications" className="flex items-center gap-3 rounded-2xl border bg-card p-4 hover:bg-accent">
                 <div className="flex size-10 items-center justify-center rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-300">
                   <BriefcaseBusiness className="size-5" />
@@ -170,8 +185,8 @@ export default function SettingsPage() {
                 <CardContent className="space-y-3 p-4">
                   <p className="text-xs leading-relaxed text-muted-foreground">
                     {isPersistent
-                      ? "Your live plan saves to your private Supabase account. Backups are optional."
-                      : "You are previewing without persistent storage. Sign in above before relying on these changes."}
+                      ? "Your plan saves automatically. Backups are optional."
+                      : "Sign in before relying on these changes. This preview resets when you refresh."}
                   </p>
                   <div className="grid grid-cols-2 gap-2">
                     <Button variant="outline" onClick={handleExport}><Download className="size-4" />Export</Button>
@@ -186,7 +201,7 @@ export default function SettingsPage() {
                 <CardContent className="flex items-center gap-3 p-4">
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold">Reset everything</p>
-                    <p className="text-xs text-muted-foreground">Clears the Supabase snapshot after your next save.</p>
+                    <p className="text-xs text-muted-foreground">Replaces your saved plan with the starter setup.</p>
                   </div>
                   <Button variant="destructive" size="sm" onClick={() => setResetOpen(true)}>
                     <Trash2 className="size-4" />Reset
@@ -201,7 +216,9 @@ export default function SettingsPage() {
               <p className="mt-2 text-[0.62rem] font-bold uppercase tracking-[0.16em] text-primary">
                 {PRODUCT_ATTRIBUTION}
               </p>
-              <p className="mt-1 text-xs text-muted-foreground">v0.3.0 · Supabase-first</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                v0.4.0 · {isPersistent ? "Account saving is on" : "Preview mode"}
+              </p>
             </div>
           </>
         )}
@@ -212,7 +229,7 @@ export default function SettingsPage() {
           <DialogHeader>
             <DialogTitle>Reset all data?</DialogTitle>
             <DialogDescription>
-              This clears routines, logs, habits, and optional tools. If you are signed in, the empty starter state will save to Supabase. Export first if you may want it later.
+              This clears routines, logs, habits, and optional tools. If you are signed in, the starter setup will replace your saved plan. Export first if you may want it later.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

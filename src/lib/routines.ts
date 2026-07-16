@@ -1,10 +1,14 @@
-import type { Routine } from "@/lib/types";
+import type { Routine, RoutineBlock } from "@/lib/types";
 import { uid } from "@/lib/utils";
 
 export interface NewRoutineInput {
   name: string;
   emoji?: string;
   description?: string;
+}
+
+export interface RoutineDraftInput extends NewRoutineInput {
+  blocks: Array<Omit<RoutineBlock, "id">>;
 }
 
 /** Build an empty, user-owned routine without mutating the store. */
@@ -20,6 +24,18 @@ export function buildBlankRoutine(
       input.description?.trim() || "A flexible routine you can shape one block at a time.",
     seeded: false,
     blocks: [],
+  };
+}
+
+/** Build a reviewed routine draft and assign fresh log-safe block ids. */
+export function buildRoutineFromDraft(
+  input: RoutineDraftInput,
+  id = uid("routine"),
+  nextBlockId: () => string = () => uid("block"),
+): Routine {
+  return {
+    ...buildBlankRoutine(input, id),
+    blocks: input.blocks.map((block) => ({ ...block, id: nextBlockId() })),
   };
 }
 

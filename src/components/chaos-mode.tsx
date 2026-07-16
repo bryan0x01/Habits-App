@@ -14,8 +14,7 @@ import { weekdayOf } from "@/lib/time";
 import { useNow } from "@/lib/use-now";
 
 /**
- * Rescue mode strips the day down to exactly three moves so an overloaded brain
- * has nowhere to get lost: one tiny start, one minimum task, one recovery.
+ * Very-low mode keeps only three choices on screen.
  */
 export function ChaosMode() {
   const now = useNow(30_000);
@@ -45,13 +44,13 @@ export function ChaosMode() {
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-3 rounded-2xl bg-rose-500/10 px-4 py-3 text-sm text-rose-700 dark:text-rose-300">
-        <p className="min-w-0 flex-1 font-medium">Rescue mode. Only these three are in play.</p>
+        <p className="min-w-0 flex-1 font-medium">Keeping today simple. Start with one.</p>
         <button
           type="button"
           onClick={() => setEnergyMode("low")}
           className="shrink-0 rounded-xl bg-background/80 px-3 py-2 text-xs font-semibold text-foreground shadow-sm"
         >
-          I&apos;m steadier
+          Show more
         </button>
       </div>
 
@@ -62,9 +61,9 @@ export function ChaosMode() {
             <span className="flex size-8 items-center justify-center rounded-full bg-primary/15 text-primary">
               <Zap className="size-4" />
             </span>
-            <p className="text-sm font-semibold">1 · Tiny start</p>
+            <p className="text-sm font-semibold">1 · Start here</p>
           </div>
-          <p className="text-lg font-bold leading-snug">Don&apos;t think. Start here.</p>
+          <p className="text-lg font-bold leading-snug">Do this first.</p>
           {focus ? (
             <>
               <p className="text-sm text-muted-foreground">
@@ -72,12 +71,12 @@ export function ChaosMode() {
               </p>
               <Button className="w-full" onClick={() => setBlockStatus(focus.id, "done")}>
                 <CheckCircle2 className="size-5" />
-                Did it — {focus.title}
+                Done — {focus.title}
               </Button>
             </>
           ) : (
             <p className="text-sm text-muted-foreground">
-              Nothing scheduled. Drink some water — that&apos;s the start.
+              Nothing is planned right now. Drink some water or take a short break.
             </p>
           )}
         </CardContent>
@@ -90,7 +89,7 @@ export function ChaosMode() {
             <span className="flex size-8 items-center justify-center rounded-full bg-teal-500/15 text-teal-600 dark:text-teal-400">
               <Check className="size-4" />
             </span>
-            <p className="text-sm font-semibold">2 · One minimum</p>
+            <p className="text-sm font-semibold">2 · One basic</p>
           </div>
           {nextMinimum ? (
             <>
@@ -111,7 +110,7 @@ export function ChaosMode() {
             </>
           ) : (
             <p className="text-sm text-muted-foreground">
-              Minimums done — that&apos;s a saved day already.
+              Your basics are done.
             </p>
           )}
         </CardContent>
@@ -124,17 +123,17 @@ export function ChaosMode() {
             <span className="flex size-8 items-center justify-center rounded-full bg-warning/20 text-warning">
               <LifeBuoy className="size-4" />
             </span>
-            <p className="text-sm font-semibold">3 · Recovery</p>
+            <p className="text-sm font-semibold">3 · One missed task</p>
           </div>
           {missed ? (
             <>
               <p className="text-sm">
-                <span className="font-medium">Keep it small:</span>{" "}
+                <span className="font-medium">Short option:</span>{" "}
                 {missed.backup ?? "Do 20 minutes instead of skipping completely."}
               </p>
               <div className="flex gap-2">
                 <Button size="sm" onClick={() => setBlockStatus(missed.id, "done")}>
-                  Done anyway
+                  Mark done
                 </Button>
                 <SkipTaskButton
                   taskType="block"
@@ -143,14 +142,14 @@ export function ChaosMode() {
                   variant="outline"
                   size="sm"
                 >
-                  Let it go
+                  Skip it
                 </SkipTaskButton>
               </div>
             </>
           ) : (
             <p className="flex items-start gap-2 text-sm text-muted-foreground">
               <Wind className="mt-0.5 size-4 shrink-0" />
-              Nothing to recover. Reset: water, three slow breaths, then one thing.
+              Nothing needs catching up. Take a break or choose one small task.
             </p>
           )}
         </CardContent>

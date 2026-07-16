@@ -12,9 +12,8 @@ medical, educational, or workplace requirements.
 - Things uses progressive disclosure and separates actionable work from later work.
 - Motion's clearest promise is automatic replanning when the day changes.
 
-DayFlow's product position is therefore: **the planner that still works when the
-day stops following the plan**. Its core loop is capture, commit, flow, rescue,
-and review.
+DayFlow is designed to stay useful when the day changes. People can add tasks,
+choose what matters, follow the current plan, adjust it, and review the week.
 
 ### 2026 product audit: what DayFlow adopts and avoids
 
@@ -46,14 +45,14 @@ DayFlow's implementation deliberately answers those gaps:
 - a missed important block becomes an explicit keep/shrink/let-go decision and
   is never silently rescheduled;
 - a visual time ring and optional 10/25/45-minute focus sprint make time visible;
-- first-run setup asks only what kind of support helps and which of five editable
-  week shapes is closest—defaults remain available in one tap;
+- first-run setup asks what kind of support helps, which editable routine is the
+  best starting point, and whether the person wants to create an account;
 - new accounts receive generic routines and habits rather than the developer’s
   personal locations, employer, classes, or goals;
 - category and state icons come from one semantic icon system instead of repeated
   decorative marks or emoji;
-- theme and five basic interface colors live in Settings and sync with the rest
-  of the private Supabase snapshot;
+- theme and five basic interface colors live in Settings and save with the rest
+  of the private account data;
 - a signed-out session is clearly labeled as a temporary preview and never
   pretends that browser-only changes are saved.
 
@@ -141,14 +140,14 @@ Evidence:
 
 Included:
 
-- four loose anchors only: morning care, one highlight, movement/reset, loose close
+- four simple blocks only: morning care, one highlight, movement/reset, and an open evening
 - no work block by default
 - a reversible switch that restores the prior routine
 - low importance for optional movement and flexible activities
 
 Psychological detachment and physical activity are associated with stronger
 vacation well-being. Context changes also weaken ordinary habit cues, so DayFlow
-keeps only portable anchors rather than recreating the normal schedule.
+keeps only a few useful blocks rather than recreating the normal schedule.
 
 Evidence:
 
@@ -157,9 +156,9 @@ Evidence:
 
 ## Private planner boundaries
 
-The brain-dump parser uses visible keyword and duration rules. Rescue uses the
+The list parser uses visible keyword and duration rules. Plan adjustment uses the
 selected time budget, task importance, estimated effort, and current capacity.
 It does not diagnose, infer medication effects, silently delete tasks, or call a
-paid AI service. Users preview captured tasks and explicitly apply every rescue
-plan. Persistent account data is stored only in the user-owned Supabase snapshot;
+paid AI service. Users preview captured tasks and explicitly apply every change.
+Clerk handles sign-in and persistent account data is stored only in the user-owned Supabase snapshot;
 signed-out previews remain in memory and disappear on refresh.

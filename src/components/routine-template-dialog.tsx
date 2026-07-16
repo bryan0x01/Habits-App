@@ -34,9 +34,9 @@ export function RoutineTemplateDialog({ onAdded }: { onAdded: (id: string) => vo
       </DialogTrigger>
       <DialogContent className="max-h-[88dvh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Choose the closest shape</DialogTitle>
+          <DialogTitle>Choose a starting routine</DialogTitle>
           <DialogDescription>
-            Use a starting rhythm, then change the times. A template is never a rule.
+            You can change every time and block after adding it.
           </DialogDescription>
         </DialogHeader>
 

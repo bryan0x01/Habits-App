@@ -16,9 +16,9 @@ export default function NotFound() {
       </div>
       <div>
         <ProductSignature className="text-xs" />
-        <h1 className="text-xl font-bold">Off the map</h1>
+        <h1 className="text-xl font-bold">Page not found</h1>
         <p className="mt-1 max-w-xs text-sm text-muted-foreground">
-          That page doesn&apos;t exist. Let&apos;s get you back to today.
+          That page doesn&apos;t exist.
         </p>
       </div>
       <Button asChild>

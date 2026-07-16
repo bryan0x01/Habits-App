@@ -100,7 +100,7 @@ export function HabitDayStateCard({
         {showMinimums && minimumHabits.length > 0 ? (
           <div className="space-y-1.5">
             <p className="text-[0.7rem] font-medium uppercase tracking-wide text-muted-foreground">
-              Minimums · secure a Day saved
+              Basics for today
             </p>
             <div className="flex flex-wrap gap-2">
               {minimumHabits.map((h) => {

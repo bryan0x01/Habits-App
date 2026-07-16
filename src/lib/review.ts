@@ -37,13 +37,13 @@ export interface WeeklyReviewData {
 }
 
 const FRICTION_SUGGESTION: Record<FrictionReason, string> = {
-  "too-tired": "“Too tired” came up most. Move your hardest block earlier, when energy is higher.",
-  forgot: "“Forgot” led the week. Set one reminder for your keystone block.",
-  "too-late": "“Too late” was common. Shift start times 15 minutes earlier to buy a buffer.",
-  "no-start": "“Didn't know where to start” topped the list. Lean on tiny starts — the 2-minute version.",
-  social: "Social plans pulled focus. Pre-decide which blocks flex around them.",
-  "no-food": "“No food” showed up. Prep one grab-and-go breakfast the night before.",
-  other: "Notice what keeps getting in the way — one small tweak next week can unlock it.",
+  "too-tired": "Try putting your hardest task earlier in the day.",
+  forgot: "Add one reminder for the task you miss most often.",
+  "too-late": "Try starting 15 minutes earlier next time.",
+  "no-start": "Give the task a first step that takes two minutes or less.",
+  social: "Leave one open block on days when you have plans.",
+  "no-food": "Set out an easy breakfast or snack the night before.",
+  other: "Pick one repeated problem and change one small thing next week.",
 };
 
 /** Monday's yyyy-MM-dd for the week containing `date`. */
@@ -160,14 +160,14 @@ function buildSuggestion({
   topFriction: { reason: FrictionReason; count: number }[];
 }): string {
   if (tracksApplications && applicationsSent === 0) {
-    return "No applications went out this week. Next week, aim for just one — open a saved role and apply.";
+    return "Choose one saved job and send the application next week.";
   }
   if (topFriction[0] && topFriction[0].count >= 2) {
     return FRICTION_SUGGESTION[topFriction[0].reason];
   }
   const lowest = [...dayMetrics].sort((a, b) => a.done - b.done)[0];
   if (lowest && lowest.done <= 2) {
-    return `${lowest.label} happened ${lowest.done} day${lowest.done === 1 ? "" : "s"}. Make its first step visible and aim for one more day — not a perfect week.`;
+    return `Put the first step for ${lowest.label} somewhere you can see it.`;
   }
-  return "You kept a steady shape this week. Same rhythm next week — it's working.";
+  return "Keep the same plan next week. It seems to be working.";
 }

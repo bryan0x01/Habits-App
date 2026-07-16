@@ -49,15 +49,14 @@ export default function HabitsPage() {
           <LoadingCards />
         ) : habits.length === 0 ? (
           <p className="rounded-2xl border border-dashed p-8 text-center text-sm text-muted-foreground">
-            No habits yet. Add one — start with something almost too easy.
+            No habits yet. Add one when you&apos;re ready.
           </p>
         ) : (
           <>
             <HabitDayStateCard showMinimums={false} showLink={false} />
             <WeeklyMomentum />
             <p className="-mt-2 px-1 text-xs text-muted-foreground">
-              {weeklyCheckins} check-ins · {momentum.completedDays} days saved this week.
-              Every one counts.
+              {weeklyCheckins} check-ins · basics done on {momentum.completedDays} {momentum.completedDays === 1 ? "day" : "days"}.
             </p>
 
             {HABIT_CATEGORIES.map((cat) => {

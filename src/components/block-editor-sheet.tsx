@@ -265,17 +265,17 @@ export function BlockEditorSheet({
               })}
             </div>
             <p className="text-xs text-muted-foreground">
-              High-importance blocks stay on Minimum Days and trigger recovery prompts.
+              Important blocks stay visible when you switch to basics only.
             </p>
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="block-tiny">Tiny start</Label>
+            <Label htmlFor="block-tiny">First step</Label>
             <Input
               id="block-tiny"
               value={form.tinyStart}
               onChange={(e) => set("tinyStart", e.target.value)}
-              placeholder="The 2-minute on-ramp"
+              placeholder="The easiest way to begin"
             />
           </div>
 

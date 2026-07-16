@@ -1,296 +1,255 @@
-# AGENTS.md — DayFlow by Halynt handoff & working guide
+# AGENTS.md — DayFlow by Halynt handoff
 
-> Onboarding doc for the next agent or developer picking up **DayFlow**. Read this
-> before making changes. For the product pitch and deploy steps, see
-> [README.md](README.md); this file is about *how the codebase works and how to
-> work in it*.
+Read this before changing DayFlow. The [README](README.md) covers the product;
+this file explains how the code works and what must stay safe.
 
----
+## 1. Product and current status
 
-## 1. TL;DR
+DayFlow is a mobile-first, ADHD-friendly productivity PWA. The public product
+name is **DayFlow by Halynt** and the preferred attribution is **A Halynt
+product**. Do not use “Halynt Inc.” or “Halynt Group” unless the owner later
+registers and approves that legal name.
 
-DayFlow is a **mobile-first, ADHD-friendly productivity PWA**. It answers "what do
-I do right now?" and helps you recover when you fall off schedule. It's a **Next.js
-15 App Router** app, **TypeScript strict**, **Tailwind 3 + shadcn/ui**, with
-**Supabase as the only durable source of truth**. Signed-out use is an explicitly
-temporary in-memory preview; magic-link auth unlocks private cross-device saves.
+The app has a signed-out, in-memory preview and private cross-device accounts.
+**Clerk owns authentication. Supabase is only the durable data layer.** Product
+data must never be written to localStorage or another browser store.
 
-**Status:** MVP is feature-complete and deploy-ready. `npm run check` runs lint,
-the domain and component Vitest suites, and the production build/type-check. Six
-screens are wired to a single client-side store; Playwright covers first-run,
-persistence, and Rescue flows.
+The current onboarding has five short steps: welcome, support need, starting
+routine, optional account creation, and review. Visible copy should stay simple,
+specific, and friendly. Avoid coaching slogans, therapy language, “AI voice,”
+shame language, and abstract labels when a plain label works.
 
----
-
-## 2. Commands
+## 2. Required checks
 
 ```bash
 npm install
-npm run dev      # http://localhost:3000  (SW disabled in dev)
-npm run build    # production build + type-check — MUST pass before shipping
-npm start        # serve the production build (needed to test PWA/offline)
-npm run lint     # ESLint (next/core-web-vitals) — MUST pass
-npm run test     # Vitest regression suite — MUST pass
-npm run test:components # rendered component behavior — MUST pass
-npm run test:e2e # Playwright first-run + Rescue flows
-npm run check    # lint + domain/component tests + production build
-npm run icons    # regenerate PWA icons (scripts/generate-icons.mjs)
+npm run dev
+npm run lint
+npm run test
+npm run test:components
+npm run test:e2e
+npm run build
+npm run check
+npm run icons
 ```
 
-**Always run `npm run check` before declaring done** — lint alone cannot catch
-type/module export errors (see gotcha #3).
+`npm run check` runs lint, domain tests, component tests, and the production
+build/type-check. **Always run it before declaring work complete.** Run the
+relevant Playwright flow after onboarding, account, persistence, or very-low-mode
+changes.
 
-No environment variables are required to preview the UI, but signed-out changes
-are intentionally temporary. Durable use needs the Supabase project URL and
-publishable key in `.env.local` and the deployment environment.
+## 3. Main architecture
 
----
+Every interactive screen reads one client-side store:
+[`StoreProvider`](src/components/store-provider.tsx). Pure schedule, planner,
+habit-state, review, and application logic lives in `src/lib`.
 
-## 3. Architecture in one paragraph
-
-Every screen is a **client component** that reads a single React context,
-[`StoreProvider`](src/components/store-provider.tsx). The store owns the active
-in-memory snapshot and exposes typed state + action callbacks. `CloudProvider`
-loads the authenticated user's validated Supabase snapshot before the working UI
-appears, then debounces subsequent snapshot upserts. Pure domain logic (what's happening now,
-day states, weekly analytics) lives in `src/lib/*` as framework-free functions that
-take store data + a `Date` and return view models. UI is composed from shadcn/ui
-primitives in `src/components/ui` plus feature components in `src/components`.
-`AppearanceController` applies account-synced light/dark/system and accent choices.
-
-```
-Sign in → CloudProvider pulls Supabase snapshot → StoreProvider applies it → UI
-User taps → useStore() updates memory → derived logic re-renders → debounced upsert
+```text
+Clerk session
+  → CloudProvider asks Clerk for a token
+  → Supabase checks that token and RLS
+  → CloudProvider loads dayflow_snapshots
+  → StoreProvider applies the validated snapshot
+  → user changes are debounced back to the same private row
 ```
 
-### Directory map
+Important files:
 
-```
+```text
 src/
-├── app/                      # App Router — one folder per screen
-│   ├── layout.tsx            # Store/Cloud/Appearance providers, metadata, nav, SW register
-│   ├── page.tsx              # Today dashboard
-│   ├── routines/ habits/ applications/ review/ settings/   # the other 5 screens
-│   ├── error.tsx             # route error boundary
-│   ├── not-found.tsx         # 404
-│   ├── globals.css           # Tailwind + CSS-variable theme tokens (light/dark)
-│   ├── icon.png              # favicon (generated)
-│   └── apple-icon.png        # apple touch icon (generated)
-├── components/
-│   ├── ui/                   # shadcn/ui primitives (button, card, dialog, sheet, select, …)
-│   ├── store-provider.tsx    # ⭐ the single source of truth
-│   └── *.tsx                 # feature components (see §6)
-└── lib/
-    ├── types.ts              # ⭐ all data models
-    ├── storage.ts            # ⭐ snapshot validation + explicit export/import boundary
-    ├── constants.ts          # metadata: categories, energy modes, statuses, app options…
-    ├── schedule.ts           # "what now / next / missed" logic for Today
-    ├── planner.ts            # local brain-dump parsing, prioritization, and Rescue
-    ├── day-state.ts          # habit day states (Minimum saved / Strong / Full) + weekly momentum
-    ├── routines.ts           # blank/copy routine builders
-    ├── review.ts             # Weekly Review analytics
-    ├── applications.ts       # priority / follow-up / this-week helpers
-    ├── habits.ts             # cadence helpers
-    ├── time.ts               # date-fns wrappers (dateKey, weekdayOf, prettyTime, …)
-    ├── use-now.ts            # ticking clock hook (client-only)
-    ├── utils.ts              # cn(), uid(), clamp()
-    └── data/                 # generic starter rhythms, templates, and habits
-middleware.ts                  # refreshes Supabase auth sessions
-supabase/migrations/           # RLS-protected cloud-sync schema
-docs/SUPABASE_SETUP.md         # Supabase dashboard + Vercel steps
-public/  manifest.webmanifest · sw.js · icons/
-scripts/ generate-icons.mjs  # dependency-free PNG generator
-tests/                        # domain + component Vitest and Playwright E2E coverage
+├── middleware.ts                     # Clerk middleware; public preview stays public
+├── app/layout.tsx                    # Clerk, store, cloud, appearance, nav, SW
+├── app/sign-in/[[...sign-in]]/       # Clerk sign-in route
+├── app/sign-up/[[...sign-up]]/       # Clerk sign-up route
+├── app/page.tsx                      # Today
+├── app/routines/ habits/ review/ settings/ applications/
+├── components/store-provider.tsx     # active app state and actions
+├── components/cloud-provider.tsx     # Clerk session + Supabase load/save
+├── components/onboarding.tsx         # five-step first run
+├── components/appearance-controller.tsx
+├── lib/supabase/client.ts            # accessToken-aware Supabase client
+├── lib/storage.ts                    # snapshot trust boundary
+├── lib/local-planning-engine.ts      # private prompt parsing + learned preferences
+├── lib/patterns.ts                   # transparent 28-day personal patterns
+├── lib/types.ts                      # all persisted models
+└── lib/data/                         # generic public starter data
+supabase/
+├── migrations/                       # RLS schema, push, hardening, Clerk migration
+└── functions/send-reminders/         # cron-driven web push
 ```
 
----
+## 4. Authentication and persistence
 
-## 4. State & persistence (the crux)
+### Clerk
 
-- **One store.** [`store-provider.tsx`](src/components/store-provider.tsx) holds
-  every slice as `useState`. `useStore()` is the only way components read or
-  mutate active data. Do not add browser persistence or access Web Storage.
-- **Hydration.** The store becomes client-ready after mount. `CloudProvider` keeps
-  authenticated users on a boot screen until the remote snapshot is loaded, so
-  starter defaults can never overwrite their account. Pages still gate on
-  `hydrated` and show `<LoadingCards />` to avoid server/client mismatches.
-- **Persistence.** Authenticated snapshots are debounced directly to the private
-  `dayflow_snapshots` row. Signed-out preview state lives only in memory and the
-  header/Settings UI must continue to say that it is temporary.
-- **Remote wins.** A valid remote snapshot always wins on sign-in. If the account
-  has no row, the current generic starter snapshot is created once.
-- **Time is client-only.** Anything time-dependent uses the `useNow()` hook (ticks
-  every 30–60s). Never compute "today" during server render.
+- `ClerkProvider` wraps the app in `src/app/layout.tsx`.
+- `src/middleware.ts` uses `clerkMiddleware()` and must keep `/__clerk/:path*`
+  in the matcher exactly once.
+- The main app stays public because signed-out preview use is intentional.
+- Use Clerk components or hooks for sign-in, sign-up, user menus, and sign-out.
+- Never restore the deleted Supabase magic-link callback or Supabase Auth UI.
+- The service worker must not cache `/sign-in`, `/sign-up`, `/auth`, or
+  `/__clerk` traffic.
 
-### Adding a new persisted slice — checklist
+### Supabase
 
-1. Add the type to [`types.ts`](src/lib/types.ts) (and to `DayFlowSnapshot`).
-2. Extend the boundary validator in [`storage.ts`](src/lib/storage.ts).
-3. In the store: add `useState`, include it in `snapshot`/`applySnapshot`, add
-   action callbacks, reset in `resetData()`, and expose it via `AppStore`.
-4. Add backward-compatibility coverage. Only change the database migration if the
-   row itself changes; slices inside the JSON snapshot need no new table column.
+- `createSupabaseBrowserClient()` receives an access-token callback that calls
+  `session.getToken()`.
+- Clerk user IDs are text values such as `user_...`; do not model them as UUIDs.
+- RLS compares `auth.jwt()->>'sub'` with the row’s text `user_id`.
+- The migration `202607160001_clerk_auth.sql` removes old `auth.users` foreign
+  keys, changes account IDs from UUID to text, and replaces the old policies.
+- Never expose a service-role or secret key to the browser.
 
----
+### Hydration rules
 
-## 5. Data models & snapshot compatibility
+- `CloudProvider` waits for Clerk before deciding whether to show the signed-out
+  preview or load an account.
+- A valid remote snapshot wins after sign-in.
+- If a Clerk account has no snapshot, save the current starter snapshot once.
+- When an account signs out or changes, clear private account data from memory.
+- Signed-out changes are temporary and reset on refresh.
+- Time-dependent UI uses `useNow()`; do not compute today’s state during server
+  rendering.
 
-All models are in [`types.ts`](src/lib/types.ts): `Routine`, `RoutineBlock`
-(`importance`, `notificationMinutesBefore`), `Habit` (`category`, `minimum`),
-`HabitLog`, `BlockLog`, `Priority`, `Application` (type/priority/deadline/
-resumeVersion/referralContact/followUpDate/…), `EnergyLog`, `FrictionLog`,
-`WeekPlan`, `UserSettings`. Everything is plain & serializable on purpose.
+### Adding persisted data
 
-- `SNAPSHOT_VERSION` identifies the current export/cloud payload. Keep additions
-  optional where possible so existing account snapshots remain valid.
-- `isDayFlowSnapshot()` is the trust boundary for Supabase and imported JSON. An
-  incompatible change needs a deliberate normalization/migration path; never
-  silently discard an authenticated user's history.
-- Routines are **not static** — the public templates in
-  [`data/routines.ts`](src/lib/data/routines.ts) are deep-cloned into the store on
-  first run and are fully user-editable thereafter. Seed block ids are
-  `` `${routineId}-${day}-${HHmm}` ``; user-added blocks use `uid("block")`.
-  Logs reference these ids, so renaming seed ids orphans history.
+1. Add the type to `src/lib/types.ts` and `DayFlowSnapshot`.
+2. Extend validation in `src/lib/storage.ts`.
+3. Add state, snapshot/apply logic, actions, and reset behavior in the store.
+4. Add backward-compatibility tests.
+5. Only add a database migration when the outer row or its policies change.
 
----
+## 5. Snapshot compatibility
 
-## 6. Feature → file map
+`SNAPSHOT_VERSION` marks the saved/exported payload. Prefer optional additions.
+`isDayFlowSnapshot()` is the trust boundary for Supabase reads and imported files.
+Never discard a signed-in user’s history because a new field is absent.
 
-| Screen / feature | Entry | Key components / logic |
-| --- | --- | --- |
-| **Today** | [`app/page.tsx`](src/app/page.tsx) | `WhatNowCard` + `NextBestActionCard`, `ChaosMode` (chaos energy), `VacationBanner`, `TopPriorities`, `FlexPlan` (brain dump + rescue), compact `TodayOverview`, `HabitDayStateCard`, `TodayTimeline`; weekly/recruiting summaries stay on their dedicated screens |
-| **First run** | [`components/onboarding.tsx`](src/components/onboarding.tsx) | required but skippable 60-second setup: default support + closest editable routine |
-| **Routines** | [`app/routines/page.tsx`](src/app/routines/page.tsx) | `CreateRoutineDialog` (blank routines), `RoutineActionsSheet` (activate/duplicate/rename/delete), `BlockEditorSheet` (add/edit/delete blocks, multi-day creation, end>start validation) |
-| **Habits** | [`app/habits/page.tsx`](src/app/habits/page.tsx) | `HabitCard`, `HabitDayStateCard`, `WeeklyMomentum`, `AddHabitDialog`; grouped by category |
-| **Applications** | [`app/applications/page.tsx`](src/app/applications/page.tsx) | optional Settings-linked tool; `ApplicationCard`, `ApplicationDialog`; helpers in `applications.ts` |
-| **Weekly Review** | [`app/review/page.tsx`](src/app/review/page.tsx) | analytics in `review.ts`; "Plan next week" writes `WeekPlan` |
-| **Settings** | [`app/settings/page.tsx`](src/app/settings/page.tsx) | routine picker, energy/theme, magic-link cloud sync, web-push controls, export/import/reset |
-| **Friction logging** | `FrictionDialog` / `SkipTaskButton` | reasons in `constants.ts` (`FRICTION_REASONS`) |
-| **Shared shell** | `PageHeader`, `PageContainer`, `BottomNav`, `AppearanceController` | five primary destinations + `LoadingCards` |
+Routine block logs reference block IDs. Existing starter block IDs use
+```${routineId}-${day}-${HHmm}``` and must not be renamed. New user-created blocks
+use `uid("block")`.
 
-### ADHD-feature logic lives here
-- **What now / next / missed** → `computeToday()` in [`schedule.ts`](src/lib/schedule.ts). "Missed" = an *important* (`importance !== "low"`), non-optional block that already ended untouched. Minimum-day makes non-`high` blocks `optional`.
-- **Day states** (`Minimum saved` / `Strong day` / `Full win`) + **weekly momentum** (completed **days out of 7**, not streaks) → [`day-state.ts`](src/lib/day-state.ts).
-- **Energy modes** (`high/medium/low/chaos`) → `ENERGY_MODES` in `constants.ts` (chaos is labeled **"Rescue"** in the UI). **Chaos** replaces the whole dashboard with `ChaosMode` (exactly 3 cards). **Backup options** only show on low/chaos.
-- **Loose ends** (brain dump → estimates, energy-aware ordering, rescue keep/shrink/move, and the day-key carry-forward of unfinished tasks) → [`planner.ts`](src/lib/planner.ts), rendered by `FlexPlan`.
+## 6. Feature map
 
----
+| Feature | Main files |
+| --- | --- |
+| Today | `app/page.tsx`, `what-now-card.tsx`, `today-overview.tsx`, `today-timeline.tsx` |
+| Very-low view | `chaos-mode.tsx`; internal energy value remains `chaos` for snapshot compatibility |
+| Routines | `app/routines/page.tsx`, `block-editor-sheet.tsx`, `routine-actions-sheet.tsx` |
+| Private routine draft | `smart-routine-dialog.tsx`, `lib/local-planning-engine.ts` |
+| Habits | `app/habits/page.tsx`, `habit-card.tsx`, `habit-day-state.tsx`, `day-state.ts` |
+| First run | `onboarding.tsx`; account actions use Clerk modal flows |
+| Accounts | `cloud-provider.tsx`, `cloud-sync-card.tsx`, Clerk sign-in/sign-up routes |
+| Weekly review | `app/review/page.tsx`, `lib/review.ts` |
+| Personal patterns | `personal-patterns-card.tsx`, `lib/patterns.ts`; calculated on the client |
+| Flexible list | `flex-plan.tsx`, `brain-dump-dialog.tsx`, `rescue-plan-dialog.tsx`, `lib/planner.ts` |
+| Push reminders | `notification-settings-card.tsx`, `public/sw.js`, Supabase function/migrations |
+| Appearance | `appearance-controller.tsx`, Settings, account-synced `UserSettings` |
 
-## 7. Conventions (keep these for consistency)
+Internal names such as `ChaosMode`, `RescuePlanDialog`, `tinyStart`, and
+`minimumDay` remain for snapshot and code compatibility. Their visible labels are
+“Very low,” “Adjust plan,” “First step,” and “Basics only.”
 
-- **Client components everywhere** that touch the store: start with `"use client"`,
-  read `useStore()`, gate rendering on `hydrated`.
-- **Layout:** mobile-first, centered **`max-w-md` app frame** via `PageContainer`.
-  ⚠️ Don't put multi-column grids *inside* the frame — they truncate on desktop
-  (learned the hard way; applications reverted from `sm:grid-cols-2` to a single
-  column). Small stat tiles (`grid-cols-2/3`) are fine.
-- **Theming:** use semantic tokens (`bg-card`, `text-muted-foreground`, `border`,
-  `bg-primary`, …). For any raw Tailwind color, add a `dark:` variant. Both light
-  and dark must look right.
-- **shadcn/ui:** primitives live in `src/components/ui`, styled with `cn()` from
-  `lib/utils`. Add new ones in the same forwardRef + `cn()` style. `components.json`
-  is configured if you use the CLI.
-- **Accessibility:** every icon-only button needs `aria-label`; toggle chips use
-  `aria-pressed`; inputs get a `<Label htmlFor>`; filter groups use `role="group"`.
-- **IDs / timestamps:** use `uid(prefix)` and `new Date().toISOString()` from the
-  store, never `Math.random()` inline.
-- **Tone/copy:** direct, supportive, non-judgmental. No streak-shame or failure
-  language ("let it go", "that counts", "fell off? totally normal").
-- **Security posture:** RLS is the only server-side boundary — never ship a
-  service-role key to the client. The auth callback only follows same-origin
-  relative `next` paths (see `safeNextPath`), the service worker never touches
-  `/auth/*`, and baseline hardening headers (nosniff, frame-deny, referrer,
-  permissions) live in [`next.config.mjs`](next.config.mjs). Keep all four
-  intact when editing those files.
+## 7. UI and copy rules
 
----
+- Keep the mobile app frame at `max-w-md` through `PageContainer`.
+- Do not add multi-column page layouts inside that frame. Small two- or
+  three-column control groups are fine.
+- Use semantic theme tokens such as `bg-card`, `text-muted-foreground`,
+  `border`, and `bg-primary`. Add dark variants for any raw color.
+- Reuse shadcn/ui primitives and existing rounded-card patterns.
+- Use Lucide icons through the existing icon components. Do not use emoji as new
+  interface icons.
+- Every icon-only button needs an accessible label. Inputs need labels. Toggle
+  groups need `aria-pressed` or their appropriate selection role.
+- Prefer short labels: “Create account,” “Adjust today,” “Basics only,” “First
+  step,” and “What got in the way?”
+- Avoid coaching slogans, shame language, promises about a person’s future self,
+  and abstract labels when a direct action label is available.
+- Do not mention Supabase in customer-facing account copy. Say “save to your
+  account” or “saved.” Supabase can be named in technical docs.
 
-## 8. Gotchas / landmines (real ones hit while building)
+## 8. Starter data
 
-1. **Dev first-load CSS race.** The very first `next dev` page load sometimes serves
-   an *empty* `layout.css` before Tailwind's first compile finishes, so the page
-   looks completely unstyled (serif, no cards). **A hard reload fixes it.** Production
-   static CSS is unaffected. Don't chase this as a real bug in dev.
-2. **Service worker is production-only.** `ServiceWorkerRegister` no-ops unless
-   `NODE_ENV === "production"`. Test install/offline with `npm run build && npm start`.
-3. **ESLint doesn't resolve module exports.** A stray `export { NotDefined }` can
-   pass `npm run lint` but fail the **webpack build**. This bit us once in
-   `review.ts`. Always finish with `npm run check`.
-4. **`eslint.ignoreDuringBuilds: true`** in [`next.config.mjs`](next.config.mjs) — the
-   build won't fail on lint, so lint must be run separately.
-5. **No `next/font`.** Deliberately avoided (it fetches fonts at build time → breaks
-   offline/sandboxed builds). The font is a system stack via `--font-sans` in
-   `globals.css`. Don't add `next/font/google`.
-6. **Public defaults only.** Starter habits, routines, example companies, and
-   review targets must stay generic. Personal account snapshots are user data and
-   must not be rewritten merely because seed templates change.
-7. **Icons are generated**, not committed art. Re-run `npm run icons` if you change
-   the brand mark; it hand-encodes PNGs with zlib (no image deps).
-8. **Snapshot compatibility matters.** Prefer additive optional fields. If a
-   breaking payload change is unavoidable, add a tested normalizer before raising
-   the accepted snapshot version.
-9. **Production browser tabs can retain old build errors** after rebuilding while
-   a tab is open. Verify in a fresh tab before treating a chunk mismatch as a
-   service-worker regression.
-10. **Missing Vercel env vars disable Supabase silently — per deployment.**
-    `isSupabaseConfigured` is just `Boolean(url && publishableKey)`, so a
-    deployment without both shows "Cloud sync will be available after this
-    deployment gets its Supabase settings" and no sign-in — while `localhost`
-    works fine from `.env.local`. This reads as "Supabase is broken" when it is
-    only unconfigured *there*. All three `NEXT_PUBLIC_*` vars are listed in
-    [`docs/SUPABASE_SETUP.md`](docs/SUPABASE_SETUP.md) §3; Vercel only applies
-    them to **new** builds, so redeploy after adding. When someone reports sync
-    not working, **check which origin they are testing** before touching code.
+Starter routines and habits are public templates, not the owner’s personal
+schedule. Keep them generic. New templates affect new accounts only; do not
+overwrite an existing snapshot to reseed it.
 
----
+When adding a template:
 
-## 9. Extension recipes
+- use everyday titles and descriptions;
+- avoid employer, city, school, or personal project names;
+- keep every block editable;
+- provide a plain first step only when it helps;
+- preserve existing seed IDs.
 
-- **Add a routine-block field:** extend `RoutineBlock` in `types.ts` → add to
-  `BlockInput` + `addBlock/updateBlock` in the store → add a control in
-  `BlockEditorSheet` → surface it in `today-timeline.tsx` / routines list → keep the
-  snapshot validator backward-compatible.
-- **Add a screen:** create `app/<name>/page.tsx` (`"use client"`, gate on
-  `hydrated`), wrap in `PageHeader` + `PageContainer`, add a nav item in
-  [`bottom-nav.tsx`](src/components/bottom-nav.tsx). Keep the primary nav to five
-  or fewer choices; put specialist tools in Settings.
-- **Add a habit / routine template:** edit `data/habits.ts` / `data/routines.ts`.
-  New accounts receive it; never overwrite an existing account snapshot to reseed.
-- **Cloud schema changes:** update the snapshot validator in `storage.ts`, the
-  store snapshot shape, and `supabase/migrations/`. Keep RLS enabled and never use
-  a Supabase secret/service-role key in client code. See `docs/SUPABASE_SETUP.md`.
+## 9. Security and deployment
 
----
+Keep these protections intact:
 
-## 10. What's NOT done / roadmap
+- RLS on every private table;
+- same-origin-only auth redirects from Clerk;
+- no service role in client code;
+- service-worker auth-route exclusions;
+- `nosniff`, frame-deny, referrer, and permissions headers in `next.config.mjs`.
 
-- Supabase sync needs its migration applied plus Email/Auth redirect URLs and Vercel
-  environment variables configured. See `docs/SUPABASE_SETUP.md`.
-- Web Push is implemented end to end. Deployment still needs VAPID secrets, the
-  push migration/function, and the one-minute Supabase Cron from `docs/NOTIFICATIONS_SETUP.md`.
-- Automated tests cover core domain/persistence logic, the onboarding/timer/time
-  components, and first-run + Rescue browser flows. Broader per-screen E2E can
-  expand as the product grows.
-- External-service roadmap: AI assistance, Google Calendar, and
-  richer multi-device conflict resolution. See README's "Future improvements".
+### Private planning engine
 
----
+- DayFlow has no paid AI dependency and no external planning API.
+- `local-planning-engine.ts` runs in the browser. It parses common English and
+  Spanish day/time phrases and learns simple preferences from recent check-ins.
+- Learned signals are transparent empirical rates and medians, not diagnoses or
+  claims that a statistical model knows what will work for a person.
+- Never create, replace, activate, or edit a routine until the user reviews the
+  draft and explicitly taps the save action.
+- Do not silently move fixed commitments. Flexible blocks may move only to avoid
+  an overlap, and the preview must disclose omitted blocks.
+- `lib/patterns.ts` is deterministic and private; do not market observed
+  correlations as medical insight or certainty.
 
-## 11. Verification checklist before shipping
+Account saving requires all of the following:
 
-- [ ] `npm run build` passes (type-check included).
-- [ ] `npm run lint` clean.
-- [ ] `npm run test` passes.
-- [ ] `npm run test:components` passes.
-- [ ] `npm run test:e2e` passes for onboarding or Rescue changes.
-- [ ] Preview the affected screen(s) at **mobile (375px)** and **desktop**; check
-      **light and dark**.
-- [ ] Signed-in changes survive a refresh and another device through Supabase.
-- [ ] Signed-out preview clearly says it is temporary and writes no product data
-      to Web Storage.
-- [ ] No console errors.
-- [ ] If a data shape changed, old valid snapshots still load or a migration exists.
+1. Clerk publishable and secret keys in local/Vercel environments.
+2. Supabase URL and publishable key in local/Vercel environments.
+3. Clerk’s Supabase integration activated in the Clerk dashboard.
+4. Clerk configured as a Third-Party Auth provider in Supabase.
+5. Every migration applied, including `202607160001_clerk_auth.sql`.
+6. A redeploy after environment changes.
 
-_Last updated to reflect: the Supabase-first public-product redesign, generic
-starter rhythms, account-synced appearance colors, semantic visuals, simplified
-navigation, hardened push delivery, and domain/component/E2E coverage._
+See [docs/SUPABASE_SETUP.md](docs/SUPABASE_SETUP.md). Push also needs the VAPID
+and cron setup in [docs/NOTIFICATIONS_SETUP.md](docs/NOTIFICATIONS_SETUP.md).
+
+## 10. Known issues and checks
+
+1. The first `next dev` load can briefly serve unfinished Tailwind CSS. Hard
+   reload once before treating it as a product bug.
+2. The service worker is production-only.
+3. ESLint does not catch every missing export; the production build does.
+4. Do not add `next/font/google`; offline builds cannot rely on a font download.
+5. Old production tabs can keep stale chunks after a deploy. Verify in a fresh tab.
+6. Missing environment variables affect each Vercel deployment separately.
+7. The Clerk/Supabase dashboard connection is manual and cannot be completed by
+   repository code alone.
+8. npm currently reports moderate transitive advisories. Do not run a broad
+   `npm audit fix` without reviewing breaking changes.
+
+## 11. Release checklist
+
+- [ ] `npm run check` passes.
+- [ ] Relevant Playwright flows pass.
+- [ ] The changed screen works at 375–390 px and desktop width.
+- [ ] Light and dark themes are readable.
+- [ ] Onboarding fits without clipped buttons.
+- [ ] Create account, sign in, user menu, and sign out open correctly.
+- [ ] Signed-in changes survive refresh and another device.
+- [ ] Signed-out preview writes no DayFlow data to Web Storage.
+- [ ] No browser console errors.
+- [ ] Old valid snapshots still load after any data-shape change.
+- [ ] Documentation matches the current authentication flow.
+- [ ] Generated routine suggestions cannot save without review.
+- [ ] Routine descriptions and brain dumps create no external network requests.
+- [ ] No secret key or full saved snapshot appears in browser requests.
+
+Last updated for the natural-copy pass, Clerk authentication, the private local
+planning engine, and 28-day behavior patterns.

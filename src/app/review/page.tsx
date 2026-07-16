@@ -7,6 +7,7 @@ import { Hammer, HeartHandshake, Lightbulb, Send, Sparkles, Trophy } from "lucid
 
 import { PageContainer, LoadingCards } from "@/components/page-container";
 import { PageHeader } from "@/components/page-header";
+import { PersonalPatternsCard } from "@/components/personal-patterns-card";
 import { useStore } from "@/components/store-provider";
 import { WeeklyMomentum } from "@/components/weekly-momentum";
 import { Card, CardContent } from "@/components/ui/card";
@@ -44,7 +45,7 @@ export default function ReviewPage() {
 
   return (
     <>
-      <PageHeader title="Weekly review" subtitle="Your last 7 days, judgment-free" />
+      <PageHeader title="Weekly review" subtitle="A quick look at the last 7 days" />
       <PageContainer className="space-y-4">
         {!hydrated ? (
           <LoadingCards />
@@ -52,10 +53,11 @@ export default function ReviewPage() {
           <>
             <WeeklyMomentum />
 
+            <PersonalPatternsCard now={now} />
+
             {data.totalWins === 0 ? (
               <p className="rounded-2xl border border-dashed p-4 text-center text-sm text-muted-foreground">
-                Your week is just getting started. Check a few things off and this
-                page fills in with your momentum.
+                Once you check off a few things, you&apos;ll see them here.
               </p>
             ) : null}
 
@@ -107,13 +109,13 @@ export default function ReviewPage() {
                   <Trophy className="size-5" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold">Strongest day</p>
+                  <p className="text-sm font-semibold">Most active day</p>
                   <p className="text-sm text-muted-foreground">
                     {data.bestDay
-                      ? `${WEEKDAY_LABELS[data.bestDay.weekday]} — ${data.bestDay.wins} win${
+                      ? `${WEEKDAY_LABELS[data.bestDay.weekday]} — ${data.bestDay.wins} item${
                           data.bestDay.wins === 1 ? "" : "s"
-                        }. Nice.`
-                      : "No standout day yet — plenty of week left."}
+                        } done.`
+                      : "No activity yet."}
                   </p>
                 </div>
               </CardContent>
@@ -128,8 +130,7 @@ export default function ReviewPage() {
                 </p>
                 {data.topFriction.length === 0 ? (
                   <p className="text-sm text-muted-foreground">
-                    No friction logged. If you skipped things, logging the why helps
-                    spot patterns — never a mark against you.
+                    Nothing logged here yet.
                   </p>
                 ) : (
                   <ul className="space-y-2">
@@ -159,7 +160,7 @@ export default function ReviewPage() {
                   <Lightbulb className="size-5" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold">One thing to try next week</p>
+                  <p className="text-sm font-semibold">Try this next week</p>
                   <p className="mt-0.5 text-sm text-muted-foreground">{data.suggestion}</p>
                 </div>
               </CardContent>
@@ -173,7 +174,7 @@ export default function ReviewPage() {
                   <p className="text-sm font-semibold">Plan next week</p>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Three draft priorities. Keep them small and specific.
+                  Add up to three things you want to finish.
                 </p>
                 <PlanField
                   label="School / work"
@@ -185,7 +186,7 @@ export default function ReviewPage() {
                   label="Health / movement"
                   value={plan.health}
                   onChange={(v) => setWeekPlan(nextWeekKey, "health", v)}
-                  placeholder="e.g. Move twice, protect bedtime"
+                  placeholder="e.g. Move twice, start bedtime by 10:30"
                 />
                 <PlanField
                   label="Career / project"
@@ -198,8 +199,8 @@ export default function ReviewPage() {
 
             <p className="px-2 pb-2 text-center text-sm text-muted-foreground">
               {data.activeDays === 0
-                ? "No check-ins yet. The week is still open."
-                : `You showed up ${data.activeDays} day${data.activeDays === 1 ? "" : "s"} this week. That counts.`}
+                ? "No check-ins yet."
+                : `You checked in on ${data.activeDays} day${data.activeDays === 1 ? "" : "s"} this week.`}
             </p>
           </>
         )}

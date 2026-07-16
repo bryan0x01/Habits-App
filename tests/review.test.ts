@@ -48,7 +48,7 @@ describe("weekly review", () => {
       frictionLogs: [] as FrictionLog[],
     };
     const noApps = computeWeeklyReview({ ...base, applications: [] });
-    expect(noApps.suggestion).toContain("Reset one space happened 0 days");
+    expect(noApps.suggestion).toContain("Put the first step for Reset one space");
 
     const friction = (id: string, date: string): FrictionLog => ({
       id,
@@ -63,7 +63,7 @@ describe("weekly review", () => {
       applications: [application({ appliedOn: "2026-07-08" })],
       frictionLogs: [friction("one", "2026-07-07"), friction("two", "2026-07-08")],
     });
-    expect(repeatedFriction.suggestion).toContain("Too tired");
+    expect(repeatedFriction.suggestion).toContain("hardest task earlier");
     expect(repeatedFriction.topFriction[0]).toEqual({ reason: "too-tired", count: 2 });
   });
 });

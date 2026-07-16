@@ -1,287 +1,169 @@
 # DayFlow by Halynt
 
-> **A Halynt product.** DayFlow is the first focused tool in the Halynt product family.
+> A Halynt product.
 
-**What to do now — and how to get back on track.**
+DayFlow is a simple daily planner for people with ADHD. It keeps the next task
+easy to find, makes routines editable, and gives people a lighter view when the
+full day feels like too much.
 
-DayFlow is a mobile-first, installable **PWA** that helps people with ADHD-friendly
-routines answer one question first: _"What should I do right now?"_ — and, just as
-importantly, _"How do I recover when I fall off?"_
-
-[**Open the live demo**](https://habits-app-eta.vercel.app) · [View the repository](https://github.com/bryan0x01/Habits-App)
-
-Instead of a giant, guilt-inducing to-do list, DayFlow surfaces the **one thing**
-that matters at this moment, offers a **tiny on-ramp** to start it, a **lighter
-backup** when it feels like too much, and a **kind path back** when a block slips.
-
-> Supabase is the source of truth for saved plans. Signed-out visitors can
-> explore a clearly labeled temporary preview, but DayFlow never pretends that
-> unsaved browser state is permanent.
+[Open the live demo](https://habits-app-eta.vercel.app) · [View the repository](https://github.com/bryan0x01/Habits-App)
 
 ## Preview
 
-| 60-second setup | What matters now | Editable real-week rhythms |
+| Quick setup | Today | Editable routines |
 | --- | --- | --- |
 | ![DayFlow onboarding](docs/screenshots/dayflow-onboarding-mobile.png) | ![DayFlow Today screen](docs/screenshots/dayflow-today-mobile.png) | ![DayFlow routine editor](docs/screenshots/dayflow-routines-mobile.png) |
 
----
+## What it includes
 
-## ✨ Features
-
-Five primary screens, each intentionally focused, plus one optional career tool:
+DayFlow has five main screens and one optional career tool:
 
 | Screen | What it does |
 | --- | --- |
-| **Today** | The home base. One visible next action, recovery after a missed block, committed outcomes, habit minimums, and an optional full-plan drawer. In **Rescue** mode it collapses to three moves. |
-| **Routines** | Start blank or add editable Balanced, Student, Shift, Focus Work, Self-employed, Low-capacity, and Vacation rhythms. |
-| **Habits** | Eight broad starter habits with semantic icons, completion states, weekly momentum, and friction logging. Add your own; delete anytime. |
-| **Weekly Review** | Judgment-free, data-driven habit metrics, project progress, friction patterns, strongest day, and one suggested adjustment. |
-| **Settings** | Theme, five basic interface colors, routine and support defaults, Supabase sign-in, reminders, export/import, and reset. |
-| **Applications (optional)** | A career tracker available under Settings → Tools; it is no longer imposed on the primary navigation. |
+| **Today** | Shows the current task, what comes next, three priorities, today’s habits, and the rest of the plan when you want it. |
+| **Routines** | Lets people start blank, edit a practical template, or turn a plain-language description into a routine they review before saving. |
+| **Habits** | Tracks simple habits by category and shows progress over the last seven days without streaks. |
+| **Weekly Review** | Summarizes completed work and shows transparent patterns learned from the last 28 days of check-ins. |
+| **Settings** | Holds appearance, account, reminder, routine, backup, and reset controls. |
+| **Applications** | An optional job application tracker available from Settings. |
 
-New accounts start with **Balanced week** and **Low-capacity day**. The template
-library adds **Student week**, **Shift week**, **Focus work**, **Self-employed**,
-and **Vacation rhythm**. These are public starting points—no personal employer,
-location, class, or language goal is baked into a new user&apos;s plan. Every time
-and block can be changed.
+New accounts start with generic routines and habits. Nothing includes a personal
+employer, school, location, or private schedule. Every routine block can be
+renamed, moved, duplicated, or removed.
 
----
+## Why the interface works this way
 
-## 🧠 ADHD-friendly design decisions
+- **One clear task:** the Today screen leads with the task that matters now.
+- **A first step:** tasks can include an easy way to begin.
+- **A backup option:** routine blocks can have a shorter version for lower-energy days.
+- **Four capacity levels:** High, Good, Low, and Very low change how much the app shows.
+- **Basics only:** hides anything that can wait without deleting it.
+- **Three priorities:** keeps the day’s main outcomes separate from a longer list.
+- **Seven-day progress:** shows completed days without creating a streak to maintain.
+- **Simple skip notes:** people can record what got in the way and review patterns later.
+- **Editable appearance:** light, dark, or system mode plus five account-synced interface colors.
+- **Private list sorting:** “Clear my head” organizes tasks on the device using duration, importance, energy, and past check-ins.
+- **Reviewed routine drafts:** a local parser understands common day and time phrases, but it cannot save or change a schedule without approval.
+- **Transparent patterns:** DayFlow looks for repeated timing, task-size, energy, and friction patterns without sending saved history anywhere.
+- **Visible time:** current blocks use a time ring, with optional 10, 25, and 45-minute focus timers.
+- **A short setup:** onboarding asks what kind of help is useful, suggests a routine, and offers account creation.
 
-Every feature here exists to reduce a specific ADHD tax — task initiation,
-overwhelm, time blindness, or shame spirals.
+## Accounts and saved data
 
-- **What Now card** — one clear focus for the current moment, not a wall of tasks.
-  Beats time blindness and decision paralysis.
-- **Tiny Start** — a ~2-minute on-ramp for every block ("Put your gym shoes on").
-  Task initiation is the hardest part; this makes the first step trivial.
-- **Backup Option** — a lighter version of the task ("A 10-minute walk counts")
-  so a hard day doesn't become a zero day.
-- **Energy Mode** (High / Medium / Low / Rescue) — you tell the app how much you've
-  got, and the copy + emphasis adapt. In **Chaos** mode it literally says
-  _"One thing. That's the whole job right now."_
-- **Protect the day toggle** — shrinks the day to just the high-importance blocks when
-  you're struggling. Everything else becomes explicitly optional.
-- **Top 3 priorities** — three things that would make today a win, kept small,
-  above the noise of any longer list.
-- **Completion states, not scores** — hit your minimum habits and the day is
-  **Minimum saved**; do most and it's a **Strong day**; do them all for a **Full
-  win**. A rough day still counts.
-- **Rescue mode** — the highest-overwhelm energy level strips the whole dashboard to
-  exactly three moves: one tiny start, one minimum task, one recovery action.
-- **Next Best Action** — when an important block slips past untouched, you get a
-  calm recovery prompt (_"do 20 minutes instead of skipping completely"_) instead of
-  a red "missed" badge.
-- **Momentum, not streaks** — weekly momentum counts **completed days out of 7**.
-  Miss a day and nothing breaks; you just pick back up. No streak to "lose".
-- **Friction logging** — skipping asks a low-friction _"what got in the way?"_ (too
-  big, no energy, distracted…). Over a week, the Review screen surfaces patterns so
-  you can shrink the right tasks — framed as data, never as failure.
-- **Tone & UI** — friendly but not childish, big tap targets, semantic Lucide
-  icons, light/dark/system brightness, five synced interface colors, and
-  encouraging copy throughout.
-- **Progressive density** — Today contains only decisions needed today. Weekly
-  momentum lives in Habits and recruiting analytics live in Applications.
-- **Clear my head** — a local, deterministic parser turns one-item-per-line brain
-  dumps into transparent time, effort, category, first-step, and minimum estimates.
-- **Rescue the plan** — fits flexible tasks into 15, 30, 60, or 120 minutes; tasks
-  are kept, shrunk, or moved only after the user reviews and applies the plan.
-- **Vacation Mode** — temporarily swaps in four loose anchors and restores the
-  prior routine when the trip ends.
-- **Visible time + focus sprint** — the current block drains as a ring, and an
-  optional 10/25/45-minute timer keeps one task in view without turning the app
-  into a stopwatch dashboard.
-- **One-minute onboarding** — choose the friction DayFlow should support and the
-  closest editable week shape, or keep the defaults in one tap.
+[Clerk](https://clerk.com/) handles account creation and sign-in. [Supabase](https://supabase.com/)
+stores one private, row-level-security-protected DayFlow snapshot for each Clerk
+user. `CloudProvider` asks Clerk for the current session token and passes it to
+the Supabase client.
 
----
+The saved snapshot includes:
 
-## 🛠 Tech stack
+- routines and their blocks;
+- habits and dated check-ins;
+- settings and appearance;
+- priorities, flexible tasks, and weekly plans;
+- applications, capacity logs, and skip notes.
 
-- **[Next.js 15](https://nextjs.org/)** (App Router) + **React 19**
-- **TypeScript** (strict)
-- **Tailwind CSS 3** + **[shadcn/ui](https://ui.shadcn.com/)** (Radix primitives)
-- **[date-fns](https://date-fns.org/)** for date/time logic
-- **[lucide-react](https://lucide.dev/)** icons
-- **Supabase** — magic-link Auth plus one private RLS-protected snapshot per user
-- **Account-synced appearance** — light/dark/system plus five interface colors
-- **PWA**: web manifest, service worker, and generated icons
-- Deploy-ready for **Vercel**
+Signed-out use is a temporary preview. It stays in memory and resets when the
+page refreshes. DayFlow does not save product data in localStorage.
 
-### Data models
+## Tech stack
 
-Defined in [`src/lib/types.ts`](src/lib/types.ts): `Routine`, `RoutineBlock`
-(with `importance` and `notificationMinutesBefore`), `Habit` (with `category` and
-`minimum`), `HabitLog`, `BlockLog`, `Priority`, `Application`, `EnergyLog`,
-`FrictionLog`, `FlexTask`, `WeekPlan`, and `UserSettings`. They are plain and
-serializable because the same validated shape is written to Supabase and used
-for file export/import.
+- Next.js 15 App Router and React 19
+- TypeScript in strict mode
+- Tailwind CSS 3 and shadcn/ui
+- Clerk for authentication
+- Supabase for private account data
+- A private on-device planning engine for routine drafts, task sorting, and learned preferences
+- date-fns for date and schedule logic
+- Lucide icons
+- Vitest and Playwright
+- Web app manifest, service worker, generated PWA icons, and web push
 
-### Persistence
+## Project structure
 
-[`StoreProvider`](src/components/store-provider.tsx) owns the in-memory state.
-[`CloudProvider`](src/components/cloud-provider.tsx) loads the authenticated
-user&apos;s validated snapshot from Supabase, then debounces each change back to the
-same RLS-protected row. [`storage.ts`](src/lib/storage.ts) validates cloud reads
-and backup imports; it does not read or write browser storage. The snapshot saves:
-
-- the active routine plus all **editable routines and their blocks**
-- settings (energy mode, minimum day, theme)
-- completed/skipped **habits by date** and **routine blocks by date**
-- the day's **Top 3 priorities**
-- **applications**, **energy logs**, and **friction logs**
-- next-week planning drafts
-- flexible brain-dump tasks and their local Rescue estimates
-
-An authenticated Supabase snapshot is the only persistent source of truth.
-Signed-out changes live only in memory and disappear on refresh by design.
-
----
-
-## 📁 Project structure
-
-```
+```text
 src/
-├── app/                # App Router pages (one per screen) + layout
-│   ├── page.tsx        # Today dashboard
-│   ├── routines/       # Routines
-│   ├── habits/         # Habits
-│   ├── applications/   # Applications
-│   ├── review/         # Weekly Review
-│   ├── settings/       # Settings
-│   ├── icon.png        # Auto favicon (generated)
-│   └── apple-icon.png  # Apple touch icon (generated)
-├── components/
-│   ├── ui/             # shadcn/ui primitives
-│   └── *.tsx           # Feature components (what-now, momentum, etc.)
+├── app/                  # Product screens and Clerk auth routes
+├── components/           # Feature components and shadcn/ui primitives
+├── middleware.ts         # Clerk session middleware
 └── lib/
-    ├── types.ts        # Data models
-    ├── storage.ts      # snapshot validation + export/import serialization
-    ├── schedule.ts     # "What now / next / missed" logic
-    ├── planner.ts      # local brain-dump and Rescue rules
-    ├── day-state.ts    # Day states + streak-free weekly momentum
-    ├── routines.ts     # Blank/copy routine builders
-    ├── review.ts       # Weekly review aggregation
-    ├── applications.ts # Recruiting pipeline helpers
-    ├── constants.ts    # Energy modes, friction reasons, categories
-    ├── time.ts         # date-fns helpers
-    └── data/           # Routine templates + default habits
-public/
-├── manifest.webmanifest
-├── sw.js               # Service worker
-└── icons/              # PWA icons (generated)
-scripts/
-└── generate-icons.mjs  # Dependency-free PNG icon generator
+    ├── data/             # Generic routine and habit starters
+    ├── supabase/         # Clerk-token-aware browser client
+    ├── schedule.ts       # Current, next, and missed-block logic
+    ├── local-planning-engine.ts # Private prompt parsing and adaptive ordering
+    ├── patterns.ts       # Private 28-day adaptation from check-ins
+    ├── planner.ts        # Local list parsing and plan adjustment
+    ├── day-state.ts      # Daily habit state and seven-day progress
+    ├── storage.ts        # Snapshot validation and file import/export
+    └── types.ts          # Serializable data models
 supabase/
-└── migrations/          # RLS-protected cloud-sync schema
-docs/
-└── SUPABASE_SETUP.md    # Dashboard + Vercel configuration steps
-tests/                   # Domain, component, and Playwright E2E regression suites
+├── migrations/           # Snapshot, push, hardening, and Clerk migrations
+└── functions/            # Reminder delivery
+tests/                    # Domain, component, and browser regression tests
 ```
 
----
+## Run locally
 
-## 🚀 Run locally
-
-Requires **Node 18.18+** (Node 20+ recommended).
+Use Node 20 or newer.
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). On your phone, open it over
-your local network (or a deployed URL) and use **"Add to Home Screen"** to install.
+Open [http://localhost:3000](http://localhost:3000). The signed-out preview works
+without environment variables. Account creation and cloud saving need the Clerk
+and Supabase values listed in [the setup guide](docs/SUPABASE_SETUP.md). The
+planning engine needs no API key or external service.
 
-> **No environment variables are required for temporary preview use.** To enable
-> account sync, follow [the Supabase setup guide](docs/SUPABASE_SETUP.md) and add
-> the URL plus publishable key to `.env.local` and Vercel.
-
-Production build:
+Useful commands:
 
 ```bash
-npm run build
-npm start
+npm run dev              # local development
+npm run check            # lint, domain tests, component tests, and production build
+npm run test:e2e         # onboarding and very-low-mode browser flows
+npm run icons            # rebuild PWA icons
 ```
 
-Full release verification:
+The service worker only registers in production. Use `npm run build` followed by
+`npm start` to test installation and offline behavior.
 
-```bash
-npm run check    # ESLint + regression tests + production build/type-check
-npm run test:e2e # first-run, persistence, and Rescue browser flows
-```
+## Deploy
 
-> The service worker only registers in **production** builds, so it never
-> interferes with hot-reloading in `dev`. To test install/offline behavior, run
-> `npm run build && npm start`.
+1. Import the repository in Vercel.
+2. Add the Clerk and Supabase environment variables from the setup guide.
+3. Apply every migration in `supabase/migrations/`.
+4. Connect Clerk as a Supabase third-party authentication provider.
+5. Redeploy after changing environment variables.
 
-Regenerate the app icons anytime:
+Reminder delivery also needs the VAPID secrets, Edge Function, and one-minute
+cron described in [the notification guide](docs/NOTIFICATIONS_SETUP.md).
 
-```bash
-npm run icons
-```
+Routine descriptions and brain dumps are processed in the browser. The local
+engine recognizes common English and Spanish day/time phrases, rejects overlaps,
+and uses recent check-ins only to tune unspecified times and task ordering. Every
+routine still requires a visible review before it can be saved. See the
+[planning-engine guide](docs/LOCAL_PLANNING_ENGINE.md).
 
----
+## Current roadmap
 
-## ▲ Deploy to Vercel
+- Better handling when two devices edit the same plan at once
+- Calendar connections
+- More browser coverage for each screen
+- Broader language coverage for the private routine builder
 
-DayFlow is a stock Next.js app — no env vars required for the MVP.
+## Resume notes
 
-**Option A — Dashboard**
-1. Push this repo to GitHub/GitLab/Bitbucket.
-2. In [Vercel](https://vercel.com/new), **Import** the repository.
-3. Framework preset auto-detects **Next.js**. Accept the defaults and **Deploy**.
+- Built a mobile-first productivity PWA with Next.js, TypeScript, Tailwind CSS,
+  Clerk authentication, and an RLS-protected Supabase data layer.
+- Implemented editable routine scheduling, capacity-aware views, habit progress,
+  weekly review, and an optional application tracker.
+- Added account-synced appearance, file backup, installable PWA support, web push,
+  and cross-midnight reminder deduplication.
+- Added reviewed local routine generation, adaptive brain-dump organization, and
+  private behavior-pattern suggestions with no paid AI dependency.
+- Added regression coverage for domain rules, rendered components, onboarding,
+  account persistence, and the three-choice very-low view.
 
-**Option B — CLI**
-```bash
-npm i -g vercel
-vercel          # preview deploy
-vercel --prod   # production deploy
-```
-
-That's it. The manifest, service worker, and icons are served from `public/`, so
-the deployed app is installable as a PWA immediately.
-
----
-
-## 🔭 Future improvements
-
-The Supabase-first core is complete. Natural next steps:
-
-- **Richer multi-device conflict handling** — signed-in devices already sync a
-  private snapshot; future work can add live conflict resolution for simultaneous
-  edits on two open devices.
-- **AI assistance** — an on-device/Claude-powered coach that reshapes the day based
-  on your energy mode, suggests smarter tiny-starts, and turns friction logs into
-  personalized nudges.
-- **Google Calendar** — two-way sync so routine blocks reflect real meetings and
-  free/busy time.
-- **Deeper calendar recurrence** — multi-day block creation is available today;
-  future calendar sync could add date ranges, exceptions, and alternating weeks.
-
----
-
-## 📄 Resume bullets
-
-- Built a mobile-first, ADHD-friendly productivity **PWA** using **Next.js**,
-  **TypeScript**, **Tailwind CSS**, and a private **Supabase** snapshot layer.
-- Implemented adaptive routine flows with **energy modes**, **tiny-start** actions,
-  **backup options**, and **minimum-day** recovery logic.
-- Designed **habit momentum tracking**, **application tracking**, and **weekly review
-  analytics**.
-- Added **installable PWA** support with a **service worker**, private cloud sync,
-  hardened web-push delivery, and cross-midnight reminder deduplication.
-- Added regression coverage across pure domain logic, rendered components, and
-  first-run/Rescue browser journeys.
-
----
-
-## 📝 Notes
-
-- Persistent data requires Supabase sign-in. A signed-out preview is temporary;
-  use **Export** for an optional file backup and **Reset** to replace the synced
-  snapshot with a fresh starter state.
-- Placeholder routine times are sensible defaults meant to be personalized.
-
-Built with care for brains that work a little differently. 💜
+DayFlow by Halynt is built for people who want a plan that is clear, flexible,
+and easy to come back to.

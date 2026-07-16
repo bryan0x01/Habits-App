@@ -1,3 +1,5 @@
+import { ClerkProvider } from "@clerk/nextjs";
+import { shadcn } from "@clerk/ui/themes";
 import type { Metadata, Viewport } from "next";
 
 import "./globals.css";
@@ -13,7 +15,7 @@ import { APP_TAGLINE, PARENT_BRAND, PRODUCT_NAME } from "@/lib/constants";
 export const metadata: Metadata = {
   applicationName: PRODUCT_NAME,
   title: {
-    default: `${PRODUCT_NAME} — What to do now`,
+    default: `${PRODUCT_NAME} — A simpler plan for today`,
     template: `%s · ${PRODUCT_NAME}`,
   },
   description: APP_TAGLINE,
@@ -53,15 +55,41 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="min-h-dvh bg-background font-sans text-foreground">
-        <StoreProvider>
+        <ClerkProvider
+          appearance={{
+            theme: shadcn,
+            variables: {
+              colorBackground: "hsl(var(--card))",
+              colorDanger: "hsl(var(--destructive))",
+              colorForeground: "hsl(var(--card-foreground))",
+              colorInput: "hsl(var(--input))",
+              colorInputForeground: "hsl(var(--foreground))",
+              colorModalBackdrop: "rgb(0 0 0 / 72%)",
+              colorMuted: "hsl(var(--muted))",
+              colorMutedForeground: "hsl(var(--muted-foreground))",
+              colorNeutral: "hsl(var(--foreground))",
+              colorPrimary: "hsl(var(--primary))",
+              colorPrimaryForeground: "hsl(var(--primary-foreground))",
+              colorRing: "hsl(var(--ring))",
+              borderRadius: "1rem",
+              fontFamily: "var(--font-sans)",
+            },
+            elements: {
+              cardBox: "border border-border bg-card shadow-xl",
+              modalContent: "bg-card",
+            },
+          }}
+        >
+          <StoreProvider>
             <AppearanceController />
             <CloudProvider>
               <div className="relative min-h-dvh">{children}</div>
               <Onboarding />
               <BottomNav />
             </CloudProvider>
-          <ServiceWorkerRegister />
-        </StoreProvider>
+            <ServiceWorkerRegister />
+          </StoreProvider>
+        </ClerkProvider>
       </body>
     </html>
   );

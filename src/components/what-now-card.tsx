@@ -38,9 +38,9 @@ export function WhatNowCard() {
       <HeroSurface>
         <QuietHero
           mark="none"
-          eyebrow="Today"
-          title="Open water"
-          body="No blocks scheduled. Rest, or pick one small thing you'd feel good about."
+          eyebrow="No plans yet"
+          title="Your day is open"
+          body="Add something to your routine, or leave the time free."
         />
       </HeroSurface>
     );
@@ -51,9 +51,9 @@ export function WhatNowCard() {
       <HeroSurface>
         <QuietHero
           mark="full"
-          eyebrow="Day protected"
-          title="Enough is done"
-          body={`${view.doneCount} of ${view.requiredCount} done. However today went, you showed up — that's the win.`}
+          eyebrow="Done for today"
+          title="You’re finished"
+          body={`${view.doneCount} of ${view.requiredCount} planned tasks done.`}
         />
       </HeroSurface>
     );
@@ -65,9 +65,9 @@ export function WhatNowCard() {
       <HeroSurface>
         <QuietHero
           mark="saved"
-          eyebrow="Nothing scheduled right now"
-          title="Breathing room"
-          body="Enjoy the gap, or get a head start on what's next."
+          eyebrow="Nothing right now"
+          title="You have a break"
+          body="Take it, or look at what’s next."
         />
       </HeroSurface>
     );
@@ -92,7 +92,7 @@ export function WhatNowCard() {
           allowBackup={allowBackup}
           emphasizeTiny={allowBackup || need === "start"}
           energyLine={
-            need === "varies" && live ? "Don't think. Start here." : support.prompt
+            need === "varies" && live ? "Start with the first small step." : support.prompt
           }
           onDone={() => setBlockStatus(focus.id, "done")}
         />
@@ -101,12 +101,12 @@ export function WhatNowCard() {
       {view.current && view.current.status === "done" && view.next ? (
         <p className="px-1 text-sm text-muted-foreground">
           <CheckCircle2 className="mr-1 inline size-4 text-success" />
-          Nice — {view.current.title} done. Next up is {view.next.title}.
+          {view.current.title} is done. Next: {view.next.title}.
         </p>
       ) : live && view.next ? (
         <p className="px-1 text-sm text-muted-foreground">
           <ArrowRight className="mr-1 inline size-4" />
-          Next up · {view.next.title} at {prettyTime(view.next.start)}
+          Next · {view.next.title} at {prettyTime(view.next.start)}
         </p>
       ) : null}
     </div>
@@ -188,7 +188,7 @@ function FocusContent({
           <Zap className="mt-0.5 size-5 shrink-0 text-hero-accent" />
           <div>
             <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-hero-foreground/60">
-              Tiny start
+              Start here
             </p>
             <p className="mt-0.5 font-medium">{block.tinyStart}</p>
           </div>
@@ -230,7 +230,7 @@ function FocusContent({
             className="flex items-center gap-1.5 text-sm font-medium text-hero-foreground/80 underline-offset-4 hover:underline"
           >
             <LifeBuoy className="size-4" />
-            {showBackup ? "Hide the lighter version" : "Too much? Try a lighter version"}
+            {showBackup ? "Hide smaller option" : "Need a smaller option?"}
           </button>
           {showBackup ? (
             <p className="mt-2 rounded-2xl bg-hero-soft p-3.5 text-sm">{block.backup}</p>
@@ -255,7 +255,7 @@ export function NextBestActionCard() {
   if (!missed) return null;
 
   const suggestion =
-    missed.backup ?? "Do 20 focused minutes instead of skipping it completely.";
+    missed.backup ?? "Spend 20 minutes on it now, or skip it for today.";
 
   return (
     <Card className="border-warning/40 bg-warning/10">
@@ -265,22 +265,22 @@ export function NextBestActionCard() {
             <ArrowRight className="size-5" />
           </div>
           <div>
-            <p className="text-sm font-semibold">The plan slipped. The day didn&apos;t.</p>
+            <p className="text-sm font-semibold">This one got missed</p>
             <p className="text-xs text-muted-foreground">
-              You slipped past <span className="font-medium">{missed.title}</span>.
-              No spiral — the day isn&apos;t failed.
+              <span className="font-medium">{missed.title}</span> ended earlier.
+              Do a shorter version now, or skip it.
             </p>
           </div>
         </div>
 
         <p className="rounded-xl bg-background/60 p-3 text-sm">
-          <span className="font-medium">Keep it small:</span> {suggestion}
+          <span className="font-medium">Shorter option:</span> {suggestion}
         </p>
 
         <div className="flex flex-wrap gap-2">
           <Button size="sm" onClick={() => setBlockStatus(missed.id, "done")}>
             <CheckCircle2 className="size-4" />
-            Done anyway
+            Mark done
           </Button>
           <SkipTaskButton
             taskType="block"
@@ -289,7 +289,7 @@ export function NextBestActionCard() {
             variant="outline"
             size="sm"
           >
-            Let it go
+            Skip it
           </SkipTaskButton>
         </div>
       </CardContent>

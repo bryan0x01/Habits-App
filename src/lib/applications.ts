@@ -10,7 +10,7 @@ export function isPriorityApplication(app: Application): boolean {
   return app.priority === "high";
 }
 
-/** Terminal states drop out of the "in flight" pipeline. */
+/** Terminal states drop out of the active pipeline. */
 export function isActive(app: Application): boolean {
   return app.status !== "rejected" && app.status !== "offer";
 }

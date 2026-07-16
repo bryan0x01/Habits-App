@@ -67,7 +67,7 @@ export default function ApplicationsPage() {
     <>
       <PageHeader
         title="Applications"
-        subtitle={`${activeCount} in flight`}
+        subtitle={`${activeCount} active`}
         action={
           <Button size="sm" variant="secondary" onClick={openAdd}>
             <Plus className="size-4" />
@@ -83,12 +83,11 @@ export default function ApplicationsPage() {
             <BriefcaseBusiness className="mx-auto mb-3 size-8 text-muted-foreground" />
             <p className="font-medium">No applications yet</p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Track roles, deadlines, and follow-ups here so nothing slips. One
-              at a time is plenty.
+              Track roles, deadlines, and follow-ups in one place.
             </p>
             <Button className="mt-4" onClick={openAdd}>
               <Plus className="size-4" />
-              Add your first
+              Add application
             </Button>
           </div>
         ) : (

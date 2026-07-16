@@ -28,7 +28,7 @@ export function FlexPlan() {
           <div className="min-w-0 flex-1">
             <p className="text-sm font-semibold">Loose ends</p>
             <p className="text-xs opacity-70">
-              {tasks.length === 0 ? "Your head does not have to hold the plan." : `${openTasks.length} still in play`}
+              {tasks.length === 0 ? "Write it down when you need to." : `${openTasks.length} left`}
             </p>
           </div>
           {openTasks.length > 0 ? <RescuePlanDialog tasks={openTasks} /> : null}
@@ -37,9 +37,9 @@ export function FlexPlan() {
 
         {tasks.length === 0 ? (
           <div className="px-4 py-5">
-            <p className="text-sm font-medium">Drop the mess. Keep the decisions.</p>
+            <p className="text-sm font-medium">Add anything you still need to do.</p>
             <p className="mt-1 text-xs text-muted-foreground">
-              Add one task per line. DayFlow will estimate time, effort, and the smallest useful version locally.
+              Put one task on each line. DayFlow will help sort the list.
             </p>
           </div>
         ) : (
@@ -71,7 +71,7 @@ export function FlexPlan() {
                       <span className="text-xs text-muted-foreground">{task.effort}</span>
                     </div>
                     {!task.done ? (
-                      <p className="mt-1.5 truncate text-xs text-muted-foreground">Start: {task.tinyStart}</p>
+                      <p className="mt-1.5 truncate text-xs text-muted-foreground">First step: {task.tinyStart}</p>
                     ) : null}
                   </button>
                   <button

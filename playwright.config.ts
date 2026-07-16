@@ -7,17 +7,20 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   reporter: "list",
   use: {
-    baseURL: "http://127.0.0.1:3000",
+    baseURL: process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:3000",
     ...devices["Desktop Chrome"],
     channel: "chrome",
     colorScheme: "light",
     viewport: { width: 375, height: 812 },
     trace: "retain-on-failure",
   },
-  webServer: {
-    command: "npm run dev -- -H 127.0.0.1",
-    url: "http://127.0.0.1:3000",
-    reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
-  },
+  webServer: process.env.PLAYWRIGHT_SKIP_WEBSERVER
+    ? undefined
+    : {
+        command: "npm run build && npm start -- -H 127.0.0.1",
+        env: { DAYFLOW_E2E: "1" },
+        url: "http://127.0.0.1:3000",
+        reuseExistingServer: !process.env.CI,
+        timeout: 120_000,
+      },
 });

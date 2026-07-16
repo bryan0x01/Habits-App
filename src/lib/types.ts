@@ -110,7 +110,7 @@ export interface Habit {
   cadence: HabitCadence;
   category: HabitCategory;
   tinyStart?: string;
-  /** Counts toward the "minimum saved" day state. */
+  /** Included in the daily basics state. */
   minimum?: boolean;
   /** True for user-created habits (vs. seeded defaults). */
   custom?: boolean;

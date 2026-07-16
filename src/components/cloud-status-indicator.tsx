@@ -9,13 +9,15 @@ import { cn } from "@/lib/utils";
 export function CloudStatusIndicator() {
   const { configured, user, status } = useCloud();
 
-  const state = !configured || !user
-    ? { label: "Preview only — sign in to save", icon: CloudOff, className: "text-amber-600 dark:text-amber-400" }
+  const state = !configured
+    ? { label: "Preview mode", icon: CloudOff, className: "text-amber-600 dark:text-amber-400" }
+    : !user
+      ? { label: "Sign in to save", icon: CloudOff, className: "text-amber-600 dark:text-amber-400" }
     : status === "error"
-      ? { label: "Supabase save needs attention", icon: TriangleAlert, className: "text-destructive" }
+      ? { label: "Couldn’t save", icon: TriangleAlert, className: "text-destructive" }
       : status === "syncing"
-        ? { label: "Saving to Supabase", icon: RefreshCw, className: "text-primary" }
-        : { label: "Saved to Supabase", icon: Cloud, className: "text-success" };
+        ? { label: "Saving", icon: RefreshCw, className: "text-primary" }
+        : { label: "Saved", icon: Cloud, className: "text-success" };
   const Icon = state.icon;
 
   return (

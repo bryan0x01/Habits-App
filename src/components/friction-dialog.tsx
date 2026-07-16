@@ -61,10 +61,10 @@ export function FrictionDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>No shame — what got in the way?</DialogTitle>
+          <DialogTitle>What got in the way?</DialogTitle>
           <DialogDescription>
             Skipping <span className="font-medium text-foreground">{title}</span>.
-            Noticing the friction is how we make tomorrow easier.
+            This helps you notice patterns over time.
           </DialogDescription>
         </DialogHeader>
 
@@ -99,7 +99,7 @@ export function FrictionDialog({
             Cancel
           </Button>
           <Button className="flex-1" onClick={submit}>
-            Log it &amp; let it go
+            Save
           </Button>
         </div>
       </DialogContent>

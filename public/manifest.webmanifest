@@ -1,7 +1,7 @@
 {
   "name": "DayFlow by Halynt — ADHD-friendly routines",
   "short_name": "DayFlow",
-  "description": "See what to do now, what's next, and how to recover when you fall off schedule.",
+  "description": "Plan your day, see what's next, and adjust when plans change.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

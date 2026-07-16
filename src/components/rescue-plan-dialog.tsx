@@ -46,14 +46,14 @@ export function RescuePlanDialog({ tasks }: { tasks: FlexTask[] }) {
       <DialogTrigger asChild>
         <Button variant="outline" size="sm">
           <LifeBuoy className="size-4" />
-          Rescue
+          Adjust plan
         </Button>
       </DialogTrigger>
       <DialogContent className="max-h-[88dvh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>The plan slipped. The day didn&apos;t.</DialogTitle>
+          <DialogTitle>Make the rest of today fit</DialogTitle>
           <DialogDescription>
-            Choose the time you truly have. DayFlow will keep, shrink, or move the rest to tomorrow.
+            Choose how much time you have. DayFlow will keep what fits and move the rest to tomorrow.
           </DialogDescription>
         </DialogHeader>
         <div className="grid grid-cols-4 gap-2" role="group" aria-label="Time available">
@@ -90,11 +90,11 @@ export function RescuePlanDialog({ tasks }: { tasks: FlexTask[] }) {
         </div>
         <div className="flex items-start gap-2 rounded-md bg-muted p-3 text-xs text-muted-foreground">
           <Minimize2 className="mt-0.5 size-4 shrink-0" />
-          Capacity limits how many tasks stay: one in Rescue, two in Low, three in Medium, four in High.
+          With less energy, fewer tasks stay on today&apos;s list.
         </div>
         <DialogFooter>
           <Button onClick={apply} className="w-full">
-            Apply this reset
+            Update today
             <ArrowRight className="size-4" />
           </Button>
         </DialogFooter>

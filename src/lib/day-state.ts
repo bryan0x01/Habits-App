@@ -4,15 +4,11 @@ import { dateKey, weekdayOf } from "@/lib/time";
 import type { Habit, HabitLog, Weekday } from "@/lib/types";
 
 /**
- * Habit completion states — the emotional core of the app.
- *
- * The ladder is intentionally forgiving: doing your handful of "minimum"
- * habits already earns a "Day saved", so a rough day still counts. No streaks,
- * no punishment.
+ * Habit completion states used by the daily card and seven-day summary.
  */
 export type DayState = "none" | "started" | "saved" | "strong" | "full";
 
-/** Ratio of done/due at/above which a day is "strong". */
+/** Ratio of done/due at or above which the UI shows good progress. */
 const STRONG_THRESHOLD = 0.7;
 
 export interface HabitDaySummary {
@@ -33,11 +29,11 @@ export interface DayStateCopy {
 }
 
 export const DAY_STATE_COPY: Record<DayState, DayStateCopy> = {
-  none: { label: "Fresh page", emoji: "✨", microcopy: "Pick one small thing. That's all it takes to start." },
-  started: { label: "Moving", emoji: "🌱", microcopy: "You're on the board. Stack one more." },
-  saved: { label: "Minimum saved", emoji: "🛟", microcopy: "Minimum saved. That counts — genuinely." },
-  strong: { label: "Strong day", emoji: "💪", microcopy: "Strong day. You're most of the way there." },
-  full: { label: "Full win", emoji: "🏆", microcopy: "Full win. Every habit done. Take the W." },
+  none: { label: "Not started", emoji: "✨", microcopy: "Start with one habit." },
+  started: { label: "Started", emoji: "🌱", microcopy: "One done." },
+  saved: { label: "Basics done", emoji: "🛟", microcopy: "The important basics are covered." },
+  strong: { label: "Good progress", emoji: "💪", microcopy: "Most of today’s habits are done." },
+  full: { label: "All done", emoji: "🏆", microcopy: "That’s everything for today." },
 };
 
 export function computeHabitDay(
@@ -80,7 +76,7 @@ export function computeHabitDay(
   };
 }
 
-/** A day "counts" toward weekly momentum once the minimum is saved. */
+/** A day is complete for the weekly summary once all daily basics are done. */
 export function isDayComplete(summary: HabitDaySummary): boolean {
   return summary.state === "saved" || summary.state === "strong" || summary.state === "full";
 }

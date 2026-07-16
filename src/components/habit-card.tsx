@@ -30,7 +30,7 @@ export function HabitCard({
   const skipped = status === "skipped";
 
   const subtitle = skipped
-    ? "Let go today — no problem"
+    ? "Skipped today"
     : done
       ? "Done today"
       : habit.tinyStart || CADENCE_LABEL[habit.cadence];

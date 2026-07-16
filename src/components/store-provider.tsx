@@ -20,7 +20,9 @@ import { applyApplicationPatch } from "@/lib/applications";
 import {
   buildBlankRoutine,
   buildRoutineCopy,
+  buildRoutineFromDraft,
   type NewRoutineInput,
+  type RoutineDraftInput,
 } from "@/lib/routines";
 import type {
   Application,
@@ -145,6 +147,7 @@ export interface AppStore {
 
   // Routines
   createRoutine: (input: NewRoutineInput) => string;
+  createRoutineFromDraft: (input: RoutineDraftInput) => string;
   duplicateRoutine: (id: string) => string | null;
   renameRoutine: (id: string, name: string) => void;
   deleteRoutine: (id: string) => void;
@@ -362,6 +365,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   /* ---- routines ---- */
   const createRoutine = React.useCallback((input: NewRoutineInput): string => {
     const routine = buildBlankRoutine(input);
+    setRoutines((list) => [...list, routine]);
+    return routine.id;
+  }, []);
+
+  const createRoutineFromDraft = React.useCallback((input: RoutineDraftInput): string => {
+    const routine = buildRoutineFromDraft(input);
     setRoutines((list) => [...list, routine]);
     return routine.id;
   }, []);
@@ -753,6 +762,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     restartOnboarding,
     setVacationMode,
     createRoutine,
+    createRoutineFromDraft,
     duplicateRoutine,
     renameRoutine,
     deleteRoutine,

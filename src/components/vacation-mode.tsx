@@ -19,7 +19,7 @@ export function VacationModeCard() {
         <div className="min-w-0 flex-1">
           <label htmlFor="vacation-mode" className="text-sm font-semibold">Vacation mode</label>
           <p className="text-xs text-muted-foreground">
-            Four loose anchors. Work stays out unless you add it.
+            A lighter routine with work left out.
           </p>
         </div>
         <Switch id="vacation-mode" checked={active} onCheckedChange={setVacationMode} />
@@ -36,7 +36,7 @@ export function VacationBanner() {
       <Palmtree className="size-5 shrink-0 text-teal-700 dark:text-teal-300" />
       <div className="min-w-0 flex-1">
         <p className="font-semibold">Vacation rhythm</p>
-        <p className="text-xs text-muted-foreground">Be present. Protect only the anchors.</p>
+        <p className="text-xs text-muted-foreground">Only the basics are on your schedule.</p>
       </div>
       <Button variant="ghost" size="sm" onClick={() => setVacationMode(false)}>
         <Undo2 className="size-4" />

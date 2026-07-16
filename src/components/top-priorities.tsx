@@ -32,7 +32,7 @@ export function TopPriorities() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Target className="size-4 text-primary" />
-            <p className="text-sm font-semibold">Make the cut</p>
+            <p className="text-sm font-semibold">Top priorities</p>
           </div>
           {todays.length > 0 ? (
             <span className="text-xs text-muted-foreground">
@@ -43,7 +43,7 @@ export function TopPriorities() {
 
         {todays.length === 0 ? (
           <p className="text-xs text-muted-foreground">
-            Commit to three outcomes at most. Everything else stays flexible.
+            Add up to three things you want to finish today.
           </p>
         ) : (
           <ul className="space-y-2">
@@ -88,7 +88,7 @@ export function TopPriorities() {
             <Input
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
-              placeholder={todays.length === 0 ? "The outcome that matters" : `Commitment ${todays.length + 1}`}
+              placeholder={todays.length === 0 ? "First priority" : `Priority ${todays.length + 1}`}
               className="h-10"
               maxLength={80}
             />

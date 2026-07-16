@@ -10,7 +10,7 @@ import type {
 } from "@/lib/types";
 
 export const APP_NAME = "DayFlow";
-export const APP_TAGLINE = "What to do now — and how to get back on track.";
+export const APP_TAGLINE = "A simpler way to plan your day.";
 export const PARENT_BRAND = "Halynt";
 export const PRODUCT_NAME = `${APP_NAME} by ${PARENT_BRAND}`;
 export const PRODUCT_ATTRIBUTION = `A ${PARENT_BRAND} product`;
@@ -29,7 +29,7 @@ export const ENERGY_MODES: EnergyModeMeta[] = [
   {
     id: "high",
     label: "High",
-    tagline: "Ride the wave — take on the big stuff.",
+    tagline: "I can take on more today.",
     emoji: "⚡️",
     chip: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30",
     ring: "ring-emerald-500",
@@ -38,7 +38,7 @@ export const ENERGY_MODES: EnergyModeMeta[] = [
   {
     id: "medium",
     label: "Medium",
-    tagline: "Steady and solid. Keep it moving.",
+    tagline: "A normal amount feels fine.",
     emoji: "🌊",
     chip: "bg-violet-500/15 text-violet-700 dark:text-violet-300 border-violet-500/30",
     ring: "ring-violet-500",
@@ -47,7 +47,7 @@ export const ENERGY_MODES: EnergyModeMeta[] = [
   {
     id: "low",
     label: "Low",
-    tagline: "Gentle mode. Small wins still count.",
+    tagline: "Keep today light.",
     emoji: "🌤️",
     chip: "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30",
     ring: "ring-amber-500",
@@ -55,8 +55,8 @@ export const ENERGY_MODES: EnergyModeMeta[] = [
   },
   {
     id: "chaos",
-    label: "Rescue",
-    tagline: "Protect one useful move. The rest can wait.",
+    label: "Very low",
+    tagline: "Show me only the basics.",
     emoji: "🌀",
     chip: "bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/30",
     ring: "ring-rose-500",
@@ -80,37 +80,37 @@ export const SUPPORT_NEEDS: SupportNeedMeta[] = [
     id: "start",
     label: "Getting started",
     shortLabel: "Start",
-    prompt: "Forget the whole task. Do only the first visible move.",
+    prompt: "Start with the first small step.",
   },
   {
     id: "focus",
     label: "Staying focused",
     shortLabel: "Focus",
-    prompt: "Keep this one task in view. Everything else can wait.",
+    prompt: "Keep this task open and hide the rest for now.",
   },
   {
     id: "remember",
     label: "Remembering",
     shortLabel: "Remember",
-    prompt: "Leave yourself a visible cue for the next step before you move on.",
+    prompt: "Add a reminder before you move on.",
   },
   {
     id: "switch",
     label: "Switching tasks",
     shortLabel: "Switch",
-    prompt: "Close the last task, take one breath, then open this one.",
+    prompt: "Pause the last task, then open this one.",
   },
   {
     id: "overwhelmed",
     label: "Feeling overloaded",
     shortLabel: "Overloaded",
-    prompt: "Shrink the task. A lighter version is enough today.",
+    prompt: "Make this task smaller for today.",
   },
   {
     id: "varies",
     label: "It depends",
     shortLabel: "It varies",
-    prompt: "Use the smallest useful next step and adjust as you go.",
+    prompt: "Start with the smallest useful step.",
   },
 ];
 

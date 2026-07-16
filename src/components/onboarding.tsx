@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { SignInButton, SignUpButton, useAuth } from "@clerk/nextjs";
 import {
   ArrowLeft,
   ArrowLeftRight,
@@ -13,6 +14,8 @@ import {
   GraduationCap,
   LifeBuoy,
   ListStart,
+  Save,
+  ShieldCheck,
   Sparkles,
   StickyNote,
   type LucideIcon,
@@ -27,14 +30,15 @@ import { PRODUCT_ATTRIBUTION, SUPPORT_NEEDS } from "@/lib/constants";
 import type { SupportNeed } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-type Step = "welcome" | "support" | "rhythm" | "ready";
+type Step = "welcome" | "support" | "rhythm" | "account" | "ready";
 
-const STEPS: Step[] = ["welcome", "support", "rhythm", "ready"];
+const STEPS: Step[] = ["welcome", "support", "rhythm", "account", "ready"];
 const STEP_LABELS: Record<Step, string> = {
-  welcome: "How it helps",
-  support: "Your friction",
-  rhythm: "Your starting week",
-  ready: "Your preview",
+  welcome: "Welcome",
+  support: "A little help",
+  rhythm: "Your week",
+  account: "Your account",
+  ready: "All set",
 };
 
 const SUPPORT_ICONS: Record<SupportNeed, LucideIcon> = {
@@ -50,25 +54,25 @@ const ROUTINE_CHOICES = [
   {
     id: BALANCED_ROUTINE_ID,
     label: "A balanced week",
-    note: "Work, meals, recovery, and a clear stopping point.",
+    note: "Work, meals, downtime, and a clear end to the day.",
     icon: Compass,
   },
   {
     id: "student-week",
     label: "Mostly school",
-    note: "Classes, short review sessions, assignments, and a steady shutdown.",
+    note: "Classes, study time, assignments, and breaks.",
     icon: GraduationCap,
   },
   {
     id: "focus-work",
     label: "Focus work",
-    note: "Protected focus, communication windows, lunch, and a clean close.",
+    note: "Focus time, messages, lunch, and a set finish.",
     icon: BriefcaseBusiness,
   },
   {
     id: "shift-week",
     label: "Shift work",
-    note: "Prep, real breaks, decompression, and one home essential.",
+    note: "Getting ready, work, breaks, and time to wind down.",
     icon: Clock3,
   },
   {
@@ -80,6 +84,7 @@ const ROUTINE_CHOICES = [
 ] as const;
 
 export function Onboarding() {
+  const { isLoaded: authLoaded, isSignedIn } = useAuth();
   const {
     hydrated,
     settings,
@@ -131,6 +136,10 @@ export function Onboarding() {
     };
   }, [open, step]);
 
+  React.useEffect(() => {
+    if (open && step === "account" && isSignedIn) setStep("ready");
+  }, [isSignedIn, open, step]);
+
   if (!open) return null;
 
   const finish = () => {
@@ -138,7 +147,7 @@ export function Onboarding() {
     if (routineId === "blank") {
       const id = createRoutine({
         name: "My week",
-        description: "A blank week built from my real anchors.",
+        description: "An empty week to build myself.",
       });
       setActiveRoutine(id);
     } else if (routines.some((routine) => routine.id === routineId)) {
@@ -172,7 +181,7 @@ export function Onboarding() {
             <div>
               <ProductSignature className="block text-sm leading-none" />
               <p className="mt-1 text-[0.68rem] text-muted-foreground">
-                A calmer way back into the day
+                A simple plan for today
               </p>
             </div>
           </div>
@@ -214,20 +223,24 @@ export function Onboarding() {
         {step === "welcome" ? (
           <WelcomeStep
             onStart={() => setStep("support")}
-            onDefaults={completeOnboarding}
+            onDefaults={() => {
+              setSupport("varies");
+              setRoutineId(BALANCED_ROUTINE_ID);
+              setStep(isSignedIn ? "ready" : "account");
+            }}
           />
         ) : null}
 
         {step === "support" ? (
           <div className="flex flex-1 flex-col pt-8">
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">
-              First, remove one decision
+              A little help
             </p>
             <h1 id="onboarding-title" className="mt-2 text-3xl font-bold tracking-tight">
-              What usually gets in the way?
+              What would help most?
             </h1>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-              This only changes the kind of prompt DayFlow gives you. It is not a diagnosis.
+              Pick one for now. You can change it anytime.
             </p>
 
             <div className="mt-6 grid grid-cols-2 gap-2.5" role="group" aria-label="Default support">
@@ -259,20 +272,20 @@ export function Onboarding() {
               })}
             </div>
 
-            <Button className="mt-auto" size="lg" onClick={() => setStep("rhythm")}>Choose my week</Button>
+            <Button className="mt-auto" size="lg" onClick={() => setStep("rhythm")}>Next</Button>
           </div>
         ) : null}
 
         {step === "rhythm" ? (
           <div className="flex flex-1 flex-col pt-8">
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">
-              Then, use a starting point
+              Your usual week
             </p>
             <h1 id="onboarding-title" className="mt-2 text-3xl font-bold tracking-tight">
-              Which week is closest?
+              Which one looks most like yours?
             </h1>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-              Pick the nearest shape, not a perfect match. Every block and time stays editable.
+              Choose the closest one. You can change every task and time later.
             </p>
 
             <div className="mt-6 space-y-2.5" role="radiogroup" aria-label="Starting routine">
@@ -305,35 +318,82 @@ export function Onboarding() {
               })}
             </div>
 
-            <Button className="mt-6" size="lg" onClick={() => setStep("ready")}>Review my setup</Button>
+            <Button
+              className="mt-6"
+              size="lg"
+              onClick={() => setStep(isSignedIn ? "ready" : "account")}
+            >
+              Next
+            </Button>
             <p className="mt-3 text-center text-xs text-muted-foreground">
-              No streaks to lose. No plan is treated like a rule.
+              Nothing here is permanent.
             </p>
+          </div>
+        ) : null}
+
+        {step === "account" ? (
+          <div className="flex flex-1 flex-col justify-center py-8">
+            <div className="rounded-[2rem] border bg-card p-6">
+              <span className="flex size-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                <Save className="size-5" />
+              </span>
+              <p className="mt-6 text-xs font-bold uppercase tracking-[0.2em] text-primary">
+                Keep your setup
+              </p>
+              <h1 id="onboarding-title" className="mt-2 text-3xl font-bold tracking-tight">
+                Save your plan
+              </h1>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                Create an account so your setup and progress are here next time, on any device.
+              </p>
+
+              <div className="mt-6 space-y-2">
+                <SignUpButton mode="modal">
+                  <Button className="w-full" size="lg" disabled={!authLoaded}>
+                    Create account
+                  </Button>
+                </SignUpButton>
+                <SignInButton mode="modal">
+                  <Button className="w-full" size="lg" variant="outline" disabled={!authLoaded}>
+                    I already have an account
+                  </Button>
+                </SignInButton>
+              </div>
+
+              <p className="mt-5 flex items-start gap-2 text-xs leading-relaxed text-muted-foreground">
+                <ShieldCheck className="mt-0.5 size-4 shrink-0 text-primary" />
+                Your DayFlow data stays private in your account.
+              </p>
+            </div>
+
+            <Button className="mt-3" variant="ghost" onClick={() => setStep("ready")}>
+              Not now
+            </Button>
           </div>
         ) : null}
 
         {step === "ready" ? (
           <div className="flex flex-1 flex-col pt-4">
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">
-              Ready when you are
+              All set
             </p>
             <h1 id="onboarding-title" className="mt-1.5 text-[1.7rem] font-bold leading-tight tracking-tight">
-              Here is your calmer starting point.
+              Your setup is ready.
             </h1>
             <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
-              This is a preview, not a contract. You can change every prompt, block, and time later.
+              You can change any of this later in Settings.
             </p>
 
             <div className="mt-4 space-y-2">
               <SetupSummary
                 icon={SUPPORT_ICONS[selectedSupport.id]}
-                label="Prompt style"
+                label="Help with"
                 value={selectedSupport.label}
                 note={selectedSupport.prompt}
               />
               <SetupSummary
                 icon={selectedRoutine.icon}
-                label="Starting rhythm"
+                label="Week template"
                 value={selectedRoutine.label}
                 note={selectedRoutine.note}
               />
@@ -341,18 +401,18 @@ export function Onboarding() {
 
             <div className="mt-3 rounded-[1.5rem] border bg-card p-3.5">
               <p className="text-[0.65rem] font-bold uppercase tracking-[0.16em] text-muted-foreground">
-                What DayFlow will keep visible
+                What you’ll see
               </p>
               <div className="mt-2.5 space-y-2 text-xs">
-                <PreviewPoint icon={ListStart} text="One useful next move — not the whole list." />
-                <PreviewPoint icon={Clock3} text="Time you can see, with a tiny way to begin." />
-                <PreviewPoint icon={LifeBuoy} text="A rescue route when the original plan slips." />
+                <PreviewPoint icon={ListStart} text="The next thing on your plan." />
+                <PreviewPoint icon={Clock3} text="How much time is left." />
+                <PreviewPoint icon={LifeBuoy} text="A simpler option when you need one." />
               </div>
             </div>
 
-            <Button className="mt-4" size="lg" onClick={finish}>Start my DayFlow</Button>
+            <Button className="mt-4" size="lg" onClick={finish}>Go to Today</Button>
             <p className="mt-2 text-center text-[0.68rem] leading-relaxed text-muted-foreground">
-              Sign in from Settings to save this setup.
+              {isSignedIn ? "Your setup will be saved to your account." : "This preview resets when you refresh."}
             </p>
           </div>
         ) : null}
@@ -372,25 +432,25 @@ function WelcomeStep({
     <div className="flex flex-1 flex-col justify-center py-10">
       <div className="relative overflow-hidden rounded-[2rem] rounded-br-lg bg-hero p-6 text-hero-foreground">
         <p className="text-xs font-bold uppercase tracking-[0.2em] text-hero-accent">
-          One useful move
+          A simpler day
         </p>
         <h1 id="onboarding-title" className="mt-3 text-4xl font-bold leading-[1.05] tracking-tight">
-          Your day does not need another giant list.
+          Let&apos;s set up your day.
         </h1>
         <p className="mt-4 max-w-sm leading-relaxed text-hero-foreground/75">
-          DayFlow keeps the next action visible, makes time tangible, and gives you a way back when the plan slips.
+          DayFlow keeps your routine in one place and shows you what&apos;s next.
         </p>
         <div className="mt-8 space-y-3 border-t border-hero-foreground/10 pt-5 text-sm">
-          <p><span className="font-semibold text-hero-accent">Now:</span> one clear focus</p>
-          <p><span className="font-semibold text-hero-accent">Hard day:</span> a smaller version still counts</p>
-          <p><span className="font-semibold text-hero-accent">Missed it:</span> decide—never silently reschedule</p>
+          <p><span className="font-semibold text-hero-accent">See:</span> one task at a time</p>
+          <p><span className="font-semibold text-hero-accent">Adjust:</span> use a lighter option when needed</p>
+          <p><span className="font-semibold text-hero-accent">Change:</span> move or skip things without rebuilding the day</p>
         </div>
       </div>
 
-      <Button className="mt-6" size="lg" onClick={onStart}>Make it fit my life</Button>
-      <Button className="mt-2" variant="ghost" onClick={onDefaults}>Use the default setup</Button>
+      <Button className="mt-6" size="lg" onClick={onStart}>Set up DayFlow</Button>
+      <Button className="mt-2" variant="ghost" onClick={onDefaults}>Use the starter setup</Button>
       <div className="mt-3 text-center text-xs leading-relaxed text-muted-foreground">
-        <p>Setup takes about a minute and can be reopened in Settings.</p>
+        <p>This takes about a minute. You can change it later.</p>
         <p className="mt-1 font-semibold text-primary">{PRODUCT_ATTRIBUTION}</p>
       </div>
     </div>

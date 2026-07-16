@@ -32,7 +32,7 @@ export function WeeklyMomentum({ className }: { className?: string }) {
       <CardContent className="space-y-3 p-4">
         <div className="flex items-end justify-between">
           <div>
-            <p className="text-sm font-semibold">Weekly momentum</p>
+            <p className="text-sm font-semibold">Last 7 days</p>
             <p className="text-xs text-muted-foreground">Completed days, not streaks.</p>
           </div>
           <p className="text-sm font-semibold">

@@ -7,12 +7,11 @@ import { useCloud } from "@/components/cloud-provider";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { supportsWebPush, urlBase64ToUint8Array } from "@/lib/notifications";
-import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
 
 export function NotificationSettingsCard() {
-  const { user } = useCloud();
+  const { user, supabase } = useCloud();
   const [enabled, setEnabled] = React.useState(false);
   const [busy, setBusy] = React.useState(false);
   const [message, setMessage] = React.useState<string | null>(null);
@@ -27,13 +26,12 @@ export function NotificationSettingsCard() {
   }, [supported]);
 
   const toggle = async () => {
-    if (!user || !publicKey || !supported) return;
+    if (!user || !supabase || !publicKey || !supported) return;
     setBusy(true);
     setMessage(null);
     try {
       const registration = await navigator.serviceWorker.ready;
       const current = await registration.pushManager.getSubscription();
-      const supabase = createSupabaseBrowserClient();
       if (current) {
         const { error } = await supabase.from("push_subscriptions").delete().eq("user_id", user.id).eq("endpoint", current.endpoint);
         if (error) throw error;
@@ -59,7 +57,7 @@ export function NotificationSettingsCard() {
           throw error;
         }
         setEnabled(true);
-        setMessage("Gentle block reminders are on.");
+        setMessage("Reminders are on.");
       }
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Couldn't update reminders.");
@@ -71,10 +69,10 @@ export function NotificationSettingsCard() {
   const detail = !supported
     ? "This browser does not support Web Push. On iPhone, install DayFlow to the Home Screen first."
     : !user
-      ? "Sign in under Cloud sync first, so reminders stay private."
+      ? "Sign in first to turn on reminders."
       : !publicKey
-        ? "Push is ready in the app, but the deployment is missing its public VAPID key."
-        : enabled ? "On for this device. Uses each block's reminder time." : "Off for this device.";
+        ? "Reminders still need to be connected on this deployment."
+        : enabled ? "On for this device. Each block uses its own reminder time." : "Off for this device.";
 
   return (
     <Card>
@@ -87,7 +85,7 @@ export function NotificationSettingsCard() {
             <p className="text-sm font-semibold">Push reminders</p>
             <p className="text-xs text-muted-foreground">{detail}</p>
           </div>
-          <Button size="sm" variant={enabled ? "outline" : "default"} disabled={busy || !supported || !user || !publicKey} onClick={toggle}>
+          <Button size="sm" variant={enabled ? "outline" : "default"} disabled={busy || !supported || !user || !supabase || !publicKey} onClick={toggle}>
             {busy ? <Loader2 className="size-4 animate-spin" /> : enabled ? "Turn off" : "Turn on"}
           </Button>
         </div>
